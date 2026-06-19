@@ -1,0 +1,125 @@
+.products-page {
+  padding-top: 5rem;
+  background: var(--white-pure);
+}
+
+.products-page__intro {
+  padding: clamp(3rem, 8vh, 4.5rem) 0 clamp(1.25rem, 3vw, 1.75rem);
+  text-align: center;
+}
+
+.products-page__intro-inner {
+  max-width: 40rem;
+  margin: 0 auto;
+}
+
+.products-page__intro .section-label,
+.products-page__intro .section-title {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.products-page__desc {
+  margin: 1.15rem auto 0;
+  max-width: 36rem;
+  font-size: clamp(1rem, 1.8vw, 1.125rem);
+  font-weight: var(--font-weight-light);
+  color: var(--text-secondary);
+  line-height: 1.8;
+  letter-spacing: 0.02em;
+}
+
+.products-page__grid-section {
+  padding: 0 0 var(--section-padding);
+  background: var(--white);
+}
+
+.products-page__filters {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem 0.75rem;
+  margin-bottom: clamp(2.25rem, 4.5vw, 3.5rem);
+}
+
+.products-page__filter-btn {
+  font-size: 0.625rem;
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--navy);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid transparent;
+  padding: 0.5rem 0.25rem;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.products-page__filter-btn:hover:not(.products-page__filter-btn--active) {
+  border-bottom-color: var(--border-strong);
+}
+
+.products-page__filter-btn--active {
+  color: var(--navy);
+  border-bottom-color: var(--navy);
+}
+
+.products-page__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 10px;
+}
+
+@media (min-width: 768px) {
+  .products-page__grid {
+    gap: clamp(2.5rem, 5vw, 4rem) clamp(1.5rem, 3vw, 2.5rem);
+  }
+}
+
+@media (min-width: 1024px) {
+  .products-page__grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: clamp(3rem, 5vw, 4.5rem) 2.5rem;
+  }
+}
+
+.products-page__grid--fade-in {
+  animation: productsGridIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes productsGridIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 639px) {
+  .products-page__filters {
+    justify-content: flex-start;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 0.5rem;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .products-page__filters::-webkit-scrollbar {
+    display: none;
+  }
+
+  .products-page__filter-btn {
+    flex-shrink: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .products-page__grid--fade-in {
+    animation: none;
+  }
+}

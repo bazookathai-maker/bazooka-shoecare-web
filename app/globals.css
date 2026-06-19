@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-night font-sans text-mist antialiased;
+  }
+
+  ::selection {
+    @apply bg-frost/25 text-signal;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@layer components {
+  .eyebrow {
+    @apply font-sans text-[11px] font-semibold uppercase tracking-mega text-steel;
+  }
+
+  .link-underline {
+    @apply relative inline-block after:absolute after:bottom-0 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-frost after:transition-transform after:duration-300 hover:after:scale-x-100;
+  }
+}

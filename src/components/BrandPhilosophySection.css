@@ -1,0 +1,78 @@
+.philosophy {
+  padding: var(--section-padding) 0;
+  background: linear-gradient(
+    180deg,
+    var(--white) 0%,
+    rgba(90, 107, 125, 0.06) 50%,
+    var(--white-pure) 100%
+  );
+}
+
+.philosophy__inner {
+  display: grid;
+  gap: clamp(3rem, 6vw, 5rem);
+}
+
+@media (min-width: 900px) {
+  .philosophy__inner {
+    grid-template-columns: 0.9fr 1.1fr;
+    align-items: start;
+    gap: clamp(3rem, 8vw, 6rem);
+  }
+}
+
+.philosophy__intro {
+  max-width: 420px;
+}
+
+.philosophy__lead {
+  margin-top: 1.25rem;
+  font-family: var(--font-family);
+  font-size: 1rem;
+  font-weight: var(--font-weight-light);
+  line-height: 1.8;
+  color: var(--text-secondary);
+  letter-spacing: 0.015em;
+}
+
+.philosophy__grid {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border-top: 1px solid var(--border);
+}
+
+.philosophy__pillar {
+  padding: clamp(1.75rem, 3vw, 2.25rem) 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.philosophy__pillar-label {
+  display: block;
+  font-family: var(--font-family);
+  font-size: 0.625rem;
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--letter-spacing-label);
+  text-transform: uppercase;
+  color: var(--muted-green);
+  margin-bottom: 0.75rem;
+}
+
+.philosophy__pillar-title {
+  font-family: var(--font-family);
+  font-size: 1.125rem;
+  font-weight: var(--font-weight-medium);
+  color: var(--blue-gray-dark);
+  letter-spacing: 0.02em;
+  margin-bottom: 0.5rem;
+}
+
+.philosophy__pillar-text {
+  font-family: var(--font-family);
+  font-size: 0.875rem;
+  font-weight: var(--font-weight-regular);
+  line-height: 1.75;
+  color: var(--text-secondary);
+  max-width: 36rem;
+}

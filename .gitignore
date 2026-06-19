@@ -1,0 +1,4 @@
+node_modules/
+dist/
+public/videos/reviews/*.mp4
+public/videos/articles/*.mp4

@@ -1,0 +1,122 @@
+.cinematic-video {
+  display: block;
+  padding: 0;
+  margin: 0;
+  margin-right: auto;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transform: translateX(clamp(-1rem, -3vw, -2.5rem));
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.cinematic-video:hover {
+  transform: translateX(clamp(-1rem, -3vw, -2.5rem)) scale(1.01);
+}
+
+.cinematic-video__frame {
+  position: relative;
+  display: block;
+  width: min(100%, clamp(240px, 42vw, 400px));
+  max-height: min(85vh, 820px);
+  line-height: 0;
+}
+
+.cinematic-video__el {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 9 / 16;
+  max-height: min(85vh, 820px);
+  object-fit: contain;
+  object-position: center;
+  border-radius: clamp(6px, 1.2vw, 12px);
+  background: #0e1628;
+  box-shadow:
+    0 24px 64px rgba(14, 22, 40, 0.14),
+    0 0 0 1px rgba(90, 107, 125, 0.1);
+  pointer-events: none;
+  vertical-align: top;
+}
+
+.cinematic-video__hint {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.cinematic-video__hint--flash {
+  animation: cinematicHintIn 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes cinematicHintIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.cinematic-video__hint-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  height: auto;
+  color: var(--white-pure);
+  border: none;
+  background: none;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.35));
+}
+
+.cinematic-video__hint--flash .cinematic-video__hint-icon {
+  animation: cinematicIconPop 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes cinematicIconPop {
+  0% {
+    transform: scale(0.88);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.cinematic-video__hint-icon svg {
+  display: block;
+  width: clamp(2.5rem, 7vw, 3.25rem);
+  height: clamp(2.5rem, 7vw, 3.25rem);
+  stroke-width: 1.35;
+}
+
+.cinematic-video__hint--play .cinematic-video__hint-icon svg {
+  margin-left: 0.25rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cinematic-video {
+    transition: none;
+  }
+
+  .cinematic-video:hover {
+    transform: translateX(clamp(-1rem, -3vw, -2.5rem));
+  }
+
+  .cinematic-video__hint--flash,
+  .cinematic-video__hint--flash .cinematic-video__hint-icon {
+    animation: none;
+  }
+}

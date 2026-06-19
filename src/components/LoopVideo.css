@@ -1,0 +1,64 @@
+.loop-video {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  background: var(--blue-gray-dark);
+}
+
+.loop-video--portrait {
+  aspect-ratio: 4 / 5;
+}
+
+.loop-video--wide {
+  aspect-ratio: 16 / 9;
+}
+
+.loop-video--cinematic {
+  aspect-ratio: 21 / 9;
+  max-height: min(52vh, 520px);
+}
+
+.loop-video__poster,
+.loop-video__el {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.loop-video__poster {
+  z-index: 0;
+  animation: loopPosterDrift 20s ease-in-out infinite alternate;
+}
+
+@keyframes loopPosterDrift {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.04);
+  }
+}
+
+.loop-video__el {
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 1s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.loop-video__el--ready {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loop-video__poster {
+    animation: none;
+  }
+
+  .loop-video__el {
+    opacity: 1;
+    transition: none;
+  }
+}

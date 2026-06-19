@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" viewBox="0 0 800 800" fill="none">
+  <defs>
+    <radialGradient id="a" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(520 260) rotate(90) scale(520 520)">
+      <stop stop-color="#8db4ff" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#8db4ff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="800" height="800" fill="#05070a"/>
+  <rect width="800" height="800" fill="url(#a)"/>
+  <ellipse cx="400" cy="430" rx="120" ry="170" stroke="#c9d4e3" stroke-opacity="0.14" stroke-width="2"/>
+  <path d="M320 520c80 40 160 60 240 60" stroke="#e8f1ff" stroke-opacity="0.10" stroke-width="2"/>
+</svg>

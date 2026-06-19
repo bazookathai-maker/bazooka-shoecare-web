@@ -1,0 +1,43 @@
+.recommended-page {
+  padding-top: 5rem;
+  background: var(--white-pure);
+}
+
+.recommended-page__hero {
+  padding: clamp(3.5rem, 8vw, 5rem) 0 clamp(2.5rem, 5vw, 3rem);
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+}
+
+.recommended-page__hero-inner {
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.recommended-page__title {
+  font-family: var(--font-family);
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: var(--font-weight-light);
+  letter-spacing: 0.04em;
+  color: var(--blue-gray-dark);
+  line-height: 1.15;
+}
+
+.recommended-page__subtitle {
+  margin-top: 1rem;
+  font-family: var(--font-family);
+  font-size: 1rem;
+  font-weight: var(--font-weight-light);
+  color: var(--text-secondary);
+  line-height: 1.75;
+  letter-spacing: 0.02em;
+}
+
+.recommended-page__grid-section {
+  padding: var(--section-padding) 0;
+  border-top: none;
+}
+
+.recommended-page__grid-section.featured-products {
+  background: var(--white-pure);
+}

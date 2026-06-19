@@ -1,0 +1,252 @@
+.reviews-featured {
+  padding: var(--section-padding) 0;
+  background: var(--gradient-premium);
+}
+
+.reviews-featured__header {
+  text-align: center;
+  max-width: 40rem;
+  margin: 0 auto clamp(3rem, 6vw, 4.5rem);
+}
+
+.reviews-featured__desc {
+  margin-top: 1.25rem;
+  font-size: clamp(1.0625rem, 2vw, 1.1875rem);
+  font-weight: var(--font-weight-light);
+  color: var(--text-secondary);
+  line-height: 1.8;
+}
+
+.reviews-featured__layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(2rem, 4vw, 2.75rem);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+@media (min-width: 900px) {
+  .reviews-featured__layout {
+    grid-template-columns: minmax(280px, 0.95fr) minmax(0, 1.15fr);
+    align-items: start;
+    gap: clamp(2.5rem, 4vw, 3.5rem);
+  }
+
+  .reviews-featured__media-col {
+    position: sticky;
+    top: clamp(5rem, 10vh, 7rem);
+  }
+}
+
+.reviews-featured__media-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.reviews-featured__video-wrap {
+  position: relative;
+  overflow: hidden;
+  border-radius: clamp(10px, 1.2vw, 14px);
+  background: var(--navy-deep);
+  box-shadow:
+    0 20px 48px rgba(28, 45, 69, 0.1),
+    0 0 0 1px rgba(28, 45, 69, 0.06);
+}
+
+.reviews-featured__video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  max-height: min(72vh, 560px);
+  object-fit: cover;
+  object-position: center;
+  opacity: 0;
+  transition: opacity 1s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.reviews-featured__video--ready {
+  opacity: 1;
+}
+
+@media (min-width: 900px) {
+  .reviews-featured__video {
+    aspect-ratio: 3 / 4;
+    max-height: 520px;
+  }
+}
+
+.reviews-featured__video-caption {
+  font-size: 0.625rem;
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.reviews-featured__list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1.25rem, 2.5vw, 1.75rem);
+}
+
+.reviews-featured__card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  background: var(--white-pure);
+  border-radius: clamp(10px, 1.2vw, 12px);
+  overflow: hidden;
+  box-shadow:
+    0 8px 28px rgba(28, 45, 69, 0.06),
+    0 0 0 1px rgba(28, 45, 69, 0.05);
+  transition:
+    transform 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (min-width: 560px) {
+  .reviews-featured__card {
+    grid-template-columns: minmax(140px, 38%) minmax(0, 1fr);
+  }
+}
+
+@media (hover: hover) {
+  .reviews-featured__card:hover {
+    transform: translateY(-3px);
+    box-shadow:
+      0 14px 36px rgba(28, 45, 69, 0.09),
+      0 0 0 1px rgba(107, 127, 110, 0.12);
+  }
+}
+
+.reviews-featured__card-visual {
+  position: relative;
+  min-height: 180px;
+  background: #f3f2f0;
+  overflow: hidden;
+}
+
+@media (min-width: 560px) {
+  .reviews-featured__card-visual {
+    min-height: 100%;
+  }
+}
+
+.reviews-featured__sneaker {
+  width: 100%;
+  height: 100%;
+  min-height: 180px;
+  object-fit: cover;
+  object-position: center;
+  filter: saturate(0.92) contrast(1.02);
+  transition: transform 0.85s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.reviews-featured__card:hover .reviews-featured__sneaker {
+  transform: scale(1.03);
+}
+
+.reviews-featured__avatar {
+  position: absolute;
+  left: clamp(0.875rem, 2vw, 1.125rem);
+  bottom: clamp(0.875rem, 2vw, 1.125rem);
+  width: clamp(3rem, 8vw, 3.5rem);
+  height: clamp(3rem, 8vw, 3.5rem);
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center top;
+  border: 2px solid var(--white-pure);
+  box-shadow: 0 6px 20px rgba(28, 45, 69, 0.18);
+  background: #ebe8e4;
+}
+
+.reviews-featured__card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: clamp(1.125rem, 2.5vw, 1.5rem);
+}
+
+.reviews-featured__identity {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.reviews-featured__name {
+  font-size: clamp(1.0625rem, 2vw, 1.1875rem);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0.02em;
+  color: var(--navy);
+  line-height: 1.25;
+}
+
+.reviews-featured__city {
+  margin-top: 0.2rem;
+  font-size: 0.75rem;
+  font-weight: var(--font-weight-light);
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+}
+
+.reviews-featured__tag {
+  flex-shrink: 0;
+  font-size: 0.5625rem;
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted-green-dark);
+  padding: 0.35rem 0.55rem;
+  background: rgba(107, 127, 110, 0.1);
+  border-radius: 2px;
+}
+
+.reviews-featured__usage {
+  font-size: 0.6875rem;
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0.08em;
+  color: var(--blue-gray);
+}
+
+.reviews__stars {
+  display: flex;
+  gap: 0.25rem;
+  color: var(--muted-green);
+}
+
+.reviews__stars svg {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+.reviews-featured__quote {
+  font-size: clamp(0.9375rem, 1.6vw, 1.0625rem);
+  font-weight: var(--font-weight-light);
+  line-height: 1.8;
+  color: var(--text-primary);
+  flex: 1;
+}
+
+.reviews-featured__cta {
+  margin-top: clamp(3rem, 6vw, 4.5rem);
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reviews-featured__card:hover {
+    transform: none;
+  }
+
+  .reviews-featured__card:hover .reviews-featured__sneaker {
+    transform: none;
+  }
+
+  .reviews-featured__video {
+    opacity: 1;
+    transition: none;
+  }
+}

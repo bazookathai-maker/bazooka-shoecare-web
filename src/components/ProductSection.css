@@ -1,0 +1,112 @@
+.product-section {
+  padding: var(--section-padding) 0;
+  background: var(--white-pure);
+}
+
+.product-section__header {
+  max-width: 36rem;
+  margin: 0 auto clamp(4rem, 8vw, 6rem);
+  text-align: center;
+}
+
+.product-section__desc {
+  margin-top: 1.5rem;
+  font-size: clamp(1.0625rem, 2vw, 1.1875rem);
+  font-weight: var(--font-weight-light);
+  color: var(--text-secondary);
+  line-height: 1.8;
+}
+
+.product-section__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(2rem, 4vw, 3rem);
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+  .product-section__grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(2.5rem, 4vw, 3.5rem);
+  }
+}
+
+.product-section__grid > * {
+  height: 100%;
+}
+
+.product-section__cta {
+  display: flex;
+  justify-content: center;
+  margin-top: clamp(3.5rem, 7vw, 5rem);
+}
+
+/* Essential care cards — calm premium hover (home only) */
+.product-section .product-card--bottle {
+  border-radius: 2px;
+  box-shadow: 0 2px 16px rgba(28, 45, 69, 0.04);
+  transition:
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.product-section .product-card--bottle:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 14px 40px rgba(28, 45, 69, 0.09);
+}
+
+.product-section .product-card--bottle .product-card__image {
+  transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.product-section .product-card--bottle:hover .product-card__image {
+  transform: scale(1.04);
+}
+
+.product-section .product-card__use-case {
+  margin: 0;
+  font-size: 0.6875rem;
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted-green-dark);
+  line-height: 1.5;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transform: translateY(4px);
+  transition:
+    opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+    max-height 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.product-section .product-card--bottle:hover .product-card__use-case {
+  max-height: 2.5rem;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-section .product-card--bottle,
+  .product-section .product-card--bottle .product-card__image,
+  .product-section .product-card__use-case {
+    transition: none;
+  }
+
+  .product-section .product-card--bottle:hover {
+    transform: none;
+    box-shadow: 0 2px 16px rgba(28, 45, 69, 0.04);
+  }
+
+  .product-section .product-card--bottle:hover .product-card__image {
+    transform: none;
+  }
+
+  .product-section .product-card--bottle .product-card__use-case {
+    max-height: none;
+    opacity: 1;
+    transform: none;
+  }
+}

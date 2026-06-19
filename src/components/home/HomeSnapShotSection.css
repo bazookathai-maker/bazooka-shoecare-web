@@ -1,0 +1,49 @@
+/* Snap Shot — fullscreen editorial pause */
+.home-snap {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  min-height: clamp(420px, 70vh, 720px);
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--navy-deep);
+}
+
+.home-snap__frame {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.home-snap__media {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -9%;
+  width: 100%;
+  height: 118%;
+  object-fit: cover;
+  object-position: center;
+  will-change: transform;
+  filter: saturate(0.96) contrast(1.02);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-snap__media {
+    top: 0;
+    height: 100%;
+    will-change: auto;
+  }
+}
+
+@media (max-width: 767px) {
+  .home-snap {
+    min-height: clamp(360px, 62vh, 560px);
+  }
+
+  .home-snap__media {
+    top: -6%;
+    height: 112%;
+  }
+}

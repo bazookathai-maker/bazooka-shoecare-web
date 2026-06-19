@@ -1,0 +1,178 @@
+/* Mobile layout — scaled-down desktop feel */
+
+:root {
+  --mobile-carousel-gap: 12px;
+  --mobile-carousel-card: min(86vw, 320px);
+  --mobile-carousel-inset: clamp(1.25rem, 4vw, 1.5rem);
+  --mobile-product-grid-gap: 12px;
+}
+
+@media (max-width: 767px) {
+  /* ─── Touch swipe carousels ─── */
+  .mobile-slider {
+    touch-action: pan-x;
+  }
+
+  .articles-carousel__viewport,
+  .home-reviews__viewport,
+  .home-our-products__viewport,
+  .reviews-page__carousel-viewport,
+  .pdp__cleaning-grid {
+    scroll-behavior: smooth;
+    touch-action: pan-x;
+  }
+
+  .article-card__video,
+  .article-card__video--has-media {
+    touch-action: pan-x;
+  }
+
+  /* ─── Non-product carousels (PDP gallery) ─── */
+  .pdp__cleaning-grid {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+    gap: var(--mobile-carousel-gap);
+    width: 100vw;
+    max-width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    padding-left: var(--mobile-carousel-inset);
+    padding-right: var(--mobile-carousel-inset);
+    padding-bottom: 0.25rem;
+  }
+
+  .pdp__cleaning-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .pdp__cleaning-grid > li {
+    flex: 0 0 var(--mobile-carousel-card);
+    width: var(--mobile-carousel-card);
+    max-width: var(--mobile-carousel-card);
+    scroll-snap-align: start;
+  }
+
+  .article-card,
+  .reviews-page__google-card {
+    height: 100%;
+  }
+
+  /* ─── Product grids — 2 columns, desktop scaled down ─── */
+  .products-page__grid,
+  .featured-products__grid,
+  .pdp__recommended-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--mobile-product-grid-gap);
+    width: 100%;
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 0;
+    padding-right: 0;
+    overflow: visible;
+  }
+
+  .products-page__grid {
+    gap: var(--mobile-product-grid-gap) 10px;
+  }
+
+  .pdp__recommended-grid > * {
+    min-width: 0;
+  }
+
+  /* ─── Cover images — show full frame ─── */
+  .contact-page__figure {
+    background: #f3f2f0;
+  }
+
+  .contact-page__image {
+    object-fit: contain;
+    object-position: center;
+  }
+
+  /* ─── Product & showcase imagery ─── */
+  .featured-products__card {
+    min-height: auto;
+  }
+
+  .featured-products__media {
+    aspect-ratio: auto;
+    height: 120px;
+    max-height: 120px;
+  }
+
+  .featured-products__image {
+    object-fit: contain;
+    object-position: center;
+    width: 100%;
+    height: 100%;
+    max-height: 108px;
+    padding: 6px;
+  }
+
+  .featured-products__card:hover .featured-products__image {
+    transform: none;
+  }
+
+  .featured-products__info {
+    padding: 8px 8px 6px;
+    gap: 0.2rem;
+  }
+
+  .featured-products__name {
+    font-size: 0.8125rem;
+    line-height: 1.3;
+    min-height: auto;
+  }
+
+  .featured-products__description {
+    font-size: 0.6875rem;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .featured-products__price {
+    font-size: 0.6875rem;
+    padding-top: 0.15rem;
+    margin-top: 0.1rem;
+  }
+
+  .featured-products__card .add-to-cart {
+    font-size: 0.6875rem;
+    padding: 8px 10px;
+    margin: 0 8px 8px;
+    letter-spacing: 0.05em;
+  }
+
+  .product-gallery__main {
+    min-height: min(62vh, 520px);
+  }
+
+  .pdp__cleaning-item img {
+    object-fit: contain;
+    object-position: center;
+    background: var(--gray-soft);
+  }
+
+  .pdp__ba-figure img {
+    object-fit: contain;
+    object-position: center;
+  }
+
+  .home-reviews__video {
+    object-fit: contain;
+    object-position: center;
+  }
+}

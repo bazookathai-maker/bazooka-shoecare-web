@@ -1,0 +1,53 @@
+.add-to-cart {
+  display: block;
+  width: 100%;
+  margin-top: auto;
+  padding: 0.875rem 1rem;
+  font-family: var(--font-family);
+  font-size: 0.6875rem;
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--letter-spacing-button);
+  text-transform: uppercase;
+  color: var(--white-pure);
+  background: var(--blue-gray-dark);
+  border: 1px solid var(--blue-gray-dark);
+  transition:
+    color 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    background 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.add-to-cart:hover {
+  color: var(--white-pure);
+  background: var(--muted-green-dark);
+  border-color: var(--muted-green-dark);
+}
+
+.featured-products__card .add-to-cart {
+  border: 1px solid var(--blue-gray-dark);
+}
+
+.product-card .add-to-cart {
+  border: 1px solid var(--blue-gray-dark);
+}
+
+/* Flying product thumbnail */
+.cart-flyer {
+  border-radius: 2px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(61, 79, 95, 0.2);
+  background: var(--white-pure);
+}
+
+.cart-flyer img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cart-flyer {
+    display: none;
+  }
+}

@@ -1,0 +1,126 @@
+/* WHY BAZOOKA — thin icons, minimal type, spacious layout */
+
+.why-bazooka {
+  padding: clamp(5rem, 12vw, 9rem) 0;
+  background: var(--white-pure);
+  border-top: 1px solid var(--border);
+}
+
+.why-bazooka__inner {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(4rem, 10vw, 7.5rem);
+}
+
+.why-bazooka__header {
+  max-width: 36rem;
+}
+
+.why-bazooka__title.section-title {
+  font-size: clamp(2.25rem, 5.25vw, 3.5rem);
+  font-weight: var(--font-weight-light);
+  letter-spacing: 0.1em;
+}
+
+.why-bazooka__desc {
+  margin-top: clamp(1.5rem, 3vw, 2.25rem);
+  max-width: 30rem;
+  font-family: var(--font-family);
+  font-size: clamp(1.0625rem, 2vw, 1.25rem);
+  font-weight: var(--font-weight-light);
+  color: var(--text-secondary);
+  line-height: 1.85;
+  letter-spacing: 0.03em;
+}
+
+.why-bazooka__grid {
+  list-style: none;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(4rem, 9vw, 6.5rem);
+}
+
+@media (min-width: 640px) {
+  .why-bazooka__grid {
+    grid-template-columns: repeat(2, 1fr);
+    column-gap: clamp(3rem, 6vw, 5rem);
+    row-gap: clamp(4.5rem, 10vw, 7rem);
+  }
+}
+
+@media (min-width: 1100px) {
+  .why-bazooka__grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: clamp(3rem, 5vw, 4.5rem);
+  }
+}
+
+.why-bazooka__item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  padding: 0 clamp(0.25rem, 2vw, 1rem);
+  max-width: 18rem;
+}
+
+@media (min-width: 1100px) {
+  .why-bazooka__item {
+    max-width: none;
+    padding-right: clamp(1.25rem, 2.5vw, 2.25rem);
+  }
+
+  .why-bazooka__item:not(:last-child) {
+    border-right: 1px solid var(--border);
+  }
+}
+
+.why-bazooka__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 2.5rem;
+  height: 2.5rem;
+  margin-bottom: clamp(2rem, 4.5vw, 2.75rem);
+  color: var(--blue-gray);
+  flex-shrink: 0;
+}
+
+.why-bazooka__icon svg {
+  width: 1.75rem;
+  height: 1.75rem;
+  stroke-width: 1;
+}
+
+.why-bazooka__item-title {
+  font-family: var(--font-family);
+  font-size: clamp(0.8125rem, 1.75vw, 0.9375rem);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--blue-gray-dark);
+  margin-bottom: clamp(1.25rem, 3vw, 1.625rem);
+  line-height: 1.45;
+}
+
+.why-bazooka__text {
+  font-family: var(--font-family);
+  font-size: clamp(0.9375rem, 1.9vw, 1.0625rem);
+  font-weight: var(--font-weight-light);
+  line-height: 1.95;
+  color: var(--text-secondary);
+  letter-spacing: 0.025em;
+  max-width: 16.5rem;
+}
+
+@media (min-width: 640px) {
+  .why-bazooka__text {
+    max-width: 17.5rem;
+  }
+}
+
+@media (min-width: 1100px) {
+  .why-bazooka__text {
+    max-width: 15.5rem;
+  }
+}
