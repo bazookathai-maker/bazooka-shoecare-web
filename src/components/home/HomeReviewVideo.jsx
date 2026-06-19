@@ -15,6 +15,7 @@ export default function HomeReviewVideo({
   autoPlay = false,
   isActive = false,
   managedPlayback = false,
+  onUnavailable,
 }) {
   const wrapRef = useRef(null);
   const videoRef = useRef(null);
@@ -103,7 +104,10 @@ export default function HomeReviewVideo({
   const handleError = () => {
     if (fallback && activeSrc !== fallback) {
       setActiveSrc(fallback);
+      return;
     }
+
+    onUnavailable?.();
   };
 
   return (

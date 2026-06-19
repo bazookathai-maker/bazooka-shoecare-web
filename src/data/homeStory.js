@@ -319,14 +319,25 @@ export const lifestyleMotion = {
 };
 
 /** Homepage review videos — community row */
-export const homeReviewVideos = [
+const HOME_REVIEW_VIDEO_ALLOWLIST = new Set([
+  '/videos/reviews/review-1.mp4',
+  '/videos/reviews/review-2.mp4',
+  '/videos/reviews/review-3.mp4',
+  '/videos/reviews/review-4.mp4',
+  '/videos/reviews/review-6.mp4',
+]);
+
+const allHomeReviewVideos = [
   { src: '/videos/reviews/review-1.mp4', handle: '@bazooka.review', quote: 'รีวิวจากผู้ใช้จริง' },
   { src: '/videos/reviews/review-2.mp4', handle: '@bazooka.review', quote: 'รีวิวจากผู้ใช้จริง' },
   { src: '/videos/reviews/review-3.mp4', handle: '@bazooka.review', quote: 'รีวิวจากผู้ใช้จริง' },
   { src: '/videos/reviews/review-4.mp4', handle: '@bazooka.review', quote: 'รีวิวจากผู้ใช้จริง' },
-  { src: '/videos/reviews/review-5.mp4', handle: '@bazooka.review', quote: 'รีวิวจากผู้ใช้จริง' },
   { src: '/videos/reviews/review-6.mp4', handle: '@bazooka.review', quote: 'รีวิวจากผู้ใช้จริง' },
 ];
+
+export const homeReviewVideos = allHomeReviewVideos.filter((item) =>
+  HOME_REVIEW_VIDEO_ALLOWLIST.has(item.src),
+);
 
 /** Community reviews */
 export const communityReviewVideo = {
