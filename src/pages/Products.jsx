@@ -1,22 +1,18 @@
 import { useMemo, useState } from 'react';
-import { allProducts, PRODUCT_FILTER_TABS } from '../data/products';
+import { allProducts, PRODUCT_FILTER_TABS, matchesProductFilter } from '../data/products';
 import ProductCard from '../components/ProductCard';
 import ScrollReveal from '../components/ScrollReveal';
 import './Products.css';
 
 function getFilterCount(filterId) {
-  if (filterId === 'all') return allProducts.length;
-  return allProducts.filter((p) => p.filterCategory === filterId).length;
+  return allProducts.filter((product) => matchesProductFilter(product, filterId)).length;
 }
 
 export default function Products() {
   const [activeFilter, setActiveFilter] = useState('all');
 
   const filteredProducts = useMemo(() => {
-    if (activeFilter === 'all') return allProducts;
-    return allProducts.filter(
-      (product) => product.filterCategory === activeFilter,
-    );
+    return allProducts.filter((product) => matchesProductFilter(product, activeFilter));
   }, [activeFilter]);
 
   return (
@@ -24,12 +20,8 @@ export default function Products() {
       <header className="products-page__intro">
         <div className="container">
           <ScrollReveal className="products-page__intro-inner">
-            <p className="section-label">คอลเลกชัน</p>
-            <h1 className="section-title">ร้านดูแลรองเท้า</h1>
-            <p className="products-page__desc">
-              {allProducts.length} สูตรสำหรับทุกวัสดุและทุกโอกาส — ตั้งแต่ฟื้นฟูด่วน
-              จนถึงพิธีการปกป้องครบวงจร คัดสรร ไม่รก
-            </p>
+            <p className="section-label">COLLECTION</p>
+            <h1 className="section-title">BAZOOKA STORE</h1>
           </ScrollReveal>
         </div>
       </header>
@@ -44,18 +36,29 @@ export default function Products() {
             {PRODUCT_FILTER_TABS.map((tab) => {
               const count = getFilterCount(tab.id);
               const isActive = activeFilter === tab.id;
+              const isBestsellerTab = tab.id === 'bestsellers';
               return (
                 <button
                   key={tab.id}
                   type="button"
                   role="tab"
                   aria-selected={isActive}
-                  className={`products-page__filter-btn ${
-                    isActive ? 'products-page__filter-btn--active' : ''
-                  }`}
+                  className={`products-page__filter-btn${
+                    isActive ? ' products-page__filter-btn--active' : ''
+                  }${isBestsellerTab ? ' products-page__filter-btn--bestseller' : ''}`}
                   onClick={() => setActiveFilter(tab.id)}
                 >
-                  {tab.label} {count}
+                  {isBestsellerTab ? (
+                    <>
+                      <span className="products-page__filter-hot-badge">ขายดี</span>
+                      <span>{tab.label}</span>
+                      <span className="products-page__filter-count">{count}</span>
+                    </>
+                  ) : (
+                    <>
+                      {tab.label} {count}
+                    </>
+                  )}
                 </button>
               );
             })}

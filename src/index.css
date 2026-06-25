@@ -30,7 +30,7 @@
     var(--navy) 55%,
     #243a52 100%
   );
-  --font-family: 'Prompt', 'Noto Sans Thai', sans-serif;
+  --font-family: 'Noto Sans Thai', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   --font-family-display: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   --font-weight-light: 400;
   --font-weight-regular: 400;

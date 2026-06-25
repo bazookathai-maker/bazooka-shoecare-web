@@ -121,10 +121,7 @@ export default function HomeRecommendedPromotionSection() {
     <section className="home-top-picks" id="top-picks">
       <div className="container">
         <ScrollReveal className="home-top-picks__header">
-          <h2 className="home-top-picks__title">Top Picks</h2>
-          <p className="home-top-picks__subtitle">
-            สินค้าที่เราแนะนำสำหรับการดูแลรองเท้าคู่โปรดของคุณ
-          </p>
+          <h2 className="home-top-picks__title">TOP PRODUCT</h2>
         </ScrollReveal>
 
         <ScrollReveal as="ul" className="home-top-picks__grid" delay={70}>

@@ -277,10 +277,21 @@
   color: var(--text-secondary);
 }
 
+.reviews-page__platform-icon,
 .reviews-page__google-icon {
   flex-shrink: 0;
   width: 1.25rem;
   height: 1.25rem;
+}
+
+.reviews-page__tiktok-icon {
+  color: #000;
+}
+
+.reviews-page__shopee-icon {
+  display: block;
+  object-fit: contain;
+  border-radius: 50%;
 }
 
 .reviews-page__google-text {

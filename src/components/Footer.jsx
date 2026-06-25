@@ -7,7 +7,7 @@ export default function Footer() {
       <div className="container footer__inner">
         <div className="footer__brand">
           <span className="footer__logo">BAZOOKA</span>
-          <p className="footer__tagline">การดูแลรองเท้าสนีกเกอร์ระดับพรีเมียม</p>
+          <p className="footer__tagline">ดูแลรองเท้าคู่โปรด ได้ครบในเซตเดียว</p>
         </div>
 
         <nav className="footer__nav">
@@ -18,7 +18,7 @@ export default function Footer() {
             สินค้า
           </Link>
           <Link to="/recommended" className="footer__link">
-            สินค้าแนะนำ
+            TOP PRODUCT
           </Link>
           <Link to="/articles" className="footer__link">
             บทความ

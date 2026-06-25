@@ -1,14 +1,4 @@
-import { allProducts } from './products';
-
-/** Same 6 listing images as home featured section — copy text from matching shop products */
-const featuredImages = [
-  '/products/product-26.jpg.jpg',
-  '/products/product-8.jpg.png',
-  '/products/product-2.jpg.png',
-  '/products/product-11.jpg.png',
-  '/products/product-5.jpg.jpg',
-  '/products/product-23.jpg.PNG',
-];
+import { allProducts, BESTSELLER_LISTING_IMAGES } from './products';
 
 function pickShopProduct(image) {
   const product = allProducts.find((item) => item.image === image);
@@ -25,7 +15,7 @@ function pickShopProduct(image) {
   };
 }
 
-const curatedProducts = featuredImages.map(pickShopProduct);
+const curatedProducts = BESTSELLER_LISTING_IMAGES.map(pickShopProduct);
 
 export const featuredProductsList = curatedProducts.map((item, index) => ({
   id: item.id,

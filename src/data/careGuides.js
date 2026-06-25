@@ -132,6 +132,20 @@ export const careGuides = [
       { label: 'BAZOOKA คลีนเนอร์', image: '/products/product-5.jpg.jpg' },
     ],
   },
+  {
+    id: 'crocs-wash',
+    slug: 'crocs-wash',
+    topic: 'crocs-care',
+    title: 'HOW TO ซักรองเท้า CROCS',
+    summary:
+      'รองเท้า CROCS ทำความสะอาดได้ง่าย หากซักถูกวิธีจะช่วยรักษาสี รูปทรง และความสบายในการใส่ให้คงอยู่ได้นานขึ้น',
+    video: null,
+    products: [
+      { label: 'BAZOOKA คลีนเนอร์', image: '/products/product-5.jpg.jpg' },
+      { label: 'สเปรย์รีเฟรช', image: '/products/product-16.jpg.jpg' },
+      { label: 'ชุดครบเซ็ต BAZOOKA', image: '/products/product-27.jpg.jpg' },
+    ],
+  },
 ];
 
 export function getCareGuideBySlug(slug) {

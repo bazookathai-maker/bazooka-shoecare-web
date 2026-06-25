@@ -5,6 +5,7 @@ import HomeRecommendedPromotionSection from '../components/home/HomeRecommendedP
 import HomeHowToCareSection from '../components/home/HomeHowToCareSection';
 
 import HomeReviewsSection from '../components/home/HomeReviewsSection';
+import HomeFaqSection from '../components/home/HomeFaqSection';
 
 
 
@@ -21,6 +22,8 @@ export default function Home() {
       <HomeHowToCareSection />
 
       <HomeReviewsSection />
+
+      <HomeFaqSection ctaOnly />
 
     </main>
 

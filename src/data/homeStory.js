@@ -110,18 +110,24 @@ export const homeHowToCare = [
   {
     id: 'articles',
     title: 'บทความ',
-    subtitle: 'เคล็ดลับดูแลรองเท้าคู่โปรด',
-    cta: 'อ่านเพิ่มเติม',
+    subtitle: 'ตัวช่วยในการดูแลรองเท้าของคุณ',
+    cta: 'ดูบทความเพิ่มเติม',
     href: '/articles',
     slides: articleSlides,
   },
   {
     id: 'how-to',
     title: 'วิธีการใช้',
-    subtitle: 'เรียนรู้การใช้งานผลิตภัณฑ์ BAZOOKA',
+    subtitle: 'คู่มือการดูแลรองเท้า วิธีทำความสะอาด และวิธีใช้งานผลิตภัณฑ์ BAZOOKA',
     cta: 'ดูวิธีใช้',
     href: '/how-to',
     image: '/images/how-to/howto-step-1.png',
+  },
+  {
+    id: 'sneaker-care-guide',
+    title: 'SNEAKER CARE GUIDE',
+    cta: 'เปิดคู่มือ',
+    href: '/guides/sneaker-care-guide.pdf',
   },
 ];
 
@@ -328,11 +334,11 @@ const HOME_REVIEW_VIDEO_ALLOWLIST = new Set([
 ]);
 
 const allHomeReviewVideos = [
-  { src: '/videos/reviews/review-1.mp4', handle: '@bazooka.review', quote: 'รีวิวจากผู้ใช้จริง' },
-  { src: '/videos/reviews/review-2.mp4', handle: '@bazooka.review', quote: 'รีวิวจากผู้ใช้จริง' },
-  { src: '/videos/reviews/review-3.mp4', handle: '@bazooka.review', quote: 'รีวิวจากผู้ใช้จริง' },
-  { src: '/videos/reviews/review-4.mp4', handle: '@bazooka.review', quote: 'รีวิวจากผู้ใช้จริง' },
-  { src: '/videos/reviews/review-6.mp4', handle: '@bazooka.review', quote: 'รีวิวจากผู้ใช้จริง' },
+  { src: '/videos/reviews/review-1.mp4', handle: '@bazookashoecare' },
+  { src: '/videos/reviews/review-2.mp4', handle: '@bazookashoecare' },
+  { src: '/videos/reviews/review-3.mp4', handle: '@bazookashoecare' },
+  { src: '/videos/reviews/review-4.mp4', handle: '@bazookashoecare' },
+  { src: '/videos/reviews/review-6.mp4', handle: '@bazookashoecare' },
 ];
 
 export const homeReviewVideos = allHomeReviewVideos.filter((item) =>

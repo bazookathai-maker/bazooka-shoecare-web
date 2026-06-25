@@ -228,7 +228,7 @@ export default function ArticleCard({ guide, isActive = true, variant = 'carouse
         </div>
 
         <div className="article-card__video-wrap">
-          {guide.video ? (
+          {guide.video?.trim() ? (
             <ArticleCardVideo
               src={guide.video}
               title={guide.title}

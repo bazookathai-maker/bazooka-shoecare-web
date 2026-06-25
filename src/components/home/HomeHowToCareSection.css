@@ -78,6 +78,10 @@
   margin-top: var(--care-gap-block);
 }
 
+.home-how-to-care__block--howto > .home-how-to-care__intro {
+  margin-top: 1rem;
+}
+
 .home-how-to-care__block-title {
   margin: 0;
   font-size: clamp(1.25rem, 2.2vw, 1.625rem);
@@ -114,6 +118,57 @@
   object-fit: contain;
   object-position: center;
   image-rendering: auto;
+}
+
+.home-how-to-care__articles-cta {
+  display: flex;
+  justify-content: center;
+  margin-top: clamp(1.5rem, 3vw, 2rem);
+}
+
+.home-how-to-care__articles-link {
+  padding: 1.15rem clamp(1.75rem, 4vw, 3rem);
+  min-width: min(100%, 13.5rem);
+  font-size: clamp(0.75rem, 2vw, 0.8125rem);
+  letter-spacing: 0.1em;
+  text-transform: none;
+  text-align: center;
+  transition:
+    border-color 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    background 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    color 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (hover: hover) {
+  .home-how-to-care__articles-link:hover {
+    border-color: var(--muted-green-dark);
+    color: var(--muted-green-dark);
+    background: var(--white-pure);
+    box-shadow: 0 10px 26px rgba(28, 45, 69, 0.08);
+  }
+}
+
+.home-how-to-care__guide {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--care-gap-block);
+}
+
+.home-how-to-care__guide-link {
+  margin-top: 0;
+  padding: 1.15rem 3rem;
+  min-width: 13.5rem;
+  font-size: 0.8125rem;
+  letter-spacing: 0.1em;
+  text-transform: none;
+}
+
+.home-how-to-care__section-divider {
+  margin: clamp(1.25rem, 2vw, 1.875rem) 0 0;
+  padding: 0;
+  border: 0;
+  border-top: 1px solid var(--border);
 }
 
 /* Article — 2-slide premium slider */

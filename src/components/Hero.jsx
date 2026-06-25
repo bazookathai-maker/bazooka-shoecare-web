@@ -46,17 +46,14 @@ export default function Hero() {
 
       <div className="hero__content container">
         <div className="hero__copy">
-          <p className="hero__eyebrow">การดูแลรองเท้าพรีเมียม</p>
+          <p className="hero__eyebrow">Bazooka ผลิตภัณฑ์ดูแลรองเท้า สูตรจากญี่ปุ่น</p>
           <h1 className="hero__headline">
-            <span>รองเท้าพร้อม</span>
-            <span>ทุกวันของคุณ</span>
+            <span>ดูแลรองเท้าคู่โปรด</span>
+            <span>ได้ครบในเซตเดียว</span>
           </h1>
           <p className="hero__body hero__body--desktop">
             พิธีการดูแลที่ออกแบบสำหรับคู่ที่คุณใส่จริง — ทำความสะอาด ปกป้อง
             และฟื้นฟู สำหรับชีวิตในเมือง
-          </p>
-          <p className="hero__body hero__body--mobile">
-            ทำความสะอาด ปกป้อง และฟื้นฟูรองเท้าคู่โปรด สำหรับชีวิตในเมือง
           </p>
 
           <ul className="hero__stats" aria-label="จุดเด่นการดูแลรองเท้า">

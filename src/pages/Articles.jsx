@@ -111,9 +111,6 @@ export default function Articles() {
         <div className="container container--editorial">
           <ScrollReveal>
             <h1 className="articles-page__title">เรื่องราวการดูแลรองเท้า</h1>
-            <p className="articles-page__subtitle">
-              คู่มือดูแลรองเท้าคู่โปรดจาก BAZOOKA
-            </p>
           </ScrollReveal>
         </div>
       </header>

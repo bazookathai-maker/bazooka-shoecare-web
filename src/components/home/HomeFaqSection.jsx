@@ -1,5 +1,5 @@
 import { useId, useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import ScrollReveal from '../ScrollReveal';
 import { FaqRelatedArticles } from '../HubRelatedContent';
 import { homeFaqs } from '../../data/homeFaq';
@@ -58,20 +58,34 @@ function FaqItem({ faq, index, isOpen, onToggle }) {
   );
 }
 
-export default function HomeFaqSection() {
+export default function HomeFaqSection({ showViewAllCta = false, ctaOnly = false }) {
   const { hash } = useLocation();
   const [openIndex, setOpenIndex] = useState(null);
 
   useEffect(() => {
-    if (!hash?.startsWith('#faq-')) return;
+    if (ctaOnly || !hash?.startsWith('#faq-')) return;
     const faqId = hash.replace('#faq-', '');
     const index = homeFaqs.findIndex((item) => item.id === faqId);
     if (index >= 0) setOpenIndex(index);
-  }, [hash]);
+  }, [hash, ctaOnly]);
 
   const handleToggle = (index) => {
     setOpenIndex((current) => (current === index ? null : index));
   };
+
+  if (ctaOnly) {
+    return (
+      <section className="home-faq home-faq--cta-only" id="faq" aria-label="คำถามที่พบบ่อย">
+        <div className="container">
+          <ScrollReveal className="home-faq__cta-wrap" delay={70}>
+            <Link to="/faq" className="home-faq__cta-card">
+              ดูคำถามที่พบบ่อย
+            </Link>
+          </ScrollReveal>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="home-faq" id="faq" aria-labelledby="home-faq-title">
@@ -98,6 +112,14 @@ export default function HomeFaqSection() {
             ))}
           </div>
         </ScrollReveal>
+
+        {showViewAllCta ? (
+          <ScrollReveal className="home-faq__footer" delay={120}>
+            <Link to="/faq" className="btn-outline home-faq__view-all">
+              ดูคำถามที่พบบ่อยทั้งหมด
+            </Link>
+          </ScrollReveal>
+        ) : null}
       </div>
     </section>
   );

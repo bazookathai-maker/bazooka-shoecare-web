@@ -38,6 +38,9 @@ export default function ProductCard({
       )}
 
       <div className="product-card__media" ref={mediaRef}>
+        {product.isBestseller ? (
+          <span className="product-card__bestseller-badge">ขายดี</span>
+        ) : null}
         <span className="product-card__category">{product.category}</span>
         <div className="product-card__image-wrap">
           <img

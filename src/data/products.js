@@ -244,7 +244,17 @@ export const homeFeaturedProducts = [
   },
 ];
 
-/** Shop filter categories (27 products) — counts: 5 / 3 / 4 / 5 / 6 */
+/** Recommended / bestseller listings — shared with /recommended page */
+export const BESTSELLER_LISTING_IMAGES = [
+  '/products/product-26.jpg.jpg',
+  '/products/product-8.jpg.png',
+  '/products/product-2.jpg.png',
+  '/products/product-11.jpg.png',
+  '/products/product-5.jpg.jpg',
+  '/products/product-23.jpg.PNG',
+];
+
+/** Shop filter categories (27 products) — counts: 3 / 2 / 2 / 14 / 6 */
 const shopFilterCategories = [
   'cleaners', // 1 Organic Cleaner
   'kits', // 2 โปรจับคู่
@@ -258,8 +268,8 @@ const shopFilterCategories = [
   'kits', // 10 BAZOOKA Spray + Cleaner whiter
   'protectors', // 11 BAZOOKA สเปรย์
   'kits', // 12 BAZOOKA สเปรย์ 1 แถม 1 + CLEANER
-  'protectors', // 13 BAZOOKA spray + Midsole Protector
-  'protectors', // 14 BAZOOKA spray + Midsole whiter
+  'kits', // 13 BAZOOKA spray + Midsole Protector
+  'kits', // 14 BAZOOKA spray + Midsole whiter
   'cleaners', // 15 BAZOOKA Cleaner 2
   'refresh', // 16 Refresh Spray
   'brushes', // 17 แปรงพื้นรองเท้า
@@ -277,12 +287,19 @@ const shopFilterCategories = [
 
 export const PRODUCT_FILTER_TABS = [
   { id: 'all', label: 'ทั้งหมด' },
-  { id: 'cleaners', label: 'ทำความสะอาด' },
-  { id: 'protectors', label: 'ปกป้อง' },
-  { id: 'refresh', label: 'ฟื้นฟู' },
-  { id: 'brushes', label: 'อุปกรณ์' },
-  { id: 'kits', label: 'ชุดสุดคุ้ม' },
+  { id: 'bestsellers', label: 'สินค้าขายดี' },
+  { id: 'cleaners', label: 'Cleaner' },
+  { id: 'protectors', label: 'Protect' },
+  { id: 'refresh', label: 'Refresh' },
+  { id: 'kits', label: 'ครบเซต' },
+  { id: 'brushes', label: 'แปรง&ผ้า&ปากกา' },
 ];
+
+export function matchesProductFilter(product, filterId) {
+  if (filterId === 'all') return true;
+  if (filterId === 'bestsellers') return product.isBestseller;
+  return product.filterCategory === filterId;
+}
 
 /** Products page — listing artwork only (27 cards) */
 export const allProducts = productCatalog.map((item, index) => ({
@@ -291,6 +308,7 @@ export const allProducts = productCatalog.map((item, index) => ({
   image: listingImages[index],
   imageFit: 'contain',
   filterCategory: shopFilterCategories[index],
+  isBestseller: BESTSELLER_LISTING_IMAGES.includes(listingImages[index]),
   ...item,
 }));
 

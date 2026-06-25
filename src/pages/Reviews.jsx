@@ -61,7 +61,7 @@ function getCardScrollLeft(viewport, card) {
 function GoogleIcon() {
   return (
     <svg
-      className="reviews-page__google-icon"
+      className="reviews-page__platform-icon"
       viewBox="0 0 24 24"
       aria-hidden="true"
     >
@@ -82,6 +82,40 @@ function GoogleIcon() {
         d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
       />
     </svg>
+  );
+}
+
+function TikTokIcon() {
+  return (
+    <svg
+      className="reviews-page__platform-icon reviews-page__tiktok-icon"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path
+        fill="currentColor"
+        d="M16.6 5.82s.51.5 0 0A4.28 4.28 0 0 0 15.54 3h-3.09v12.4a2.59 2.59 0 0 1-2.59 2.5c-1.42 0-2.6-1.16-2.6-2.6 0-1.72 1.66-3.01 3.37-2.48V9.66c-3.45-.46-6.47 2.22-6.47 5.64 0 3.33 2.76 5.7 5.69 5.7 3.14 0 5.69-2.55 5.69-5.69V9.01a7.35 7.35 0 0 0 4.3 1.38V7.3a4.1 4.1 0 0 1-1-.48z"
+      />
+    </svg>
+  );
+}
+
+function ReviewSourceIcon({ source }) {
+  if (source === 'tiktok') return <TikTokIcon />;
+  if (source === 'shopee') return <ShopeeIcon />;
+  return <GoogleIcon />;
+}
+
+function ShopeeIcon() {
+  return (
+    <img
+      src="/images/icons/shopee.png"
+      alt=""
+      className="reviews-page__platform-icon reviews-page__shopee-icon"
+      width={20}
+      height={20}
+      decoding="async"
+    />
   );
 }
 
@@ -129,7 +163,14 @@ function ReviewerAvatar({ name, colorIndex, image }) {
   );
 }
 
-function GoogleReviewCard({ review, colorIndex }) {
+function getReviewSource(cardIndex, showSummary) {
+  const reviewIndex = showSummary ? cardIndex - 1 : cardIndex;
+  if (reviewIndex <= 1 || reviewIndex === 3 || reviewIndex === 5) return 'tiktok';
+  if (reviewIndex === 2 || reviewIndex === 4) return 'shopee';
+  return 'google';
+}
+
+function GoogleReviewCard({ review, colorIndex, source = 'google' }) {
   const images =
     Array.isArray(review.images) && review.images.length
       ? review.images
@@ -155,7 +196,7 @@ function GoogleReviewCard({ review, colorIndex }) {
             ) : null}
           </div>
         </div>
-        <GoogleIcon />
+        <ReviewSourceIcon source={source} />
       </div>
       <GoogleStars count={review.rating} />
       <p className="reviews-page__google-text">{review.text}</p>
@@ -387,7 +428,11 @@ function GoogleReviewsCarousel({ reviews, showSummary = false }) {
               aria-label={review ? `รีวิว ${index}` : 'สรุปคะแนนรีวิว'}
             >
               {review ? (
-                <GoogleReviewCard review={review} colorIndex={index} />
+                <GoogleReviewCard
+                  review={review}
+                  colorIndex={index}
+                  source={getReviewSource(index, showSummary)}
+                />
               ) : (
                 <RatingSummaryCard />
               )}
@@ -457,8 +502,7 @@ export default function Reviews() {
             <p className="section-label">ชุมชน</p>
             <h1 className="section-title">รีวิว</h1>
             <p className="reviews-page__lead">
-              เสียงจากคนที่ใช้ BAZOOKA ในชีวิตจริง — ประสบการณ์จริง
-              จากรองเท้าคู่โปรดของพวกเขา
+              ข้อความจากคนที่ใช้ BAZOOKA ในชีวิตจริง — ประสบการณ์จริง
             </p>
           </ScrollReveal>
         </div>

@@ -6,7 +6,7 @@ import './Header.css';
 const navLinks = [
   { to: '/', label: 'หน้าแรก' },
   { to: '/products', label: 'สินค้า' },
-  { to: '/recommended', label: 'สินค้าแนะนำ' },
+  { to: '/recommended', label: 'TOP PRODUCT' },
   { to: '/articles', label: 'บทความ' },
   { to: '/reviews', label: 'รีวิว' },
   { to: '/faq', label: 'FAQ' },

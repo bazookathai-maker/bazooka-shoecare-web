@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import ScrollReveal from '../ScrollReveal';
 import { homeHowToCare } from '../../data/homeStory';
 import './HomeHowToCareSection.css';
@@ -90,11 +91,31 @@ function ArticleBlock({ card }) {
         images={card.slides.map((slide) => slide.image)}
         slideLabel="บทความ"
       />
+      <div className="home-how-to-care__articles-cta">
+        <Link to={card.href} className="btn-outline home-how-to-care__articles-link">
+          {card.cta}
+        </Link>
+      </div>
     </div>
   );
 }
 
-function HowToBlock({ card }) {
+function GuideButton({ card }) {
+  return (
+    <div className="home-how-to-care__guide">
+      <a
+        href={card.href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="btn-outline home-how-to-care__guide-link"
+      >
+        {card.cta}
+      </a>
+    </div>
+  );
+}
+
+function HowToBlock({ card, guideCard }) {
   return (
     <div className="home-how-to-care__block home-how-to-care__block--howto">
       <CareBlockIntro card={card} />
@@ -106,41 +127,48 @@ function HowToBlock({ card }) {
           decoding="async"
         />
       </div>
+      {guideCard?.href ? (
+        <>
+          <GuideButton card={guideCard} />
+          <hr className="home-how-to-care__section-divider" aria-hidden="true" />
+        </>
+      ) : null}
     </div>
   );
 }
 
-function CareBlock({ card }) {
+function CareBlock({ card, guideCard }) {
   if (card.id === 'articles' && card.slides?.length) {
     return <ArticleBlock card={card} />;
   }
 
   if (card.id === 'how-to' && card.image) {
-    return <HowToBlock card={card} />;
+    return <HowToBlock card={card} guideCard={guideCard} />;
   }
 
   return null;
 }
 
 export default function HomeHowToCareSection() {
+  const guideCard = homeHowToCare.find((card) => card.id === 'sneaker-care-guide');
+
   return (
     <section className="home-how-to-care" id="how-to-care">
       <div className="container">
         <ScrollReveal className="home-how-to-care__header">
           <h2 className="home-how-to-care__title">HOW TO CARE</h2>
-          <p className="home-how-to-care__lead">
-            เรียนรู้การดูแลรองเท้าคู่โปรด ผ่านบทความ วิธีการใช้งาน และวิดีโอสาธิต
-          </p>
         </ScrollReveal>
 
         <ScrollReveal as="ul" className="home-how-to-care__grid" delay={70}>
-          {homeHowToCare.map((card, index) => (
+          {homeHowToCare
+            .filter((card) => card.id !== 'sneaker-care-guide')
+            .map((card, index) => (
             <li
               key={card.id}
               className="home-how-to-care__item"
               style={{ transitionDelay: `${index * 80}ms` }}
             >
-              <CareBlock card={card} />
+              <CareBlock card={card} guideCard={guideCard} />
             </li>
           ))}
         </ScrollReveal>

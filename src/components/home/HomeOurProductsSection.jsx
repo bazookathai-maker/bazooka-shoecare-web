@@ -330,13 +330,7 @@ export default function HomeOurProductsSection() {
     <section className="home-our-products" id="our-products">
       <div className="container">
         <ScrollReveal className="home-our-products__header">
-          <h2 className="home-our-products__title">Our Products</h2>
-          <p className="home-our-products__subtitle">
-            ระบบดูแลรองเท้าที่ครบทั้งทำความสะอาด ปกป้อง และฟื้นฟูความสดชื่น
-          </p>
-          <p className="home-our-products__hint">
-            ใช้ลูกศรเพื่อดูสินค้าเพิ่มเติม
-          </p>
+          <h2 className="home-our-products__title">OUR PRODUCTS</h2>
         </ScrollReveal>
 
         <ScrollReveal className="home-our-products__carousel" delay={70}>

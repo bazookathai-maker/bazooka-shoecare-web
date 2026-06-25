@@ -8,10 +8,7 @@ export default function Recommended() {
     <main className="recommended-page">
       <header className="recommended-page__hero">
         <div className="container recommended-page__hero-inner">
-          <h1 className="recommended-page__title">สินค้าแนะนำ</h1>
-          <p className="recommended-page__subtitle">
-            คัดสรรเซตยอดนิยมสำหรับการดูแลรองเท้าแบบครบขั้นตอน
-          </p>
+          <h1 className="recommended-page__title">TOP PRODUCT</h1>
         </div>
       </header>
 

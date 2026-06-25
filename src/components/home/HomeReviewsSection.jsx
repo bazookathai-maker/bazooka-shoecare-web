@@ -11,8 +11,7 @@ const reviewVideoClasses = {
   ready: 'home-reviews__video--ready',
 };
 
-const DEFAULT_HANDLE = '@bazooka.review';
-const DEFAULT_QUOTE = 'รีวิวจากผู้ใช้จริง';
+const DEFAULT_HANDLE = '@bazookashoecare';
 
 export default function HomeReviewsSection() {
   const [reviews, setReviews] = useState(homeReviewVideos);
@@ -38,7 +37,6 @@ export default function HomeReviewsSection() {
       <div className="container">
         <ScrollReveal className="home-reviews__header">
           <h2 className="home-reviews__title">REVIEWS</h2>
-          <p className="home-reviews__subtitle">เสียงจากผู้ใช้จริง</p>
         </ScrollReveal>
       </div>
 
@@ -97,7 +95,7 @@ export default function HomeReviewsSection() {
                         src={item.src}
                         fallback={item.fallback}
                         classes={reviewVideoClasses}
-                        ariaLabel={`รีวิวจากผู้ใช้จริง ${index + 1}`}
+                        ariaLabel={`วิดีโอรีวิว ${index + 1}`}
                         isActive={isActive}
                         managedPlayback
                         onUnavailable={() => removeReview(item.src)}
@@ -106,9 +104,6 @@ export default function HomeReviewsSection() {
                         {item.handle ?? DEFAULT_HANDLE}
                       </span>
                     </div>
-                    <p className="home-reviews__quote">
-                      &ldquo;{item.quote ?? DEFAULT_QUOTE}&rdquo;
-                    </p>
                   </button>
                 </li>
               );
