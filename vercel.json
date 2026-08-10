@@ -1,6 +1,14 @@
 {
   "rewrites": [
     {
+      "source": "/api/cart",
+      "destination": "/api/cart-proxy"
+    },
+    {
+      "source": "/api/cart/:path*",
+      "destination": "/api/cart-proxy?path=:path*"
+    },
+    {
       "source": "/((?!api/).*)",
       "destination": "/index.html"
     }

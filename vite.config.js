@@ -8,6 +8,7 @@ import {
   fetchAllWooProducts,
   fetchWooProductById,
 } from './server/wooProducts.js'
+import { proxyWooStoreCart } from './server/wooCartProxy.js'
 
 const WOO_ENV_KEYS = [
   'WOOCOMMERCE_URL',
@@ -16,8 +17,8 @@ const WOO_ENV_KEYS = [
 ]
 
 /**
- * DEV-only: handle /api/create-order and /api/products before the Store API `/api` proxy.
- * Mirrors Vercel serverless handlers using the same server modules.
+ * DEV-only: handle serverless routes before the leftover Store API `/api` proxy.
+ * Mirrors Vercel handlers using the same server modules.
  */
 function wooServerDevApi(env) {
   return {
@@ -118,6 +119,27 @@ function wooServerDevApi(env) {
           return
         }
 
+        if (path === '/api/cart' || path?.startsWith('/api/cart/')) {
+          try {
+            const subPath =
+              path === '/api/cart' ? '' : path.slice('/api/cart'.length)
+            await proxyWooStoreCart(req, res, subPath)
+          } catch (err) {
+            res.statusCode = Number(err?.status) || 500
+            res.setHeader('Content-Type', 'application/json; charset=utf-8')
+            res.setHeader('Cache-Control', 'no-store')
+            res.end(
+              JSON.stringify({
+                message:
+                  err instanceof Error
+                    ? err.message
+                    : 'คำสั่งตะกร้าไม่สำเร็จ',
+              }),
+            )
+          }
+          return
+        }
+
         next()
       })
     },
@@ -132,18 +154,16 @@ export default defineConfig(({ mode }) => {
     plugins: [wooServerDevApi(env), react()],
     server: {
       proxy: {
-        // Store API (cart). create-order + products are handled by middleware above.
+        // Leftover Store API paths (not products / create-order / cart).
         '/api': {
           target: 'https://bazookashoecare.com/wp-json/wc/store/v1',
           changeOrigin: true,
           secure: true,
-          // Keep Woo cookies usable on localhost so session stays consistent.
           cookieDomainRewrite: 'localhost',
           cookiePathRewrite: '/',
           rewrite: (path) => path.replace(/^\/api/, ''),
           configure: (proxy) => {
             proxy.on('proxyReq', (proxyReq) => {
-              // Avoid serving a stale empty cart from intermediary caches.
               proxyReq.setHeader('Cache-Control', 'no-cache')
               proxyReq.setHeader('Pragma', 'no-cache')
             })
@@ -157,11 +177,9 @@ export default defineConfig(({ mode }) => {
               delete proxyRes.headers['last-modified']
               delete proxyRes.headers['age']
 
-              // Browser must be able to read cart session headers.
               proxyRes.headers['access-control-expose-headers'] =
                 'Cart-Token, Nonce, X-WC-Store-API-Nonce, Authorization'
 
-              // Help browsers accept rewritten cookies on localhost.
               const setCookie = proxyRes.headers['set-cookie']
               if (setCookie) {
                 const cookies = Array.isArray(setCookie)

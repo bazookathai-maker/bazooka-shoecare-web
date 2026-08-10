@@ -4,30 +4,19 @@ const CART_TOKEN_STORAGE_KEY = 'bazooka_cart_token';
 const CART_NONCE_STORAGE_KEY = 'bazooka_cart_nonce';
 
 /**
- * Store API root:
- * - DEV: Vite proxy `/api` → Woo Store API
- * - PROD on bazooka host: same-origin `/wp-json/wc/store/v1` (no localhost, no Vite proxy)
- * - Override: VITE_WC_STORE_API_URL
+ * Store API root (cart / checkout session):
+ * Always same-origin `/api` so the browser never calls `/wp-json` on the Vercel host
+ * (that returns 403 / Failed to fetch).
+ * - DEV: Vite middleware/proxy → WordPress Store API
+ * - PROD: Vercel `/api/cart` rewrite → `/api/cart-proxy` → WordPress Store API
+ * - Override: VITE_WC_STORE_API_URL (public URL only — never secrets)
  */
 function resolveStoreApiRoot() {
   const fromEnv = import.meta.env.VITE_WC_STORE_API_URL;
   if (typeof fromEnv === 'string' && fromEnv.trim()) {
     return fromEnv.replace(/\/$/, '');
   }
-  if (import.meta.env.DEV) {
-    return '/api';
-  }
-  if (typeof window !== 'undefined') {
-    const host = window.location.hostname;
-    if (
-      host === 'bazookashoecare.com' ||
-      host === 'www.bazookashoecare.com' ||
-      host.endsWith('.bazookashoecare.com')
-    ) {
-      return `${window.location.origin}/wp-json/wc/store/v1`;
-    }
-  }
-  return 'https://bazookashoecare.com/wp-json/wc/store/v1';
+  return '/api';
 }
 
 const STORE_API_ROOT = resolveStoreApiRoot();
