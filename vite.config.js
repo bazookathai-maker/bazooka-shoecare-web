@@ -4,6 +4,10 @@ import {
   createWooCommerceOrder,
   readJsonBody,
 } from './server/wooCreateOrder.js'
+import {
+  fetchAllWooProducts,
+  fetchWooProductById,
+} from './server/wooProducts.js'
 
 const WOO_ENV_KEYS = [
   'WOOCOMMERCE_URL',
@@ -12,12 +16,12 @@ const WOO_ENV_KEYS = [
 ]
 
 /**
- * DEV-only: handle POST /api/create-order before the Store API `/api` proxy.
- * Mirrors Vercel serverless `api/create-order.js` using the same server module.
+ * DEV-only: handle /api/create-order and /api/products before the Store API `/api` proxy.
+ * Mirrors Vercel serverless handlers using the same server modules.
  */
-function createOrderDevApi(env) {
+function wooServerDevApi(env) {
   return {
-    name: 'create-order-dev-api',
+    name: 'woo-server-dev-api',
     configureServer(server) {
       for (const key of WOO_ENV_KEYS) {
         if (env[key]) process.env[key] = env[key]
@@ -25,44 +29,96 @@ function createOrderDevApi(env) {
 
       server.middlewares.use(async (req, res, next) => {
         const path = req.url?.split('?')[0]
-        if (path !== '/api/create-order') {
-          next()
+
+        if (path === '/api/create-order') {
+          res.setHeader('Cache-Control', 'no-store')
+          res.setHeader('Content-Type', 'application/json; charset=utf-8')
+
+          if (req.method === 'OPTIONS') {
+            res.statusCode = 204
+            res.end()
+            return
+          }
+
+          if (req.method !== 'POST') {
+            res.statusCode = 405
+            res.end(JSON.stringify({ message: 'Method Not Allowed' }))
+            return
+          }
+
+          try {
+            const payload = await readJsonBody(req)
+            const result = await createWooCommerceOrder(payload)
+            res.statusCode = 200
+            res.end(JSON.stringify(result))
+          } catch (err) {
+            const status = Number(err?.status) || 500
+            res.statusCode = status
+            res.end(
+              JSON.stringify({
+                message:
+                  err instanceof Error
+                    ? err.message
+                    : 'สร้างคำสั่งซื้อไม่สำเร็จ',
+                code: err?.data?.code || undefined,
+              }),
+            )
+          }
           return
         }
 
-        res.setHeader('Cache-Control', 'no-store')
-        res.setHeader('Content-Type', 'application/json; charset=utf-8')
+        if (path === '/api/products') {
+          res.setHeader('Cache-Control', 'no-store')
+          res.setHeader('Content-Type', 'application/json; charset=utf-8')
 
-        if (req.method === 'OPTIONS') {
-          res.statusCode = 204
-          res.end()
+          if (req.method === 'OPTIONS') {
+            res.statusCode = 204
+            res.end()
+            return
+          }
+
+          if (req.method !== 'GET') {
+            res.statusCode = 405
+            res.end(JSON.stringify({ message: 'Method Not Allowed' }))
+            return
+          }
+
+          try {
+            const url = new URL(req.url || '/', 'http://localhost')
+            const id = url.searchParams.get('id')
+
+            if (id) {
+              const product = await fetchWooProductById(id)
+              if (!product) {
+                res.statusCode = 404
+                res.end(
+                  JSON.stringify({ message: 'ไม่พบสินค้า', product: null }),
+                )
+                return
+              }
+              res.statusCode = 200
+              res.end(JSON.stringify({ product }))
+              return
+            }
+
+            const products = await fetchAllWooProducts()
+            res.statusCode = 200
+            res.end(JSON.stringify({ products }))
+          } catch (err) {
+            const status = Number(err?.status) || 500
+            res.statusCode = status
+            res.end(
+              JSON.stringify({
+                message:
+                  err instanceof Error ? err.message : 'โหลดสินค้าไม่สำเร็จ',
+                code: err?.data?.code || undefined,
+              }),
+            )
+          }
           return
         }
 
-        if (req.method !== 'POST') {
-          res.statusCode = 405
-          res.end(JSON.stringify({ message: 'Method Not Allowed' }))
-          return
-        }
-
-        try {
-          const payload = await readJsonBody(req)
-          const result = await createWooCommerceOrder(payload)
-          res.statusCode = 200
-          res.end(JSON.stringify(result))
-        } catch (err) {
-          const status = Number(err?.status) || 500
-          res.statusCode = status
-          res.end(
-            JSON.stringify({
-              message:
-                err instanceof Error
-                  ? err.message
-                  : 'สร้างคำสั่งซื้อไม่สำเร็จ',
-              code: err?.data?.code || undefined,
-            }),
-          )
-        }
+        next()
       })
     },
   }
@@ -73,10 +129,10 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
 
   return {
-    plugins: [createOrderDevApi(env), react()],
+    plugins: [wooServerDevApi(env), react()],
     server: {
       proxy: {
-        // Store API (cart/products). create-order is handled by middleware above.
+        // Store API (cart). create-order + products are handled by middleware above.
         '/api': {
           target: 'https://bazookashoecare.com/wp-json/wc/store/v1',
           changeOrigin: true,

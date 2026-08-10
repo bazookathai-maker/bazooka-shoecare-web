@@ -31,11 +31,11 @@ function resolveStoreApiRoot() {
 }
 
 const STORE_API_ROOT = resolveStoreApiRoot();
-const STORE_PRODUCTS_URL = `${STORE_API_ROOT}/products`;
 const STORE_CART_URL = `${STORE_API_ROOT}/cart`;
 const STORE_CHECKOUT_URL = `${STORE_API_ROOT}/checkout`;
-/** Same-origin serverless route — secrets never leave the server. */
+/** Same-origin serverless routes — secrets never leave the server. */
 const CREATE_ORDER_API_URL = '/api/create-order';
+const PRODUCTS_API_URL = '/api/products';
 
 export function getStoreApiRoot() {
   return STORE_API_ROOT;
@@ -845,13 +845,60 @@ export function mapStoreProductDetail(wooProduct) {
   };
 }
 
+/**
+ * Fetch one product via same-origin serverless `/api/products?id=`.
+ * Avoids browser → WordPress /wp-json (Vercel 403 on www).
+ */
 export async function fetchStoreProductById(productId) {
   const id = String(productId || '').trim();
   if (!id || !/^\d+$/.test(id)) {
     return null;
   }
 
-  const response = await fetch(`${STORE_PRODUCTS_URL}/${id}`, {
+  const response = await fetch(
+    `${PRODUCTS_API_URL}?id=${encodeURIComponent(id)}`,
+    {
+      cache: 'no-store',
+      headers: {
+        Accept: 'application/json',
+        'Cache-Control': 'no-cache',
+        Pragma: 'no-cache',
+      },
+    },
+  );
+
+  let data;
+  try {
+    data = await response.json();
+  } catch {
+    data = null;
+  }
+
+  if (response.status === 404) {
+    return null;
+  }
+
+  if (!response.ok) {
+    const message =
+      (data && typeof data.message === 'string' && data.message.trim()) ||
+      `โหลดสินค้าไม่สำเร็จ (${response.status})`;
+    throw new Error(message);
+  }
+
+  const product = data?.product;
+  if (!product || typeof product !== 'object' || Array.isArray(product)) {
+    throw new Error('รูปแบบข้อมูลสินค้าไม่ถูกต้อง');
+  }
+
+  return mapStoreProductDetail(product);
+}
+
+/**
+ * Fetch all published products via same-origin serverless `/api/products`.
+ * Count and order follow the API response (no local catalog / ID allowlist).
+ */
+export async function fetchStoreProducts() {
+  const response = await fetch(PRODUCTS_API_URL, {
     cache: 'no-store',
     headers: {
       Accept: 'application/json',
@@ -860,62 +907,26 @@ export async function fetchStoreProductById(productId) {
     },
   });
 
-  if (response.status === 404) {
-    return null;
+  let data;
+  try {
+    data = await response.json();
+  } catch {
+    data = null;
   }
 
   if (!response.ok) {
-    throw new Error(`โหลดสินค้าไม่สำเร็จ (${response.status})`);
+    const message =
+      (data && typeof data.message === 'string' && data.message.trim()) ||
+      `โหลดสินค้าไม่สำเร็จ (${response.status})`;
+    throw new Error(message);
   }
 
-  const data = await response.json();
-  if (!data || typeof data !== 'object' || Array.isArray(data)) {
+  const products = data?.products;
+  if (!Array.isArray(products)) {
     throw new Error('รูปแบบข้อมูลสินค้าไม่ถูกต้อง');
   }
 
-  return mapStoreProductDetail(data);
-}
-
-/**
- * Fetch all published products from WooCommerce Store API.
- * Count and order follow the API response (no local catalog / ID allowlist).
- */
-export async function fetchStoreProducts() {
-  const products = [];
-  let page = 1;
-  let totalPages = 1;
-
-  do {
-    const params = new URLSearchParams({
-      per_page: '100',
-      page: String(page),
-      status: 'publish',
-    });
-    const url = `${STORE_PRODUCTS_URL}?${params.toString()}`;
-    const response = await fetch(url, {
-      cache: 'no-store',
-      headers: {
-        Accept: 'application/json',
-        'Cache-Control': 'no-cache',
-        Pragma: 'no-cache',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`โหลดสินค้าไม่สำเร็จ (${response.status})`);
-    }
-
-    const data = await response.json();
-    if (!Array.isArray(data)) {
-      throw new Error('รูปแบบข้อมูลสินค้าไม่ถูกต้อง');
-    }
-
-    products.push(...data.map(mapStoreProduct));
-    totalPages = Number(response.headers.get('X-WP-TotalPages') || 1);
-    page += 1;
-  } while (page <= totalPages);
-
-  return products;
+  return products.map(mapStoreProduct);
 }
 
 function splitFullName(fullName) {

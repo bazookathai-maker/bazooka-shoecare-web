@@ -27,10 +27,18 @@ export function resolveWooRestOrdersUrl(wooUrl) {
   return `${raw}/wp-json/wc/v3/orders`;
 }
 
+const SENSITIVE_PLACEHOLDER = /^\[SENSITIVE]$/i;
+
+function cleanEnvValue(value) {
+  const raw = String(value || '').trim();
+  if (!raw || SENSITIVE_PLACEHOLDER.test(raw)) return '';
+  return raw;
+}
+
 function getServerCredentials() {
-  const url = String(process.env.WOOCOMMERCE_URL || '').trim();
-  const key = String(process.env.WOOCOMMERCE_CONSUMER_KEY || '').trim();
-  const secret = String(process.env.WOOCOMMERCE_CONSUMER_SECRET || '').trim();
+  const url = cleanEnvValue(process.env.WOOCOMMERCE_URL);
+  const key = cleanEnvValue(process.env.WOOCOMMERCE_CONSUMER_KEY);
+  const secret = cleanEnvValue(process.env.WOOCOMMERCE_CONSUMER_SECRET);
   return { url, key, secret };
 }
 
