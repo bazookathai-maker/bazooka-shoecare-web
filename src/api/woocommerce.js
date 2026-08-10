@@ -34,53 +34,16 @@ const STORE_API_ROOT = resolveStoreApiRoot();
 const STORE_PRODUCTS_URL = `${STORE_API_ROOT}/products`;
 const STORE_CART_URL = `${STORE_API_ROOT}/cart`;
 const STORE_CHECKOUT_URL = `${STORE_API_ROOT}/checkout`;
+/** Same-origin serverless route — secrets never leave the server. */
+const CREATE_ORDER_API_URL = '/api/create-order';
 
 export function getStoreApiRoot() {
   return STORE_API_ROOT;
 }
 
-/**
- * WooCommerce REST API v3 root (order create).
- * - DEV: Vite proxy `/wc-rest` unless VITE_WC_REST_URL is set
- * - PROD: requires VITE_WC_REST_URL pointing at a host that serves WordPress (not Vercel 403)
- */
-function resolveRestApiRoot() {
-  const fromEnv = import.meta.env.VITE_WC_REST_URL;
-  if (typeof fromEnv === 'string' && fromEnv.trim()) {
-    return fromEnv.replace(/\/$/, '');
-  }
-  if (import.meta.env.DEV) {
-    return '/wc-rest';
-  }
-  return '';
-}
-
-const REST_API_ROOT = resolveRestApiRoot();
-
-export function getRestApiRoot() {
-  return REST_API_ROOT;
-}
-
-function getRestCredentials() {
-  const key = String(import.meta.env.VITE_WC_CONSUMER_KEY || '').trim();
-  const secret = String(import.meta.env.VITE_WC_CONSUMER_SECRET || '').trim();
-  return { key, secret };
-}
-
+/** Always true for client — configuration lives on the server (WOOCOMMERCE_*). */
 export function isRestOrderConfigured() {
-  const { key, secret } = getRestCredentials();
-  return Boolean(REST_API_ROOT && key && secret);
-}
-
-function buildRestBasicAuthHeader() {
-  const { key, secret } = getRestCredentials();
-  if (!key || !secret) {
-    throw new Error(
-      'ยังไม่ได้ตั้งค่า WooCommerce REST API (VITE_WC_CONSUMER_KEY / VITE_WC_CONSUMER_SECRET)',
-    );
-  }
-  const token = btoa(`${key}:${secret}`);
-  return `Basic ${token}`;
+  return true;
 }
 
 /** Phase test gateways only — never Omise/card/PromptPay in this phase. */
@@ -1279,8 +1242,8 @@ function toRestAddress(address, { includeEmail = false } = {}) {
 }
 
 /**
- * Create a real WooCommerce order via REST API v3.
- * Does not process Omise/card/PromptPay — status pending, set_paid false.
+ * Create a WooCommerce order via same-origin serverless `/api/create-order`.
+ * Consumer key/secret stay on the server — never sent to the browser.
  */
 export async function createRestOrder({
   form,
@@ -1288,12 +1251,6 @@ export async function createRestOrder({
   shippingTotal = 0,
   paymentMethod = 'bacs',
 }) {
-  if (!REST_API_ROOT) {
-    throw new Error(
-      'ยังไม่ได้ตั้งค่า VITE_WC_REST_URL (หรือใช้ /wc-rest ในโหมดพัฒนา)',
-    );
-  }
-
   const method = resolveWooPaymentMethod(paymentMethod);
   if (!method) {
     throw new Error('วิธีชำระเงินทดสอบไม่ถูกต้อง (ใช้ bacs หรือ cod เท่านั้น)');
@@ -1317,37 +1274,22 @@ export async function createRestOrder({
   const { billing_address, shipping_address } =
     buildStoreAddressesFromForm(form);
 
-  const shippingCost = Number(shippingTotal);
-  const shippingLines =
-    Number.isFinite(shippingCost) && shippingCost > 0
-      ? [
-          {
-            method_id: 'flat_rate',
-            method_title: 'ค่าจัดส่ง',
-            total: shippingCost.toFixed(2),
-          },
-        ]
-      : [];
-
-  const body = {
-    payment_method: method,
-    payment_method_title: getTestPaymentMethodLabel(method),
-    set_paid: false,
-    status: 'pending',
+  const payload = {
+    paymentMethod: method,
     customer_note: String(form?.note || '').trim(),
     billing: toRestAddress(billing_address, { includeEmail: true }),
     shipping: toRestAddress(shipping_address),
     line_items: lineItems,
-    shipping_lines: shippingLines,
+    shippingTotal: Number(shippingTotal) || 0,
   };
 
   if (import.meta.env.DEV) {
-    console.log('[rest-order] POST', `${REST_API_ROOT}/orders`, {
-      payment_method: body.payment_method,
-      line_items: body.line_items,
-      shipping_lines: body.shipping_lines,
+    console.log('[create-order] POST', CREATE_ORDER_API_URL, {
+      paymentMethod: payload.paymentMethod,
+      line_items: payload.line_items,
+      shippingTotal: payload.shippingTotal,
       billing: {
-        ...body.billing,
+        ...payload.billing,
         first_name: '[set]',
         last_name: '[set]',
         address_1: '[set]',
@@ -1355,25 +1297,24 @@ export async function createRestOrder({
         phone: '[set]',
       },
       shipping: {
-        ...body.shipping,
+        ...payload.shipping,
         first_name: '[set]',
         last_name: '[set]',
         address_1: '[set]',
-        phone: body.shipping.phone ? '[set]' : '',
+        phone: payload.shipping.phone ? '[set]' : '',
       },
     });
   }
 
-  const response = await fetch(`${REST_API_ROOT}/orders`, {
+  const response = await fetch(CREATE_ORDER_API_URL, {
     method: 'POST',
     headers: {
       Accept: 'application/json',
       'Content-Type': 'application/json',
-      Authorization: buildRestBasicAuthHeader(),
       'Cache-Control': 'no-cache',
       Pragma: 'no-cache',
     },
-    body: JSON.stringify(body),
+    body: JSON.stringify(payload),
     cache: 'no-store',
   });
 
@@ -1385,12 +1326,10 @@ export async function createRestOrder({
   }
 
   if (import.meta.env.DEV) {
-    console.log('[rest-order] response', {
+    console.log('[create-order] response', {
       status: response.status,
-      order_id: data?.id ?? null,
-      order_number: data?.number ?? null,
-      order_status: data?.status ?? null,
-      code: data?.code ?? null,
+      order_id: data?.order?.order_id ?? null,
+      order_number: data?.order?.order_number ?? null,
       message: data?.message ?? null,
     });
   }
@@ -1402,21 +1341,13 @@ export async function createRestOrder({
     throw err;
   }
 
-  const orderId = data?.id;
-  if (orderId == null || orderId === '') {
-    const err = new Error('ไม่พบเลขที่คำสั่งซื้อจาก WooCommerce');
+  const order = data?.order;
+  if (!order?.order_id) {
+    const err = new Error('ไม่พบเลขที่คำสั่งซื้อจากเซิร์ฟเวอร์');
     err.status = response.status;
     err.data = data;
     throw err;
   }
 
-  return {
-    raw: data,
-    order: {
-      order_id: orderId,
-      order_key: data.order_key ?? null,
-      order_number: data.number != null ? String(data.number) : String(orderId),
-      status: data.status ?? null,
-    },
-  };
+  return { raw: data?.raw ?? data, order };
 }

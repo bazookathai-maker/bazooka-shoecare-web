@@ -7,7 +7,6 @@ import {
   createRestOrder,
   extractShippingPackages,
   getRestTestPaymentOptions,
-  isRestOrderConfigured,
   selectShippingRate,
   updateCartCustomer,
   validateCheckoutCustomerForm,
@@ -168,7 +167,6 @@ export default function Checkout() {
   }, []);
 
   const paymentOptions = getRestTestPaymentOptions();
-  const restConfigured = isRestOrderConfigured();
 
   useEffect(() => {
     if (hydrating || formHydrated) return;
@@ -420,14 +418,6 @@ export default function Checkout() {
 
     if (!items.length) {
       setError('ไม่มีสินค้าในตะกร้า');
-      setStatusMessage('');
-      return;
-    }
-
-    if (!restConfigured) {
-      setError(
-        'ยังไม่ได้ตั้งค่า WooCommerce REST API (VITE_WC_REST_URL / KEY / SECRET)',
-      );
       setStatusMessage('');
       return;
     }
@@ -850,12 +840,6 @@ export default function Checkout() {
 
           <section className="checkout__block">
             <h2 className="checkout__section-title">วิธีชำระเงิน (ทดสอบ)</h2>
-            {!restConfigured ? (
-              <p className="checkout__status" role="status">
-                ยังไม่ได้ตั้งค่า REST API — ใส่ VITE_WC_REST_URL /
-                VITE_WC_CONSUMER_KEY / VITE_WC_CONSUMER_SECRET ในไฟล์ .env
-              </p>
-            ) : null}
             <div
               className="checkout__payments"
               role="radiogroup"
@@ -913,7 +897,7 @@ export default function Checkout() {
           <button
             type="submit"
             className="checkout__submit btn-primary"
-            disabled={busy || !restConfigured || !items.length}
+            disabled={busy || !items.length}
           >
             {placingOrder ? 'กำลังยืนยันคำสั่งซื้อ...' : 'ยืนยันคำสั่งซื้อ'}
           </button>
