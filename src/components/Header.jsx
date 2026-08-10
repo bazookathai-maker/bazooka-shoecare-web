@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import SearchOverlay from './SearchOverlay';
+import MiniCart from './MiniCart';
 import './Header.css';
 
 const navLinks = [
   { to: '/', label: 'หน้าแรก' },
   { to: '/products', label: 'สินค้า' },
-  { to: '/recommended', label: 'TOP PRODUCT' },
   { to: '/articles', label: 'บทความ' },
   { to: '/reviews', label: 'รีวิว' },
   { to: '/faq', label: 'FAQ' },
@@ -41,6 +42,22 @@ function CartIcon() {
   );
 }
 
+function SearchIcon() {
+  return (
+    <svg
+      className="header__search-icon"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.25"
+      aria-hidden="true"
+    >
+      <circle cx="11" cy="11" r="6.25" />
+      <path d="M16 16l4 4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function getHeroScrollThreshold() {
   const hero = document.querySelector('.hero');
   if (!hero) return 0;
@@ -50,6 +67,8 @@ function getHeroScrollThreshold() {
 export default function Header() {
   const { pathname } = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
   const [pastHero, setPastHero] = useState(pathname !== '/');
   const { count, isBouncing, cartIconRef } = useCart();
   const isHome = pathname === '/';
@@ -74,70 +93,103 @@ export default function Header() {
 
   useEffect(() => {
     setMenuOpen(false);
+    setSearchOpen(false);
+    setCartOpen(false);
     setPastHero(pathname !== '/');
   }, [pathname]);
 
   const closeMenu = () => setMenuOpen(false);
-  const useHeroOverlay = isHome && !pastHero && !menuOpen;
+  const closeSearch = useCallback(() => setSearchOpen(false), []);
+  const closeCart = useCallback(() => setCartOpen(false), []);
+  const openSearch = () => {
+    setMenuOpen(false);
+    setCartOpen(false);
+    setSearchOpen(true);
+  };
+  const openCart = () => {
+    setMenuOpen(false);
+    setSearchOpen(false);
+    setCartOpen(true);
+  };
+  const useHeroOverlay = isHome && !pastHero && !menuOpen && !searchOpen && !cartOpen;
 
   return (
-    <header
-      className={[
-        'header',
-        useHeroOverlay ? 'header--overlay' : 'header--solid',
-        menuOpen ? 'header--open' : '',
-      ]
-        .filter(Boolean)
-        .join(' ')}
-    >
-      <div className="container header__inner">
-        <Link to="/" className="header__logo" onClick={closeMenu}>
-          BAZOOKA
-        </Link>
+    <>
+      <header
+        className={[
+          'header',
+          useHeroOverlay ? 'header--overlay' : 'header--solid',
+          menuOpen ? 'header--open' : '',
+        ]
+          .filter(Boolean)
+          .join(' ')}
+      >
+        <div className="container header__inner">
+          <Link to="/" className="header__logo" onClick={closeMenu}>
+            BAZOOKA
+          </Link>
 
-        <div className="header__end">
-          <nav className={`header__nav ${menuOpen ? 'header__nav--open' : ''}`}>
-            {navLinks.map(({ to, label }) => (
-              <Link
-                key={to}
-                to={to}
-                className={`header__link ${isActive(pathname, to) ? 'header__link--active' : ''}`}
-                onClick={closeMenu}
+          <div className="header__end">
+            <nav className={`header__nav ${menuOpen ? 'header__nav--open' : ''}`}>
+              {navLinks.map(({ to, label }) => (
+                <Link
+                  key={to}
+                  to={to}
+                  className={`header__link ${isActive(pathname, to) ? 'header__link--active' : ''}`}
+                  onClick={closeMenu}
+                >
+                  {label}
+                </Link>
+              ))}
+            </nav>
+
+            <div className="header__actions">
+              <button
+                type="button"
+                className="header__search"
+                aria-label="ค้นหา"
+                aria-expanded={searchOpen}
+                onClick={openSearch}
               >
-                {label}
-              </Link>
-            ))}
-          </nav>
+                <SearchIcon />
+              </button>
 
-          <div className="header__actions">
-            <Link
-              to="/checkout"
-              ref={cartIconRef}
-              className={`header__cart ${isBouncing ? 'header__cart--bounce' : ''}`}
-              aria-label={`ตะกร้าสินค้า ${count} ชิ้น`}
-              onClick={closeMenu}
-            >
-              <CartIcon />
-              {count > 0 && (
-                <span className="header__cart-badge" aria-hidden="true">
-                  {count > 99 ? '99+' : count}
-                </span>
-              )}
-            </Link>
+              <button
+                type="button"
+                ref={cartIconRef}
+                className={`header__cart ${isBouncing ? 'header__cart--bounce' : ''}`}
+                aria-label={`ตะกร้าสินค้า ${count} ชิ้น`}
+                aria-expanded={cartOpen}
+                onClick={() => {
+                  closeMenu();
+                  openCart();
+                }}
+              >
+                <CartIcon />
+                {count > 0 && (
+                  <span className="header__cart-badge" aria-hidden="true">
+                    {count > 99 ? '99+' : count}
+                  </span>
+                )}
+              </button>
 
-            <button
-              type="button"
-              className="header__toggle"
-              aria-expanded={menuOpen}
-              aria-label={menuOpen ? 'ปิดเมนู' : 'เปิดเมนู'}
-              onClick={() => setMenuOpen((open) => !open)}
-            >
-              <span className="header__toggle-bar" />
-              <span className="header__toggle-bar" />
-            </button>
+              <button
+                type="button"
+                className="header__toggle"
+                aria-expanded={menuOpen}
+                aria-label={menuOpen ? 'ปิดเมนู' : 'เปิดเมนู'}
+                onClick={() => setMenuOpen((open) => !open)}
+              >
+                <span className="header__toggle-bar" />
+                <span className="header__toggle-bar" />
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    </header>
+      </header>
+
+      <SearchOverlay open={searchOpen} onClose={closeSearch} />
+      <MiniCart open={cartOpen} onClose={closeCart} />
+    </>
   );
 }

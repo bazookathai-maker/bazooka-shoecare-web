@@ -1,7 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import ScrollReveal from '../ScrollReveal';
 import { homeHowToCare } from '../../data/homeStory';
+import {
+  buildHomeArticleSlides,
+  getCachedWpPosts,
+} from '../../utils/homeCatalog';
 import './HomeHowToCareSection.css';
 
 function CareImageSlider({ images, slideLabel }) {
@@ -21,10 +25,14 @@ function CareImageSlider({ images, slideLabel }) {
       <div className="home-how-to-care__slider-stage" aria-live="polite">
         {images.map((src, index) => (
           <img
-            key={src}
+            key={`${src}-${index}`}
             src={src}
             alt={`${slideLabel} ${index + 1}`}
-            className={index === activeIndex ? 'home-how-to-care__slider-image--active' : undefined}
+            className={
+              index === activeIndex
+                ? 'home-how-to-care__slider-image--active'
+                : undefined
+            }
             loading={index === 0 ? 'eager' : 'lazy'}
             decoding="async"
             hidden={index !== activeIndex}
@@ -38,7 +46,7 @@ function CareImageSlider({ images, slideLabel }) {
       >
         {images.map((src, index) => (
           <button
-            key={src}
+            key={`${src}-${index}`}
             type="button"
             className={`home-how-to-care__slider-dot${
               index === activeIndex ? ' home-how-to-care__slider-dot--active' : ''
@@ -50,7 +58,10 @@ function CareImageSlider({ images, slideLabel }) {
         ))}
       </div>
 
-      <div className="home-how-to-care__slider-nav" aria-label={`${slideLabel} navigation`}>
+      <div
+        className="home-how-to-care__slider-nav"
+        aria-label={`${slideLabel} navigation`}
+      >
         <button
           type="button"
           className="home-how-to-care__slider-arrow"
@@ -151,6 +162,32 @@ function CareBlock({ card, guideCard }) {
 
 export default function HomeHowToCareSection() {
   const guideCard = homeHowToCare.find((card) => card.id === 'sneaker-care-guide');
+  const [cards, setCards] = useState(homeHowToCare);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      try {
+        const posts = await getCachedWpPosts();
+        if (cancelled) return;
+
+        const slides = buildHomeArticleSlides(posts);
+        setCards((current) =>
+          current.map((card) =>
+            card.id === 'articles' ? { ...card, slides } : card,
+          ),
+        );
+      } catch {
+        // Keep placeholder slides from homeStory.
+      }
+    }
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <section className="home-how-to-care" id="how-to-care">
@@ -160,17 +197,17 @@ export default function HomeHowToCareSection() {
         </ScrollReveal>
 
         <ScrollReveal as="ul" className="home-how-to-care__grid" delay={70}>
-          {homeHowToCare
+          {cards
             .filter((card) => card.id !== 'sneaker-care-guide')
             .map((card, index) => (
-            <li
-              key={card.id}
-              className="home-how-to-care__item"
-              style={{ transitionDelay: `${index * 80}ms` }}
-            >
-              <CareBlock card={card} guideCard={guideCard} />
-            </li>
-          ))}
+              <li
+                key={card.id}
+                className="home-how-to-care__item"
+                style={{ transitionDelay: `${index * 80}ms` }}
+              >
+                <CareBlock card={card} guideCard={guideCard} />
+              </li>
+            ))}
         </ScrollReveal>
       </div>
     </section>

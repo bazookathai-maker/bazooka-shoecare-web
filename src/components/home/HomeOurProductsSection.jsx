@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import ScrollReveal from '../ScrollReveal';
-import { isDisplayOnlyProduct } from '../../data/productDetails';
-import { homeOurProducts } from '../../data/homeStory';
+import {
+  buildHomeGroupSlide,
+  buildHomeOurProducts,
+  getCachedStoreProducts,
+} from '../../utils/homeCatalog';
 import './HomeOurProductsSection.css';
 
 const MOBILE_CAROUSEL_QUERY = '(max-width: 768px)';
@@ -12,22 +15,41 @@ export default function HomeOurProductsSection() {
   const viewportRef = useRef(null);
   const scrollSyncTimerRef = useRef(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [pillarProducts, setPillarProducts] = useState(() =>
+    buildHomeOurProducts([]),
+  );
+  const [groupSlide, setGroupSlide] = useState(() => buildHomeGroupSlide([]));
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      try {
+        const products = await getCachedStoreProducts({ force: true });
+        if (!cancelled) {
+          setPillarProducts(buildHomeOurProducts(products));
+          setGroupSlide(buildHomeGroupSlide(products));
+        }
+      } catch {
+        if (!cancelled) {
+          setPillarProducts(buildHomeOurProducts([]));
+          setGroupSlide(buildHomeGroupSlide([]));
+        }
+      }
+    }
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const slides = useMemo(() => {
-    const productSlides = homeOurProducts.map((product) => ({
+    const productSlides = pillarProducts.map((product) => ({
       type: 'product',
       id: product.id,
       product,
     }));
-
-    const groupSlide = {
-      type: 'group',
-      id: 'complete-care-system',
-      title: 'Complete Care System',
-      text: 'ครบทุกขั้นตอนสำหรับการดูแลรองเท้าคู่โปรด',
-      image: '/products/product-27.jpg.jpg',
-      fallback: '/products/product-16.jpg.jpg',
-    };
 
     const shopSlide = {
       type: 'shop',
@@ -38,7 +60,7 @@ export default function HomeOurProductsSection() {
     };
 
     return [...productSlides, groupSlide, shopSlide];
-  }, []);
+  }, [pillarProducts, groupSlide]);
 
   const maxIndex = slides.length - 1;
 
@@ -238,9 +260,12 @@ export default function HomeOurProductsSection() {
           <div className="home-our-products__body">
             <h3 className="home-our-products__name">{product.name}</h3>
             <p className="home-our-products__benefit">
-              {product.benefit.split('\n').map((line) => (
-                <span key={line}>{line}</span>
-              ))}
+              {String(product.benefit || '')
+                .split('\n')
+                .filter(Boolean)
+                .map((line) => (
+                  <span key={line}>{line}</span>
+                ))}
             </p>
           </div>
         </>
@@ -253,17 +278,13 @@ export default function HomeOurProductsSection() {
           aria-hidden={!isActive}
           data-slide-index={index}
         >
-          {isDisplayOnlyProduct(product.slug) ? (
-            <div className={cardClassName}>{cardContent}</div>
-          ) : (
-            <Link
-              to={product.href}
-              className={cardClassName}
-              tabIndex={isActive ? 0 : -1}
-            >
-              {cardContent}
-            </Link>
-          )}
+          <Link
+            to={product.href || '/products'}
+            className={cardClassName}
+            tabIndex={isActive ? 0 : -1}
+          >
+            {cardContent}
+          </Link>
         </li>
       );
     }

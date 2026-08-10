@@ -14,9 +14,11 @@ import Reviews from './pages/Reviews';
 import Faq from './pages/Faq';
 import Contact from './pages/Contact';
 import Checkout from './pages/Checkout';
+import Cart from './pages/Cart';
 import OrderSuccess from './pages/OrderSuccess';
 import OrderStatus from './pages/OrderStatus';
 import TrackOrder from './pages/TrackOrder';
+import NotFound from './pages/NotFound';
 
 export default function App() {
   return (
@@ -36,10 +38,12 @@ export default function App() {
           <Route path="/reviews" element={<Reviews />} />
           <Route path="/faq" element={<Faq />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/order-success" element={<OrderSuccess />} />
           <Route path="/order-status/:orderId" element={<OrderStatus />} />
           <Route path="/track-order" element={<TrackOrder />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
         <Footer />
       </CartProvider>

@@ -1,10 +1,17 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import './ProductGallery.css';
 
 export default function ProductGallery({ images }) {
   const [activeIndex, setActiveIndex] = useState(0);
-  const active = images[activeIndex] ?? images[0];
-  const hasThumbs = images.length > 1;
+  const list = Array.isArray(images) ? images.filter((image) => image?.src) : [];
+  const active = list[activeIndex] ?? list[0];
+  const hasThumbs = list.length > 1;
+
+  useEffect(() => {
+    setActiveIndex(0);
+  }, [images]);
+
+  if (!active) return null;
 
   return (
     <div
@@ -14,16 +21,16 @@ export default function ProductGallery({ images }) {
         <img
           key={active.src}
           src={active.src}
-          alt={active.alt}
+          alt={active.alt || ''}
           className="product-gallery__main-img"
           decoding="async"
         />
       </figure>
 
-      {images.length > 1 && (
+      {hasThumbs ? (
         <ul className="product-gallery__thumbs" aria-label="ภาพสินค้า">
-          {images.map((image, index) => (
-            <li key={image.src}>
+          {list.map((image, index) => (
+            <li key={`${image.src}-${index}`}>
               <button
                 type="button"
                 className={`product-gallery__thumb ${
@@ -31,14 +38,14 @@ export default function ProductGallery({ images }) {
                 }`}
                 onClick={() => setActiveIndex(index)}
                 aria-label={`ดูภาพที่ ${index + 1}`}
-                aria-current={index === activeIndex}
+                aria-current={index === activeIndex ? 'true' : undefined}
               >
                 <img src={image.src} alt="" loading="lazy" decoding="async" />
               </button>
             </li>
           ))}
         </ul>
-      )}
+      ) : null}
     </div>
   );
 }

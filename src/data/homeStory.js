@@ -1,6 +1,6 @@
 /** Homepage storytelling content & media */
 export const homeHero = {
-  poster: '/herojpg.png',
+  poster: '/hero.jpg',
   video: '/videos/hero-loop.mp4',
 };
 
@@ -179,7 +179,7 @@ export const problemCloseups = [
 
 export const problemLifestyle = {
   image: '/images/problem/lifestyle-moment.jpg',
-  fallback: '/herojpg.png',
+  fallback: '/hero.jpg',
   eyebrow: 'ชีวิตจริง',
   quote: 'รองเท้าที่คุณใส่ทุกวัน\nไม่เคยหยุดเดิน',
   detail:

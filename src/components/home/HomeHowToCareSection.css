@@ -1,11 +1,11 @@
-/* How To Care — natural-height editorial stack */
+﻿/* How To Care — natural-height editorial stack */
 .home-how-to-care {
   --care-content-max: 1120px;
   --care-media-max: 1000px;
   --care-media-max-height: 650px;
   --care-gap-block: 24px;
   --care-gap-sections: 40px;
-  padding: clamp(3rem, 6vw, 80px) 0;
+  padding: clamp(4.5rem, 9vw, 7rem) 0;
   background: transparent;
 }
 
@@ -266,7 +266,7 @@
 }
 
 .home-how-to-care__slider-arrow:hover:not(:disabled) {
-  border-color: rgba(107, 127, 110, 0.3);
+  border-color: rgba(28, 45, 69, 0.3);
   background: var(--white-pure);
   box-shadow: 0 14px 34px rgba(28, 45, 69, 0.11);
 }

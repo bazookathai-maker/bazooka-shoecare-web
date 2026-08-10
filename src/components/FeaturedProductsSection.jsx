@@ -1,9 +1,41 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { featuredProductsList } from '../data/featuredProducts';
+import { fetchStoreProducts } from '../api/woocommerce';
+import { buildHomeTopPicks } from '../utils/homeCatalog';
 import ShowcaseProductCard from './ShowcaseProductCard';
 import './FeaturedProductsSection.css';
 
 export default function FeaturedProductsSection({ showViewAll = true }) {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      setLoading(true);
+      try {
+        const live = await fetchStoreProducts();
+        if (!cancelled) {
+          setProducts(buildHomeTopPicks(live, 6));
+        }
+      } catch {
+        if (!cancelled) {
+          setProducts(buildHomeTopPicks([], 6));
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    }
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <section className="featured-products" id="featured-products">
       <div className="container">
@@ -14,9 +46,15 @@ export default function FeaturedProductsSection({ showViewAll = true }) {
           </p>
         </header>
 
+        {loading && products.length === 0 ? (
+          <p className="featured-products__status" role="status">
+            กำลังโหลดสินค้า...
+          </p>
+        ) : null}
+
         <ul className="featured-products__grid">
-          {featuredProductsList.map((product) => (
-            <li key={product.listId ?? product.id}>
+          {products.map((product) => (
+            <li key={product.id}>
               <ShowcaseProductCard product={product} />
             </li>
           ))}

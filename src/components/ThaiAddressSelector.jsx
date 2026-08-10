@@ -7,6 +7,15 @@ import {
 } from '../data/thaiAddress';
 import './ThaiAddressSelector.css';
 
+function FieldError({ id, message }) {
+  if (!message) return null;
+  return (
+    <p id={id} className="checkout__field-error" role="alert">
+      {message}
+    </p>
+  );
+}
+
 function SearchableCombobox({
   label,
   placeholder,
@@ -16,8 +25,11 @@ function SearchableCombobox({
   disabled = false,
   required = false,
   allowCustom = false,
+  error = '',
+  name,
 }) {
   const listId = useId();
+  const errorId = useId();
   const [query, setQuery] = useState(value || '');
   const [open, setOpen] = useState(false);
   const blurTimerRef = useRef(null);
@@ -82,7 +94,10 @@ function SearchableCombobox({
       <div className={`address-combobox${open ? ' address-combobox--open' : ''}`}>
         <input
           type="text"
-          className="checkout__input address-combobox__input"
+          name={name}
+          className={`checkout__input address-combobox__input${
+            error ? ' checkout__input--error' : ''
+          }`}
           value={query}
           onChange={(event) => {
             setQuery(event.target.value);
@@ -100,6 +115,8 @@ function SearchableCombobox({
           role="combobox"
           aria-expanded={open}
           aria-controls={listId}
+          aria-invalid={Boolean(error)}
+          aria-describedby={error ? errorId : undefined}
         />
         {open && !disabled ? (
           <ul id={listId} className="address-combobox__list" role="listbox">
@@ -126,11 +143,19 @@ function SearchableCombobox({
           </ul>
         ) : null}
       </div>
+      <FieldError id={errorId} message={error} />
     </label>
   );
 }
 
-export default function ThaiAddressSelector({ value, onChange }) {
+export default function ThaiAddressSelector({
+  value,
+  onChange,
+  disabled = false,
+  errors = {},
+}) {
+  const postalErrorId = useId();
+
   const handleProvinceChange = (province) => {
     onChange({
       province,
@@ -165,42 +190,52 @@ export default function ThaiAddressSelector({ value, onChange }) {
     <div className="thai-address">
       <SearchableCombobox
         label="จังหวัด"
+        name="province"
         placeholder="เลือกหรือค้นหาจังหวัด"
         value={value.province}
         searchFn={(query) => searchProvinces(query)}
         onChange={handleProvinceChange}
         required
+        disabled={disabled}
+        error={errors.province || ''}
       />
 
       <SearchableCombobox
         label="เขต/อำเภอ"
+        name="district"
         placeholder="เลือกหรือค้นหาเขต/อำเภอ"
         value={value.district}
         searchFn={(query) => searchDistricts(value.province, query)}
         onChange={handleDistrictChange}
-        disabled={!value.province}
+        disabled={disabled || !value.province}
         required
+        error={errors.district || ''}
       />
 
       <SearchableCombobox
         label="แขวง/ตำบล"
+        name="subdistrict"
         placeholder="เลือกหรือค้นหาแขวง/ตำบล"
         value={value.subdistrict}
         searchFn={(query) =>
           searchSubdistricts(value.province, value.district, query)
         }
         onChange={handleSubdistrictChange}
-        disabled={!value.district}
+        disabled={disabled || !value.district}
         required
+        error={errors.subdistrict || ''}
       />
 
       <SearchableCombobox
         label="ถนน"
+        name="street"
         placeholder="เช่น ถนนสุขุมวิท"
         value={value.street}
         searchFn={() => []}
         onChange={(street) => onChange({ street })}
         allowCustom
+        disabled={disabled}
+        error={errors.street || ''}
       />
 
       <label className="checkout__field thai-address__field">
@@ -213,9 +248,15 @@ export default function ThaiAddressSelector({ value, onChange }) {
           required
           inputMode="numeric"
           autoComplete="postal-code"
-          className="checkout__input"
+          className={`checkout__input${
+            errors.postalCode ? ' checkout__input--error' : ''
+          }`}
           placeholder="กรอกรหัสไปรษณีย์"
+          disabled={disabled}
+          aria-invalid={Boolean(errors.postalCode)}
+          aria-describedby={errors.postalCode ? postalErrorId : undefined}
         />
+        <FieldError id={postalErrorId} message={errors.postalCode} />
       </label>
     </div>
   );

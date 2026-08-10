@@ -1,8 +1,28 @@
+export const ARTICLE_CATEGORIES = [
+  { id: 'all', label: 'ทั้งหมด' },
+  { id: 'white-sneaker', label: 'รองเท้าสีขาว' },
+  { id: 'suede-care', label: 'หนังกลับ' },
+  { id: 'protector-spray', label: 'การปกป้อง' },
+  { id: 'running-shoes', label: 'รองเท้าวิ่ง' },
+  { id: 'deodorizer', label: 'ดับกลิ่น' },
+  { id: 'crocs-care', label: 'CROCS' },
+];
+
+const TOPIC_LABELS = Object.fromEntries(
+  ARTICLE_CATEGORIES.filter((item) => item.id !== 'all').map((item) => [
+    item.id,
+    item.label,
+  ]),
+);
+
 export const careGuides = [
   {
     id: 'white-canvas',
     slug: 'white-canvas',
     topic: 'white-sneaker',
+    category: TOPIC_LABELS['white-sneaker'],
+    publishedAt: '2025-11-12',
+    cover: '/products/cleaner-howto-1.jpg',
     title: 'ทำความสะอาดรองเท้าสีขาว\nใน 3 ขั้นตอน',
     summary:
       'รองเท้าสีขาวสวยตอนแรกซื้อ แต่พอใส่ไปสักพักก็เริ่มเหลือง เป็นรอยดำ แค่ทำความสะอาดให้ถูกวิธีก็กลับมาขาวสะอาดได้ใน 3 ขั้นตอนง่ายๆ',
@@ -23,6 +43,9 @@ export const careGuides = [
     id: 'suede-clean',
     slug: 'suede-clean',
     topic: 'suede-care',
+    category: TOPIC_LABELS['suede-care'],
+    publishedAt: '2025-10-28',
+    cover: '/products/product-23.jpg.PNG',
     title: 'วิธีทำความสะอาดรองเท้าหนังกลับ',
     summary:
       'รองเท้าหนังกลับ (Suede) เป็นวัสดุพรีเมียมที่ต้องการการดูแลเป็นพิเศษ เพราะเกิดคราบได้ง่ายและทำความสะอาดไม่เหมือนรองเท้าทั่วไป',
@@ -40,6 +63,9 @@ export const careGuides = [
     id: 'protect-refresh',
     slug: 'protect-refresh',
     topic: 'protector-spray',
+    category: TOPIC_LABELS['protector-spray'],
+    publishedAt: '2025-10-08',
+    cover: '/products/product-11.jpg.png',
     title: 'สเปรย์กันน้ำรองเท้า',
     summary:
       'สเปรย์กันน้ำรองเท้าช่วยเคลือบผิววัสดุ เพื่อป้องกันน้ำ คราบฝุ่น และของเหลวไม่ให้ซึมเข้าสู่เนื้อรองเท้า ช่วยลดการเกิดคราบ',
@@ -60,6 +86,9 @@ export const careGuides = [
     id: 'lazy-sneaker-care',
     slug: 'lazy-sneaker-care',
     topic: 'white-sneaker',
+    category: TOPIC_LABELS['white-sneaker'],
+    publishedAt: '2025-09-22',
+    cover: '/products/cleaner-howto-2.jpg',
     title: 'คืนชีพรองเท้าฉบับคนขี้เกียจ\nง่ายๆ 3 ขั้นตอน',
     summary:
       'หลายคนเป็นคนรักรองเท้า มีรองเท้าคู่โปรดที่ใส่บ่อย แต่พอใช้งานไปสักพักก็เริ่มมีคราบ ฝุ่น จนอยากทำความสะอาด แต่ก็ขี้เกียจซัก หรือไม่มีเวลามานั่งขัดรองเท้าทั้งคู่',
@@ -74,6 +103,9 @@ export const careGuides = [
     id: 'white-sneaker-restore',
     slug: 'white-sneaker-restore',
     topic: 'running-shoes',
+    category: TOPIC_LABELS['running-shoes'],
+    publishedAt: '2025-09-04',
+    cover: '/products/cleaner-howto-3.jpg',
     title: 'วิธีทำความสะอาดรองเท้าวิ่งใน 5 นาที',
     summary:
       'รองเท้าวิ่งต้องเจอกับเหงื่อและคราบสกปรกเป็นประจำ การดูแลอย่างถูกวิธีช่วยลดกลิ่นอับและยืดอายุการใช้งานได้ยาวนานขึ้น',
@@ -88,6 +120,9 @@ export const careGuides = [
     id: 'rain-wet-clean',
     slug: 'rain-wet-clean',
     topic: 'running-shoes',
+    category: TOPIC_LABELS['running-shoes'],
+    publishedAt: '2025-08-18',
+    cover: '/products/product-5.jpg.jpg',
     title: 'ทําความสะอาดรองเท้า ON CLOUD',
     summary:
       'รองเท้าวิ่ง ON CLOUD ควรทำความสะอาดอย่างถูกวิธี เพื่อช่วยรักษาความสะอาด ยืดอายุการใช้งาน และคงประสิทธิภาพการวิ่งได้ยาวนานขึ้น',
@@ -102,6 +137,9 @@ export const careGuides = [
     id: 'storage-odor-prevent',
     slug: 'storage-odor-prevent',
     topic: 'running-shoes',
+    category: TOPIC_LABELS['running-shoes'],
+    publishedAt: '2025-08-02',
+    cover: '/products/product-16.jpg.jpg',
     title: 'ทําความสะอาดรองเท้าสตั๊ด',
     summary:
       'รองเท้าสตั๊ดต้องเจอกับดิน โคลน และหญ้าอยู่เป็นประจำ การทำความสะอาดอย่างถูกวิธีจะช่วยรักษาสภาพรองเท้า ลดกลิ่นอับ และยืดอายุการใช้งานได้ยาวนานขึ้น',
@@ -119,6 +157,9 @@ export const careGuides = [
     id: 'shoe-deodorize',
     slug: 'shoe-deodorize',
     topic: 'deodorizer',
+    category: TOPIC_LABELS['deodorizer'],
+    publishedAt: '2025-07-15',
+    cover: '/products/product-25.jpg.jpg',
     title: 'วิธีดับกลิ่นรองเท้าอย่างถูกวิธี',
     summary:
       'สเปรย์ดับกลิ่นรองเท้าช่วยลดกลิ่นอับและความชื้นสะสมภายในรองเท้า ทำให้รองเท้าสดชื่น พร้อมใช้งานทุกวัน',
@@ -136,6 +177,9 @@ export const careGuides = [
     id: 'crocs-wash',
     slug: 'crocs-wash',
     topic: 'crocs-care',
+    category: TOPIC_LABELS['crocs-care'],
+    publishedAt: '2025-06-30',
+    cover: '/products/organic-cleaner.jpg.jpg',
     title: 'HOW TO ซักรองเท้า CROCS',
     summary:
       'รองเท้า CROCS ทำความสะอาดได้ง่าย หากซักถูกวิธีจะช่วยรักษาสี รูปทรง และความสบายในการใส่ให้คงอยู่ได้นานขึ้น',

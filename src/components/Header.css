@@ -1,7 +1,7 @@
 .header {
   --nav-text: #1c2d45;
   --nav-text-muted: rgba(28, 45, 69, 0.62);
-  --nav-accent: #6e8aa5;
+  --nav-accent: var(--navy);
   --nav-border: rgba(28, 45, 69, 0.08);
 
   position: fixed;
@@ -29,7 +29,8 @@
 
 .header--solid .header__logo,
 .header--solid .header__toggle,
-.header--solid .header__cart {
+.header--solid .header__cart,
+.header--solid .header__search {
   color: var(--nav-text);
   text-shadow: none;
 }
@@ -48,7 +49,8 @@
   background: var(--nav-accent);
 }
 
-.header--solid .header__cart:hover {
+.header--solid .header__cart:hover,
+.header--solid .header__search:hover {
   color: var(--nav-accent);
 }
 
@@ -68,7 +70,8 @@
 
 .header--overlay .header__logo,
 .header--overlay .header__toggle,
-.header--overlay .header__cart {
+.header--overlay .header__cart,
+.header--overlay .header__search {
   color: var(--white-pure);
   text-shadow: 0 1px 6px rgba(0, 0, 0, 0.25);
 }
@@ -87,7 +90,8 @@
   background: var(--nav-accent);
 }
 
-.header--overlay .header__cart:hover {
+.header--overlay .header__cart:hover,
+.header--overlay .header__search:hover {
   color: var(--nav-accent);
 }
 
@@ -120,6 +124,7 @@
   z-index: 2;
 }
 
+.header__search,
 .header__cart {
   position: relative;
   display: flex;
@@ -130,11 +135,23 @@
   padding: 0;
   background: transparent;
   border: none;
+  border-radius: var(--radius-sm);
   text-decoration: none;
   cursor: pointer;
-  transition: color 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: color 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow var(--transition-fast);
 }
 
+.header__search:focus-visible,
+.header__cart:focus-visible,
+.header__toggle:focus-visible,
+.header__link:focus-visible,
+.header__logo:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.header__search-icon,
 .header__cart-icon {
   width: 1.375rem;
   height: 1.375rem;
@@ -324,6 +341,7 @@
   .header--overlay.header--open .header__logo,
   .header--overlay.header--open .header__toggle,
   .header--overlay.header--open .header__cart,
+  .header--overlay.header--open .header__search,
   .header--overlay.header--open .header__link {
     color: var(--nav-text);
     text-shadow: none;
@@ -362,6 +380,7 @@
   .header__logo,
   .header__link,
   .header__cart,
+  .header__search,
   .header__toggle {
     transition: none;
   }

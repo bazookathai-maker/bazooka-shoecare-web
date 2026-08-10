@@ -30,6 +30,13 @@
   letter-spacing: 0.02em;
 }
 
+.featured-products__status {
+  margin: 0 0 1.25rem;
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
 .featured-products__grid {
   list-style: none;
   display: grid;

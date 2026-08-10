@@ -1,4 +1,4 @@
-.thai-address {
+﻿.thai-address {
   display: contents;
 }
 
@@ -50,7 +50,7 @@
 @media (hover: hover) {
   .address-combobox__option:hover,
   .address-combobox__option:focus-visible {
-    background: rgba(107, 127, 110, 0.08);
+    background: rgba(28, 45, 69, 0.08);
     outline: none;
   }
 }

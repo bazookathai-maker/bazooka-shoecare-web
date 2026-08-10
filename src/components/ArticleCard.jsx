@@ -51,11 +51,13 @@ function ProductRow({ label, image }) {
   const { addToCart } = useCart();
   const [added, setAdded] = useState(false);
   const shopProduct = useMemo(() => findProductByImage(image), [image]);
+  const canAdd =
+    shopProduct && Number.isFinite(Number(shopProduct.id));
 
   const handleAddToCart = async (event) => {
     event.preventDefault();
     event.stopPropagation();
-    if (!shopProduct) return;
+    if (!canAdd) return;
 
     const img =
       mediaRef.current?.querySelector('img') ?? mediaRef.current ?? null;
@@ -94,7 +96,7 @@ function ProductRow({ label, image }) {
           added ? ' article-card__product-cart--added' : ''
         }`}
         onClick={handleAddToCart}
-        disabled={!shopProduct}
+        disabled={!canAdd}
         aria-label={
           added
             ? `เพิ่ม ${label} ลงตะกร้าแล้ว`

@@ -1,4 +1,4 @@
-.reviews-featured {
+﻿.reviews-featured {
   padding: var(--section-padding) 0;
   background: var(--gradient-premium);
 }
@@ -118,7 +118,7 @@
     transform: translateY(-3px);
     box-shadow:
       0 14px 36px rgba(28, 45, 69, 0.09),
-      0 0 0 1px rgba(107, 127, 110, 0.12);
+      0 0 0 1px rgba(28, 45, 69, 0.12);
   }
 }
 
@@ -201,7 +201,7 @@
   text-transform: uppercase;
   color: var(--muted-green-dark);
   padding: 0.35rem 0.55rem;
-  background: rgba(107, 127, 110, 0.1);
+  background: rgba(28, 45, 69, 0.1);
   border-radius: 2px;
 }
 

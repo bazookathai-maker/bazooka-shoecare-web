@@ -1,19 +1,60 @@
-import { useMemo, useState } from 'react';
-import { allProducts, PRODUCT_FILTER_TABS, matchesProductFilter } from '../data/products';
+import { useEffect, useMemo, useState } from 'react';
+import { fetchStoreProducts } from '../api/woocommerce';
+import { PRODUCT_FILTER_TABS, matchesProductFilter } from '../data/products';
 import ProductCard from '../components/ProductCard';
 import ScrollReveal from '../components/ScrollReveal';
 import './Products.css';
 
-function getFilterCount(filterId) {
-  return allProducts.filter((product) => matchesProductFilter(product, filterId)).length;
-}
-
 export default function Products() {
   const [activeFilter, setActiveFilter] = useState('all');
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadProducts() {
+      setLoading(true);
+      setError('');
+
+      try {
+        const data = await fetchStoreProducts();
+        if (!cancelled) {
+          setProducts(data);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setProducts([]);
+          setError(
+            err instanceof Error
+              ? err.message
+              : 'ไม่สามารถโหลดสินค้าได้ กรุณาลองใหม่อีกครั้ง',
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadProducts();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const filteredProducts = useMemo(() => {
-    return allProducts.filter((product) => matchesProductFilter(product, activeFilter));
-  }, [activeFilter]);
+    return products.filter((product) =>
+      matchesProductFilter(product, activeFilter),
+    );
+  }, [products, activeFilter]);
+
+  const getFilterCount = (filterId) =>
+    products.filter((product) => matchesProductFilter(product, filterId))
+      .length;
 
   return (
     <main className="products-page">
@@ -34,7 +75,7 @@ export default function Products() {
             aria-label="กรองตามหมวดหมู่สินค้า"
           >
             {PRODUCT_FILTER_TABS.map((tab) => {
-              const count = getFilterCount(tab.id);
+              const count = loading ? 0 : getFilterCount(tab.id);
               const isActive = activeFilter === tab.id;
               const isBestsellerTab = tab.id === 'bestsellers';
               return (
@@ -47,6 +88,7 @@ export default function Products() {
                     isActive ? ' products-page__filter-btn--active' : ''
                   }${isBestsellerTab ? ' products-page__filter-btn--bestseller' : ''}`}
                   onClick={() => setActiveFilter(tab.id)}
+                  disabled={loading}
                 >
                   {isBestsellerTab ? (
                     <>
@@ -64,19 +106,37 @@ export default function Products() {
             })}
           </div>
 
-          <div
-            key={activeFilter}
-            className="products-page__grid products-page__grid--fade-in"
-          >
-            {filteredProducts.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                variant="compact"
-                linkToDetail={false}
-              />
-            ))}
-          </div>
+          {loading ? (
+            <p className="products-page__status" role="status">
+              กำลังโหลดสินค้า...
+            </p>
+          ) : null}
+
+          {error ? (
+            <p className="products-page__status products-page__status--error" role="alert">
+              {error}
+            </p>
+          ) : null}
+
+          {!loading && !error ? (
+            <div
+              key={activeFilter}
+              className="products-page__grid products-page__grid--fade-in"
+            >
+              {filteredProducts.length === 0 ? (
+                <p className="products-page__status">ไม่พบสินค้าในหมวดนี้</p>
+              ) : (
+                filteredProducts.map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    variant="compact"
+                    linkToDetail
+                  />
+                ))
+              )}
+            </div>
+          ) : null}
         </div>
       </section>
     </main>
