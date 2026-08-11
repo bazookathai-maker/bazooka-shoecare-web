@@ -4,6 +4,7 @@ import ThaiAddressSelector from '../components/ThaiAddressSelector';
 import { useCart } from '../context/CartContext';
 import {
   buildStoreAddressesFromForm,
+  createPromptPayCharge,
   createRestOrder,
   extractShippingPackages,
   getRestTestPaymentOptions,
@@ -467,6 +468,20 @@ export default function Checkout() {
         console.log('[rest-order] raw keys', raw && Object.keys(raw));
       }
 
+      let promptpay = null;
+      let promptpayError = '';
+      if (methodToUse === 'omise_promptpay') {
+        setStatusMessage('กำลังสร้าง QR พร้อมเพย์...');
+        try {
+          promptpay = await createPromptPayCharge(order.order_id);
+        } catch (qrErr) {
+          promptpayError =
+            qrErr instanceof Error
+              ? qrErr.message
+              : 'สร้าง QR พร้อมเพย์ไม่สำเร็จ';
+        }
+      }
+
       resetCartAfterOrder();
       setStatusMessage('');
       navigate('/order-success', {
@@ -477,6 +492,8 @@ export default function Checkout() {
           orderKey: order.order_key,
           orderStatus: order.status,
           paymentMethod: methodToUse,
+          promptpay,
+          promptpayError,
         },
       });
     } catch (err) {
@@ -869,8 +886,8 @@ export default function Checkout() {
               })}
             </div>
             <p className="checkout__payment-note">
-              รอบนี้สร้างออเดอร์ผ่าน WooCommerce REST API (ยังไม่ตัดเงิน /
-              ไม่ใช้ Omise)
+              โอนเงินและเก็บเงินปลายทางสร้างออเดอร์ทันที — พร้อมเพย์จะแสดง QR
+              หลังสร้างคำสั่งซื้อ (Omise Test Mode ยังไม่ตัดเงินจนกว่าจะจ่ายสำเร็จ)
             </p>
           </section>
 

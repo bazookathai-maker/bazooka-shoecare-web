@@ -9,11 +9,16 @@ import {
   fetchWooProductById,
 } from './server/wooProducts.js'
 import { proxyWooStoreCart } from './server/wooCartProxy.js'
+import {
+  createPromptPayForWooOrder,
+  handleOmiseWebhookEvent,
+} from './server/omisePromptPay.js'
 
 const WOO_ENV_KEYS = [
   'WOOCOMMERCE_URL',
   'WOOCOMMERCE_CONSUMER_KEY',
   'WOOCOMMERCE_CONSUMER_SECRET',
+  'OMISE_SECRET_KEY',
 ]
 
 /**
@@ -62,6 +67,81 @@ function wooServerDevApi(env) {
                     ? err.message
                     : 'สร้างคำสั่งซื้อไม่สำเร็จ',
                 code: err?.data?.code || undefined,
+              }),
+            )
+          }
+          return
+        }
+
+        if (path === '/api/create-promptpay') {
+          res.setHeader('Cache-Control', 'no-store')
+          res.setHeader('Content-Type', 'application/json; charset=utf-8')
+
+          if (req.method === 'OPTIONS') {
+            res.statusCode = 204
+            res.end()
+            return
+          }
+
+          if (req.method !== 'POST') {
+            res.statusCode = 405
+            res.end(JSON.stringify({ message: 'Method Not Allowed' }))
+            return
+          }
+
+          try {
+            const payload = await readJsonBody(req)
+            const result = await createPromptPayForWooOrder(
+              payload?.orderId ?? payload?.order_id,
+            )
+            res.statusCode = 200
+            res.end(JSON.stringify({ promptpay: result }))
+          } catch (err) {
+            const status = Number(err?.status) || 500
+            res.statusCode = status
+            res.end(
+              JSON.stringify({
+                message:
+                  err instanceof Error
+                    ? err.message
+                    : 'สร้าง QR พร้อมเพย์ไม่สำเร็จ',
+              }),
+            )
+          }
+          return
+        }
+
+        if (path === '/api/omise-webhook') {
+          res.setHeader('Cache-Control', 'no-store')
+          res.setHeader('Content-Type', 'application/json; charset=utf-8')
+
+          if (req.method === 'OPTIONS') {
+            res.statusCode = 204
+            res.end()
+            return
+          }
+
+          if (req.method !== 'POST') {
+            res.statusCode = 405
+            res.end(JSON.stringify({ message: 'Method Not Allowed' }))
+            return
+          }
+
+          try {
+            const event = await readJsonBody(req)
+            const result = await handleOmiseWebhookEvent(event)
+            res.statusCode = 200
+            res.end(JSON.stringify({ ok: true, ...result }))
+          } catch (err) {
+            const status = Number(err?.status) || 500
+            res.statusCode = status
+            res.end(
+              JSON.stringify({
+                ok: false,
+                message:
+                  err instanceof Error
+                    ? err.message
+                    : 'ประมวลผล webhook ไม่สำเร็จ',
               }),
             )
           }

@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
+import { getTestPaymentMethodLabel } from '../api/woocommerce';
 import './OrderPages.css';
 
 export default function OrderSuccess() {
@@ -11,6 +12,11 @@ export default function OrderSuccess() {
   const orderId = location.state?.orderId || null;
   const orderStatus = location.state?.orderStatus || '';
   const paymentMethod = location.state?.paymentMethod || '';
+  const promptpay = location.state?.promptpay || null;
+  const promptpayError = location.state?.promptpayError || '';
+  const paymentLabel = paymentMethod
+    ? getTestPaymentMethodLabel(paymentMethod)
+    : '';
 
   return (
     <main className="order-page">
@@ -50,10 +56,10 @@ export default function OrderSuccess() {
                   <span className="order-meta__value">{orderStatus}</span>
                 </div>
               ) : null}
-              {paymentMethod ? (
+              {paymentLabel ? (
                 <div className="order-meta__row" style={{ textAlign: 'center' }}>
                   <span className="order-meta__label">วิธีชำระเงิน</span>
-                  <span className="order-meta__value">{paymentMethod}</span>
+                  <span className="order-meta__value">{paymentLabel}</span>
                 </div>
               ) : null}
             </div>
@@ -64,9 +70,40 @@ export default function OrderSuccess() {
             </p>
           )}
 
-          <p className="order-success-card__text">
-            ทีมงานได้รับคำสั่งซื้อของคุณแล้วในระบบ WooCommerce
-          </p>
+          {promptpay?.qrImageUrl ? (
+            <div className="order-success-card__promptpay">
+              <p className="order-success-card__text">
+                สแกน QR พร้อมเพย์เพื่อชำระเงิน (Omise Test Mode)
+              </p>
+              <img
+                className="order-success-card__qr"
+                src={promptpay.qrImageUrl}
+                alt="QR พร้อมเพย์"
+              />
+              {promptpay.amount != null ? (
+                <p className="order-success-card__text">
+                  ยอดชำระ {Number(promptpay.amount).toLocaleString('th-TH')}{' '}
+                  {promptpay.currency || 'THB'}
+                </p>
+              ) : null}
+              <p className="order-success-card__text">
+                คำสั่งซื้อจะเป็น pending จนกว่า Omise จะยืนยันว่าชำระสำเร็จ
+              </p>
+            </div>
+          ) : null}
+
+          {promptpayError ? (
+            <p className="order-success-card__text" role="alert">
+              สร้างคำสั่งซื้อแล้ว แต่ยังสร้าง QR ไม่ได้: {promptpayError}
+            </p>
+          ) : null}
+
+          {!promptpay?.qrImageUrl && !promptpayError ? (
+            <p className="order-success-card__text">
+              ทีมงานได้รับคำสั่งซื้อของคุณแล้วในระบบ WooCommerce
+            </p>
+          ) : null}
+
           <div
             className="order-page__actions"
             style={{ justifyContent: 'center' }}

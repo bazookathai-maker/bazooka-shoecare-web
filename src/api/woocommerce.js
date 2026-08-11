@@ -24,6 +24,7 @@ const STORE_CART_URL = `${STORE_API_ROOT}/cart`;
 const STORE_CHECKOUT_URL = `${STORE_API_ROOT}/checkout`;
 /** Same-origin serverless routes — secrets never leave the server. */
 const CREATE_ORDER_API_URL = '/api/create-order';
+const CREATE_PROMPTPAY_API_URL = '/api/create-promptpay';
 const PRODUCTS_API_URL = '/api/products';
 
 export function getStoreApiRoot() {
@@ -35,12 +36,13 @@ export function isRestOrderConfigured() {
   return true;
 }
 
-/** Phase test gateways only — never Omise/card/PromptPay in this phase. */
-const TEST_PAYMENT_METHOD_PRIORITY = ['bacs', 'cod'];
+/** Checkout payment options (bacs/cod unchanged; PromptPay is Omise Test). */
+const TEST_PAYMENT_METHOD_PRIORITY = ['bacs', 'cod', 'omise_promptpay'];
 
 const TEST_PAYMENT_METHOD_LABELS = {
   bacs: 'โอนเงินผ่านธนาคาร',
   cod: 'เก็บเงินปลายทาง',
+  omise_promptpay: 'พร้อมเพย์ (ทดสอบ)',
 };
 
 /** Static test payment options for REST order create (does not depend on Store API). */
@@ -1253,7 +1255,9 @@ export async function createRestOrder({
 }) {
   const method = resolveWooPaymentMethod(paymentMethod);
   if (!method) {
-    throw new Error('วิธีชำระเงินทดสอบไม่ถูกต้อง (ใช้ bacs หรือ cod เท่านั้น)');
+    throw new Error(
+      'วิธีชำระเงินไม่ถูกต้อง (ใช้ bacs, cod หรือ omise_promptpay)',
+    );
   }
 
   const lineItems = (Array.isArray(items) ? items : [])
@@ -1350,4 +1354,48 @@ export async function createRestOrder({
   }
 
   return { raw: data?.raw ?? data, order };
+}
+
+/**
+ * Create Omise PromptPay QR for an existing Woo order.
+ * Server reads amount from Woo — client sends orderId only.
+ */
+export async function createPromptPayCharge(orderId) {
+  const id = String(orderId || '').trim();
+  if (!id) {
+    throw new Error('ไม่พบเลขที่คำสั่งซื้อสำหรับสร้าง QR พร้อมเพย์');
+  }
+
+  const response = await fetch(CREATE_PROMPTPAY_API_URL, {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      'Cache-Control': 'no-cache',
+      Pragma: 'no-cache',
+    },
+    body: JSON.stringify({ orderId: id }),
+    cache: 'no-store',
+  });
+
+  let data;
+  try {
+    data = await response.json();
+  } catch {
+    data = null;
+  }
+
+  if (!response.ok) {
+    throw new Error(
+      (data && typeof data.message === 'string' && data.message.trim()) ||
+        `สร้าง QR พร้อมเพย์ไม่สำเร็จ (${response.status})`,
+    );
+  }
+
+  const promptpay = data?.promptpay;
+  if (!promptpay?.qrImageUrl) {
+    throw new Error('ไม่พบรูป QR พร้อมเพย์จากเซิร์ฟเวอร์');
+  }
+
+  return promptpay;
 }

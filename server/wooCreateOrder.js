@@ -4,12 +4,16 @@
  * Never import this module from browser/client code.
  */
 
-const ALLOWED_PAYMENT_METHODS = new Set(['bacs', 'cod']);
+const ALLOWED_PAYMENT_METHODS = new Set(['bacs', 'cod', 'omise_promptpay']);
 
 const PAYMENT_TITLES = {
   bacs: 'โอนเงินผ่านธนาคาร',
   cod: 'เก็บเงินปลายทาง',
+  omise_promptpay: 'พร้อมเพย์ (Omise Test)',
 };
+
+export const OMISE_CHARGE_META_KEY = '_omise_charge_id';
+export const OMISE_PAID_META_KEY = '_omise_paid';
 
 function trimSlash(url) {
   return String(url || '').replace(/\/$/, '');
@@ -70,7 +74,9 @@ function toAddress(address, { includeEmail = false } = {}) {
 function buildOrderPayload(input) {
   const paymentMethod = String(input.paymentMethod || 'bacs').trim();
   if (!ALLOWED_PAYMENT_METHODS.has(paymentMethod)) {
-    const err = new Error('วิธีชำระเงินทดสอบไม่ถูกต้อง (ใช้ bacs หรือ cod เท่านั้น)');
+    const err = new Error(
+      'วิธีชำระเงินไม่ถูกต้อง (ใช้ bacs, cod หรือ omise_promptpay)',
+    );
     err.status = 400;
     throw err;
   }
@@ -183,6 +189,128 @@ export async function createWooCommerceOrder(input) {
       status: data.status ?? null,
     },
   };
+}
+
+function resolveWooRestBase(wooUrl) {
+  return resolveWooRestOrdersUrl(wooUrl).replace(/\/orders$/i, '');
+}
+
+function wooAuthHeader(key, secret) {
+  return `Basic ${Buffer.from(`${key}:${secret}`).toString('base64')}`;
+}
+
+function requireWooCredentials() {
+  const { url, key, secret } = getServerCredentials();
+  if (!url || !key || !secret) {
+    const err = new Error(
+      'ยังไม่ได้ตั้งค่า WooCommerce บนเซิร์ฟเวอร์ (WOOCOMMERCE_URL / KEY / SECRET)',
+    );
+    err.status = 500;
+    throw err;
+  }
+  return { url, key, secret };
+}
+
+async function parseJsonResponse(response) {
+  try {
+    return await response.json();
+  } catch {
+    return null;
+  }
+}
+
+export function getWooOrderMeta(order, key) {
+  const rows = Array.isArray(order?.meta_data) ? order.meta_data : [];
+  const row = rows.find((item) => item?.key === key);
+  return row?.value != null ? String(row.value) : '';
+}
+
+export function wooOrderAmountSatang(order) {
+  const major = Number(order?.total);
+  if (!Number.isFinite(major) || major < 0) return null;
+  return Math.round(major * 100);
+}
+
+export function wooOrderCurrency(order) {
+  return String(order?.currency || 'THB').trim().toLowerCase() || 'thb';
+}
+
+export function isWooOrderAlreadyPaid(order) {
+  const status = String(order?.status || '').toLowerCase();
+  if (status === 'processing' || status === 'completed') return true;
+  if (order?.date_paid) return true;
+  return getWooOrderMeta(order, OMISE_PAID_META_KEY) === 'yes';
+}
+
+async function wooRestRequest(path, { method = 'GET', body } = {}) {
+  const { url, key, secret } = requireWooCredentials();
+  const target = `${resolveWooRestBase(url)}${path.startsWith('/') ? path : `/${path}`}`;
+  const headers = {
+    Accept: 'application/json',
+    Authorization: wooAuthHeader(key, secret),
+    'Cache-Control': 'no-cache',
+    Pragma: 'no-cache',
+  };
+  if (body != null) headers['Content-Type'] = 'application/json';
+
+  const response = await fetch(target, {
+    method,
+    headers,
+    body: body != null ? JSON.stringify(body) : undefined,
+    cache: 'no-store',
+  });
+  const data = await parseJsonResponse(response);
+  if (!response.ok) {
+    const message =
+      (data && typeof data.message === 'string' && data.message.trim()) ||
+      `WooCommerce request failed (${response.status})`;
+    const err = new Error(message);
+    err.status = response.status;
+    err.data = data;
+    throw err;
+  }
+  return data;
+}
+
+export async function getWooOrderById(orderId) {
+  const id = String(orderId || '').trim();
+  if (!id || !/^\d+$/.test(id)) {
+    const err = new Error('รหัสคำสั่งซื้อไม่ถูกต้อง');
+    err.status = 400;
+    throw err;
+  }
+  try {
+    return await wooRestRequest(`/orders/${id}`);
+  } catch (err) {
+    if (err?.status === 404) {
+      const notFound = new Error('ไม่พบคำสั่งซื้อใน WooCommerce');
+      notFound.status = 404;
+      throw notFound;
+    }
+    throw err;
+  }
+}
+
+export async function updateWooOrder(orderId, payload) {
+  const id = String(orderId || '').trim();
+  return wooRestRequest(`/orders/${id}`, { method: 'PUT', body: payload });
+}
+
+export async function saveOmiseChargeIdOnOrder(orderId, chargeId) {
+  return updateWooOrder(orderId, {
+    meta_data: [{ key: OMISE_CHARGE_META_KEY, value: String(chargeId) }],
+  });
+}
+
+export async function markWooOrderPaidFromOmise(orderId, chargeId) {
+  return updateWooOrder(orderId, {
+    status: 'processing',
+    set_paid: true,
+    meta_data: [
+      { key: OMISE_CHARGE_META_KEY, value: String(chargeId) },
+      { key: OMISE_PAID_META_KEY, value: 'yes' },
+    ],
+  });
 }
 
 export async function readJsonBody(req) {
