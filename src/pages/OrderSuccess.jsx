@@ -4,16 +4,15 @@ import './OrderPages.css';
 
 export default function OrderSuccess() {
   const location = useLocation();
+  const search = new URLSearchParams(location.search);
   const orderNumber =
     location.state?.orderNumber ||
     location.state?.orderId ||
-    new URLSearchParams(location.search).get('orderNumber') ||
-    new URLSearchParams(location.search).get('orderId');
+    search.get('orderNumber') ||
+    search.get('orderId');
   const orderId = location.state?.orderId || null;
   const orderStatus = location.state?.orderStatus || '';
   const paymentMethod = location.state?.paymentMethod || '';
-  const promptpay = location.state?.promptpay || null;
-  const promptpayError = location.state?.promptpayError || '';
   const paymentLabel = paymentMethod
     ? getTestPaymentMethodLabel(paymentMethod)
     : '';
@@ -70,39 +69,15 @@ export default function OrderSuccess() {
             </p>
           )}
 
-          {promptpay?.qrImageUrl ? (
-            <div className="order-success-card__promptpay">
-              <p className="order-success-card__text">
-                สแกน QR พร้อมเพย์เพื่อชำระเงิน (Omise Test Mode)
-              </p>
-              <img
-                className="order-success-card__qr"
-                src={promptpay.qrImageUrl}
-                alt="QR พร้อมเพย์"
-              />
-              {promptpay.amount != null ? (
-                <p className="order-success-card__text">
-                  ยอดชำระ {Number(promptpay.amount).toLocaleString('th-TH')}{' '}
-                  {promptpay.currency || 'THB'}
-                </p>
-              ) : null}
-              <p className="order-success-card__text">
-                คำสั่งซื้อจะเป็น pending จนกว่า Omise จะยืนยันว่าชำระสำเร็จ
-              </p>
-            </div>
-          ) : null}
-
-          {promptpayError ? (
-            <p className="order-success-card__text" role="alert">
-              สร้างคำสั่งซื้อแล้ว แต่ยังสร้าง QR ไม่ได้: {promptpayError}
-            </p>
-          ) : null}
-
-          {!promptpay?.qrImageUrl && !promptpayError ? (
-            <p className="order-success-card__text">
-              ทีมงานได้รับคำสั่งซื้อของคุณแล้วในระบบ WooCommerce
-            </p>
-          ) : null}
+          <p className="order-success-card__text">
+            ทีมงานได้รับคำสั่งซื้อของคุณแล้วในระบบ WooCommerce
+            {paymentMethod === 'xendit_gateway'
+              ? ' หากชำระผ่าน Xendit สำเร็จ สถานะคำสั่งซื้อจะอัปเดตอัตโนมัติ'
+              : ''}
+            {paymentMethod === 'stripe_promptpay' || search.get('session_id')
+              ? ' หากชำระผ่าน Stripe PromptPay สำเร็จ สถานะคำสั่งซื้อจะอัปเดตอัตโนมัติ'
+              : ''}
+          </p>
 
           <div
             className="order-page__actions"

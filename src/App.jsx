@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import ScrollToTop from './components/ScrollToTop';
 import Header from './components/Header';
@@ -18,13 +19,17 @@ import Cart from './pages/Cart';
 import OrderSuccess from './pages/OrderSuccess';
 import OrderStatus from './pages/OrderStatus';
 import TrackOrder from './pages/TrackOrder';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Account from './pages/Account';
 import NotFound from './pages/NotFound';
 
 export default function App() {
   return (
     <BrowserRouter>
       <ScrollToTop />
-      <CartProvider>
+      <AuthProvider>
+        <CartProvider>
         <Header />
         <Routes>
           {/* Default landing page */}
@@ -38,6 +43,9 @@ export default function App() {
           <Route path="/reviews" element={<Reviews />} />
           <Route path="/faq" element={<Faq />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/account" element={<Account />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/order-success" element={<OrderSuccess />} />
@@ -46,7 +54,8 @@ export default function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
         <Footer />
-      </CartProvider>
+        </CartProvider>
+      </AuthProvider>
     </BrowserRouter>
   );
 }

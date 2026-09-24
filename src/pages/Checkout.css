@@ -19,6 +19,12 @@
   margin-top: 0.35rem;
 }
 
+.checkout__account-note {
+  margin-top: 0.65rem;
+  color: var(--text-secondary);
+  font-size: 0.9375rem;
+}
+
 .checkout__layout {
   display: grid;
   grid-template-columns: 1fr;
@@ -347,6 +353,29 @@
   letter-spacing: 0.02em;
 }
 
+.checkout__payment--single-row {
+  grid-template-rows: auto;
+  cursor: default;
+}
+
+.checkout__payment-label--with-price {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.checkout__payment-price {
+  flex-shrink: 0;
+  font-family: var(--font-family);
+  font-size: 0.875rem;
+  font-weight: var(--font-weight-medium);
+  color: var(--blue-gray-dark);
+  letter-spacing: 0.02em;
+}
+
 .checkout__submit {
   width: 100%;
   margin-top: 0.5rem;
@@ -595,4 +624,25 @@
 
 .checkout__shipping-options {
   margin-top: 0;
+}
+
+.checkout__shipping-option {
+  cursor: default;
+}
+
+.checkout__shipping-option-main {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.checkout__shipping-option-price {
+  flex-shrink: 0;
+  font-family: var(--font-family);
+  font-size: 0.875rem;
+  font-weight: var(--font-weight-medium);
+  color: var(--blue-gray-dark);
+  letter-spacing: 0.02em;
 }

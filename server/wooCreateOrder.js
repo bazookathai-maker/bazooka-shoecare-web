@@ -4,16 +4,33 @@
  * Never import this module from browser/client code.
  */
 
-const ALLOWED_PAYMENT_METHODS = new Set(['bacs', 'cod', 'omise_promptpay']);
+const ALLOWED_PAYMENT_METHODS = new Set([
+  'bacs',
+  'cod',
+  'xendit_gateway',
+  'stripe_promptpay',
+]);
+const BLOCKED_PAYMENT_METHODS = new Set([
+  'omise_promptpay',
+  'omise',
+  'omise_mobilebanking',
+  'omise_truemoney',
+  'omise_rabbit_linepay',
+  'omise_googlepay',
+  'omise_shopeepay',
+  'omise_wechat_pay',
+]);
 
 const PAYMENT_TITLES = {
   bacs: 'โอนเงินผ่านธนาคาร',
   cod: 'เก็บเงินปลายทาง',
-  omise_promptpay: 'พร้อมเพย์ (Omise Test)',
+  xendit_gateway: 'Xendit Payment Gateway',
+  stripe_promptpay: 'พร้อมเพย์ (Stripe Checkout Test)',
 };
 
 export const OMISE_CHARGE_META_KEY = '_omise_charge_id';
 export const OMISE_PAID_META_KEY = '_omise_paid';
+export const STRIPE_PAID_META_KEY = '_stripe_paid';
 
 function trimSlash(url) {
   return String(url || '').replace(/\/$/, '');
@@ -72,10 +89,24 @@ function toAddress(address, { includeEmail = false } = {}) {
 }
 
 function buildOrderPayload(input) {
-  const paymentMethod = String(input.paymentMethod || 'bacs').trim();
+  const paymentMethod = String(
+    input.paymentMethod || input.payment_method || 'bacs',
+  ).trim();
+
+  if (
+    BLOCKED_PAYMENT_METHODS.has(paymentMethod) ||
+    paymentMethod.startsWith('omise')
+  ) {
+    const err = new Error(
+      'วิธีชำระเงินนี้ถูกปิดแล้ว (Omise) — ใช้ xendit_gateway สำหรับชำระออนไลน์',
+    );
+    err.status = 400;
+    throw err;
+  }
+
   if (!ALLOWED_PAYMENT_METHODS.has(paymentMethod)) {
     const err = new Error(
-      'วิธีชำระเงินไม่ถูกต้อง (ใช้ bacs, cod หรือ omise_promptpay)',
+      'วิธีชำระเงินไม่ถูกต้อง (ใช้ bacs, cod, xendit_gateway หรือ stripe_promptpay)',
     );
     err.status = 400;
     throw err;
@@ -110,22 +141,69 @@ function buildOrderPayload(input) {
         ]
       : [];
 
-  return {
+  // Status drives WooCommerce transactional emails:
+  // COD → processing, BACS → on-hold,
+  // Xendit / Stripe stay pending until paid via plugin / webhook.
+  const statusByMethod = {
+    cod: 'processing',
+    bacs: 'on-hold',
+    xendit_gateway: 'pending',
+    stripe_promptpay: 'pending',
+  };
+
+  const payload = {
     payment_method: paymentMethod,
     payment_method_title: PAYMENT_TITLES[paymentMethod] || paymentMethod,
     set_paid: false,
-    status: 'pending',
+    status: statusByMethod[paymentMethod] || 'pending',
     customer_note: String(input.customer_note || '').trim(),
     billing: toAddress(input.billing, { includeEmail: true }),
     shipping: toAddress(input.shipping),
     line_items: lineItems,
     shipping_lines: shippingLines,
   };
+
+  const customerId = Number(input.customer_id);
+  if (Number.isInteger(customerId) && customerId > 0) {
+    payload.customer_id = customerId;
+  }
+
+  return payload;
+}
+
+/**
+ * Normalize host/base into site origin (scheme + host), no trailing slash.
+ * Used for public checkout/order-pay URLs only — never exposes secrets.
+ */
+export function resolveWooSiteOrigin(wooUrl) {
+  const raw = trimSlash(wooUrl);
+  if (!raw) return '';
+  try {
+    const parsed = new URL(raw.includes('://') ? raw : `https://${raw}`);
+    return `${parsed.protocol}//${parsed.host}`;
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * WooCommerce native pay-for-order URL (matches WC_Order::get_checkout_payment_url).
+ * Example: https://host/checkout/order-pay/123/?pay_for_order=true&key=wc_order_xxx
+ */
+export function buildWooOrderPayUrl(wooUrl, orderId, orderKey) {
+  const origin = resolveWooSiteOrigin(wooUrl);
+  const id = String(orderId || '').trim();
+  const key = String(orderKey || '').trim();
+  if (!origin || !id || !key) return '';
+  const url = new URL(`${origin}/checkout/order-pay/${encodeURIComponent(id)}/`);
+  url.searchParams.set('pay_for_order', 'true');
+  url.searchParams.set('key', key);
+  return url.toString();
 }
 
 /**
  * @param {object} input - order fields from client (no secrets)
- * @returns {Promise<{ order: object, raw: object }>}
+ * @returns {Promise<{ order: object, raw: object, payment_url?: string }>}
  */
 export async function createWooCommerceOrder(input) {
   const { url, key, secret } = getServerCredentials();
@@ -140,6 +218,9 @@ export async function createWooCommerceOrder(input) {
   const ordersUrl = resolveWooRestOrdersUrl(url);
   const body = buildOrderPayload(input);
   const auth = Buffer.from(`${key}:${secret}`).toString('base64');
+
+  // Evidence: this is the exact payment_method sent to WooCommerce REST.
+  console.log('[wooCreateOrder] POST wc/v3/orders payment_method =', body.payment_method);
 
   const response = await fetch(ordersUrl, {
     method: 'POST',
@@ -180,13 +261,78 @@ export async function createWooCommerceOrder(input) {
     throw err;
   }
 
+  const orderKey = data.order_key ?? null;
+  let orderData = data;
+
+  // Xendit: never mark paid. Ensure gateway sticks and use Woo's official payment_url.
+  if (body.payment_method === 'xendit_gateway') {
+    if (String(orderData.payment_method || '') !== 'xendit_gateway') {
+      orderData = await updateWooOrder(orderId, {
+        payment_method: 'xendit_gateway',
+        payment_method_title: PAYMENT_TITLES.xendit_gateway,
+        set_paid: false,
+      });
+    }
+
+    if (String(orderData.payment_method || '') !== 'xendit_gateway') {
+      const err = new Error(
+        'สร้างคำสั่งซื้อแล้ว แต่ WooCommerce ไม่ได้ตั้ง payment_method เป็น xendit_gateway',
+      );
+      err.status = 502;
+      err.data = orderData;
+      throw err;
+    }
+
+    let paymentUrl = String(orderData.payment_url || '').trim();
+    if (!paymentUrl) {
+      orderData = await getWooOrderById(orderId);
+      paymentUrl = String(orderData.payment_url || '').trim();
+    }
+
+    if (!paymentUrl) {
+      const err = new Error(
+        'ไม่พบ payment_url จาก WooCommerce สำหรับชำระผ่าน Xendit',
+      );
+      err.status = 502;
+      err.data = orderData;
+      throw err;
+    }
+
+    return {
+      raw: orderData,
+      order: {
+        order_id: orderId,
+        order_key: orderData.order_key ?? orderKey,
+        order_number:
+          orderData.number != null ? String(orderData.number) : String(orderId),
+        status: orderData.status ?? null,
+        payment_method: 'xendit_gateway',
+      },
+      payment_url: paymentUrl,
+      trace: {
+        payment_method_requested: body.payment_method,
+        payment_method_stored: String(orderData.payment_method || ''),
+        omise_blocked: true,
+      },
+    };
+  }
+
   return {
-    raw: data,
+    raw: orderData,
     order: {
       order_id: orderId,
-      order_key: data.order_key ?? null,
-      order_number: data.number != null ? String(data.number) : String(orderId),
-      status: data.status ?? null,
+      order_key: orderKey,
+      order_number:
+        orderData.number != null ? String(orderData.number) : String(orderId),
+      status: orderData.status ?? null,
+      payment_method: orderData.payment_method ?? body.payment_method ?? null,
+    },
+    trace: {
+      payment_method_requested: body.payment_method,
+      payment_method_stored: String(
+        orderData.payment_method ?? body.payment_method ?? '',
+      ),
+      omise_blocked: true,
     },
   };
 }
@@ -239,7 +385,9 @@ export function isWooOrderAlreadyPaid(order) {
   const status = String(order?.status || '').toLowerCase();
   if (status === 'processing' || status === 'completed') return true;
   if (order?.date_paid) return true;
-  return getWooOrderMeta(order, OMISE_PAID_META_KEY) === 'yes';
+  if (getWooOrderMeta(order, OMISE_PAID_META_KEY) === 'yes') return true;
+  if (getWooOrderMeta(order, STRIPE_PAID_META_KEY) === 'yes') return true;
+  return false;
 }
 
 async function wooRestRequest(path, { method = 'GET', body } = {}) {

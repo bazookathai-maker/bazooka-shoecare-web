@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import ThaiAddressSelector from '../components/ThaiAddressSelector';
+import CheckoutFreeShipping from '../components/CheckoutFreeShipping';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
+import { updateCustomerBilling } from '../api/customerAuth';
 import {
   buildStoreAddressesFromForm,
-  createPromptPayCharge,
   createRestOrder,
+  createStripeCheckoutSession,
   extractShippingPackages,
   getRestTestPaymentOptions,
   selectShippingRate,
@@ -116,15 +119,14 @@ export default function Checkout() {
   const {
     items,
     itemsTotal,
-    shippingTotal,
     discountTotal,
-    total,
     billingAddress,
     shippingAddress,
     syncCart,
     resetCartAfterOrder,
     hydrating,
   } = useCart();
+  const { customer } = useAuth();
   const [form, setForm] = useState(initialForm);
   const [fieldErrors, setFieldErrors] = useState({});
   const [showErrors, setShowErrors] = useState(false);
@@ -186,6 +188,29 @@ export default function Checkout() {
     setAddressSynced(true);
     setFormHydrated(true);
   }, [hydrating, formHydrated, billingAddress, shippingAddress]);
+
+  useEffect(() => {
+    if (!formHydrated || !customer) return;
+    setForm((prev) => {
+      if (prev.email || prev.firstName || prev.phone) return prev;
+      const bill = customer.billing || {};
+      const hydrated = formFromWooAddresses(bill, bill);
+      return {
+        ...prev,
+        firstName: hydrated.firstName || customer.first_name || '',
+        lastName: hydrated.lastName || customer.last_name || '',
+        email: customer.email || hydrated.email || '',
+        phone: hydrated.phone || '',
+        addressLine: hydrated.addressLine || prev.addressLine,
+        province: hydrated.province || prev.province,
+        district: hydrated.district || prev.district,
+        subdistrict: hydrated.subdistrict || prev.subdistrict,
+        street: hydrated.street || prev.street,
+        postalCode: hydrated.postalCode || prev.postalCode,
+        addressNote: hydrated.addressNote || prev.addressNote,
+      };
+    });
+  }, [formHydrated, customer]);
 
   useEffect(
     () => () => {
@@ -294,7 +319,7 @@ export default function Checkout() {
         const { packages, nextSelected } = applyShippingFromCart(updatedCart);
 
         if (packages.length === 0) {
-          setStatusMessage('อัปเดตที่อยู่แล้ว — ยังไม่มีวิธีจัดส่ง');
+          setStatusMessage('อัปเดตที่อยู่แล้ว — จัดส่งฟรีทั่วประเทศไทย');
           return true;
         }
 
@@ -435,6 +460,19 @@ export default function Checkout() {
       return;
     }
 
+    // Hard refuse Omise — never fall through to create-order / create-promptpay.
+    if (
+      methodToUse.startsWith('omise') ||
+      methodToUse === 'omise_promptpay' ||
+      String(paymentMethod || '').startsWith('omise')
+    ) {
+      setError(
+        'Omise PromptPay ถูกปิดแล้ว — เลือก Xendit หรือ Stripe PromptPay แล้วรีเฟรชหน้า',
+      );
+      setStatusMessage('');
+      return;
+    }
+
     placeOrderLockRef.current = true;
     setPlacingOrder(true);
     setError('');
@@ -451,12 +489,33 @@ export default function Checkout() {
         // REST order create does not require Store API session.
       }
 
-      const { order, raw } = await createRestOrder({
+      const { order, raw, payment_url: paymentUrl } = await createRestOrder({
         form: formRef.current,
         items,
-        shippingTotal,
+        shippingTotal: 0,
         paymentMethod: methodToUse,
       });
+
+      if (methodToUse === 'xendit_gateway') {
+        if (String(order.payment_method || '') !== 'xendit_gateway') {
+          throw new Error(
+            `Order ถูกสร้างด้วย gateway ผิด (${order.payment_method || 'ว่าง'}) — ต้องเป็น xendit_gateway`,
+          );
+        }
+        if (!paymentUrl) {
+          throw new Error(
+            'สร้างคำสั่งซื้อแล้ว แต่ไม่พบ payment_url จาก WooCommerce สำหรับ Xendit',
+          );
+        }
+      }
+
+      if (methodToUse === 'stripe_promptpay') {
+        if (String(order.payment_method || '') !== 'stripe_promptpay') {
+          throw new Error(
+            `Order ถูกสร้างด้วย gateway ผิด (${order.payment_method || 'ว่าง'}) — ต้องเป็น stripe_promptpay`,
+          );
+        }
+      }
 
       if (import.meta.env.DEV) {
         console.log('[rest-order] success', {
@@ -464,25 +523,88 @@ export default function Checkout() {
           order_number: order.order_number,
           order_key: order.order_key ? '[set]' : null,
           status: order.status,
+          payment_method: order.payment_method || methodToUse,
+          payment_url: paymentUrl ? '[set]' : null,
         });
         console.log('[rest-order] raw keys', raw && Object.keys(raw));
       }
 
-      let promptpay = null;
-      let promptpayError = '';
-      if (methodToUse === 'omise_promptpay') {
-        setStatusMessage('กำลังสร้าง QR พร้อมเพย์...');
+      console.log('[debug-billing] customer?.id =', customer?.id);
+      console.log('[debug-billing] order_id =', order.order_id);
+      console.log('[debug-billing] raw.customer_id =', raw?.customer_id);
+      console.log('[debug-billing] raw.billing.phone =', raw?.billing?.phone);
+      console.log('[debug-billing] raw.billing.address_1 =', raw?.billing?.address_1);
+      console.log('[debug-billing] raw.billing.city =', raw?.billing?.city);
+
+      if (customer?.id) {
+        const { billing_address } = buildStoreAddressesFromForm(formRef.current);
+        console.log('[debug-billing] calling updateCustomerBilling with:', {
+          first_name: billing_address.first_name,
+          last_name: billing_address.last_name,
+          phone: billing_address.phone,
+          address_1: billing_address.address_1,
+          city: billing_address.city,
+          state: billing_address.state,
+          postcode: billing_address.postcode,
+        });
         try {
-          promptpay = await createPromptPayCharge(order.order_id);
-        } catch (qrErr) {
-          promptpayError =
-            qrErr instanceof Error
-              ? qrErr.message
-              : 'สร้าง QR พร้อมเพย์ไม่สำเร็จ';
+          const updatedCustomer = await updateCustomerBilling(billing_address);
+          console.log('[debug-billing] updateCustomerBilling SUCCESS:', updatedCustomer);
+        } catch (billingErr) {
+          console.error('[debug-billing] updateCustomerBilling FAILED:', billingErr);
+        }
+      } else {
+        console.log('[debug-billing] SKIPPED — customer?.id is falsy');
+      }
+
+      // Stripe first — create Checkout Session BEFORE clearing the cart.
+      // Clearing cart first made failures land on empty-checkout UI (no error, no redirect).
+      if (methodToUse === 'stripe_promptpay') {
+        setStatusMessage('กำลังพาไปหน้าชำระเงิน Stripe...');
+        console.log('[stripe-flow] before create-stripe-checkout', {
+          order_id: order.order_id,
+          order_number: order.order_number,
+          order_key: order.order_key ? '[set]' : null,
+          payment_method: order.payment_method,
+        });
+        try {
+          const stripeSession = await createStripeCheckoutSession({
+            orderId: order.order_id,
+            orderKey: order.order_key,
+          });
+          console.log('[stripe-flow] create-stripe-checkout ok', {
+            orderId: stripeSession.orderId,
+            sessionId: stripeSession.sessionId ? '[set]' : null,
+            url: stripeSession.url ? '[set]' : null,
+          });
+          if (!stripeSession.url) {
+            throw new Error('ไม่พบ Stripe Checkout URL จากเซิร์ฟเวอร์');
+          }
+          resetCartAfterOrder();
+          window.location.assign(stripeSession.url);
+          return;
+        } catch (stripeErr) {
+          console.error('[stripe-flow] create-stripe-checkout failed', {
+            message:
+              stripeErr instanceof Error ? stripeErr.message : String(stripeErr),
+            status: stripeErr?.status,
+            data: stripeErr?.data,
+          });
+          throw stripeErr;
         }
       }
 
       resetCartAfterOrder();
+
+      // Xendit: hand off to WooCommerce payment_url (plugin creates invoice + redirect).
+      // Never mark paid here — Xendit/Woo callback updates status after Test payment.
+      // Never call Omise / create-promptpay for this path.
+      if (methodToUse === 'xendit_gateway') {
+        setStatusMessage('กำลังพาไปหน้าชำระเงิน Xendit...');
+        window.location.assign(paymentUrl);
+        return;
+      }
+
       setStatusMessage('');
       navigate('/order-success', {
         replace: true,
@@ -492,8 +614,6 @@ export default function Checkout() {
           orderKey: order.order_key,
           orderStatus: order.status,
           paymentMethod: methodToUse,
-          promptpay,
-          promptpayError,
         },
       });
     } catch (err) {
@@ -555,7 +675,11 @@ export default function Checkout() {
 
   const visibleErrors = showErrors ? fieldErrors : {};
   const busy = loading || shippingLoading || placingOrder;
-  const showShippingSection = addressSynced || shippingChecked;
+  const displayShippingTotal = 0;
+  const displayOrderTotal = Math.max(
+    0,
+    Number(itemsTotal || 0) - Number(discountTotal || 0),
+  );
 
   if (items.length === 0 && !busy) {
     return (
@@ -578,6 +702,11 @@ export default function Checkout() {
         <div className="container">
           <p className="section-label">ชำระเงิน</p>
           <h1 className="checkout__title">ชำระเงิน</h1>
+          {customer?.email ? (
+            <p className="checkout__account-note">
+              สั่งซื้อในบัญชี {customer.email}
+            </p>
+          ) : null}
         </div>
       </header>
 
@@ -626,7 +755,7 @@ export default function Checkout() {
           <div className="checkout__total-row checkout__total-row--sub">
             <span className="checkout__total-label">ค่าจัดส่ง</span>
             <span className="checkout__total-value">
-              {formatMoney(shippingTotal)}
+              {formatMoney(displayShippingTotal)}
             </span>
           </div>
           {Number(discountTotal) > 0 ? (
@@ -639,7 +768,9 @@ export default function Checkout() {
           ) : null}
           <div className="checkout__total-row">
             <span className="checkout__total-label">รวมทั้งสิ้น</span>
-            <span className="checkout__total-value">{formatMoney(total)}</span>
+            <span className="checkout__total-value">
+              {formatMoney(displayOrderTotal)}
+            </span>
           </div>
         </aside>
 
@@ -777,65 +908,7 @@ export default function Checkout() {
             </div>
           </section>
 
-          {showShippingSection ? (
-            <section className="checkout__block">
-              <h2 className="checkout__section-title">วิธีจัดส่ง</h2>
-              {shippingPackages.length === 0 ? (
-                <p className="checkout__status" role="status">
-                  ยังไม่มีวิธีจัดส่ง
-                </p>
-              ) : (
-                shippingPackages.map((pkg) => (
-                  <div
-                    key={String(pkg.packageId)}
-                    className="checkout__shipping-package"
-                  >
-                    {pkg.name ? (
-                      <p className="checkout__shipping-package-name">
-                        {pkg.name}
-                      </p>
-                    ) : null}
-                    <div
-                      className="checkout__payments checkout__shipping-options"
-                      role="radiogroup"
-                      aria-label={`วิธีจัดส่ง ${pkg.name || pkg.packageId}`}
-                    >
-                      {pkg.rates.map((rate) => {
-                        const checked =
-                          selectedRates[pkg.packageId] === rate.rateId;
-                        return (
-                          <label
-                            key={rate.rateId}
-                            className={`checkout__payment ${
-                              checked ? 'checkout__payment--active' : ''
-                            }`}
-                          >
-                            <input
-                              type="radio"
-                              name={`shipping-${pkg.packageId}`}
-                              value={rate.rateId}
-                              checked={checked}
-                              onChange={() =>
-                                handleShippingSelect(pkg.packageId, rate.rateId)
-                              }
-                              className="checkout__payment-input"
-                              disabled={busy}
-                            />
-                            <span className="checkout__payment-label">
-                              {rate.name}
-                              {Number.isFinite(rate.price)
-                                ? ` ${formatMoney(rate.price)}`
-                                : ''}
-                            </span>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))
-              )}
-            </section>
-          ) : null}
+          <CheckoutFreeShipping disabled={busy} />
 
           <section className="checkout__block">
             <h2 className="checkout__section-title">หมายเหตุคำสั่งซื้อ</h2>
@@ -886,8 +959,8 @@ export default function Checkout() {
               })}
             </div>
             <p className="checkout__payment-note">
-              โอนเงินและเก็บเงินปลายทางสร้างออเดอร์ทันที — พร้อมเพย์จะแสดง QR
-              หลังสร้างคำสั่งซื้อ (Omise Test Mode ยังไม่ตัดเงินจนกว่าจะจ่ายสำเร็จ)
+              โอนเงินและเก็บเงินปลายทางสร้างออเดอร์ทันที — Xendit หรือ Stripe
+              PromptPay (Test) จะพาไปหน้าชำระเงินหลังสร้างคำสั่งซื้อ
             </p>
           </section>
 

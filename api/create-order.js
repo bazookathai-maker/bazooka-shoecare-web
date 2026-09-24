@@ -2,6 +2,7 @@ import {
   createWooCommerceOrder,
   readJsonBody,
 } from '../server/wooCreateOrder.js';
+import { getSessionFromRequest } from '../server/wooCustomerAuth.js';
 
 function setCors(res) {
   res.setHeader('Cache-Control', 'no-store');
@@ -29,6 +30,24 @@ export default async function handler(req, res) {
 
   try {
     const payload = await readJsonBody(req);
+    // Never trust client-supplied customer_id. Guest stays guest unless session is valid.
+    delete payload.customer_id;
+    // Never allow Omise methods through create-order (online pay = xendit / stripe).
+    const method = String(payload.paymentMethod || payload.payment_method || '').trim();
+    if (method.startsWith('omise') || method === 'omise_promptpay') {
+      res.statusCode = 400;
+      res.end(
+        JSON.stringify({
+          message:
+            'Omise PromptPay ถูกปิดแล้ว — ใช้ xendit_gateway หรือ stripe_promptpay สำหรับชำระออนไลน์',
+        }),
+      );
+      return;
+    }
+    const session = getSessionFromRequest(req);
+    if (session?.customerId) {
+      payload.customer_id = session.customerId;
+    }
     const result = await createWooCommerceOrder(payload);
     res.statusCode = 200;
     res.end(JSON.stringify(result));

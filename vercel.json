@@ -1,6 +1,26 @@
 {
   "rewrites": [
     {
+      "source": "/api/auth/register",
+      "destination": "/api/auth-register"
+    },
+    {
+      "source": "/api/auth/login",
+      "destination": "/api/auth-login"
+    },
+    {
+      "source": "/api/auth/me",
+      "destination": "/api/auth-me"
+    },
+    {
+      "source": "/api/auth/orders",
+      "destination": "/api/auth-orders"
+    },
+    {
+      "source": "/api/auth/update-billing",
+      "destination": "/api/auth-update-billing"
+    },
+    {
       "source": "/api/cart",
       "destination": "/api/cart-proxy"
     },
