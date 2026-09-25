@@ -1,24 +1,20 @@
 {
   "rewrites": [
     {
-      "source": "/api/auth/register",
-      "destination": "/api/auth-register"
+      "source": "/api/create-stripe-checkout",
+      "destination": "/api/payments/stripe-checkout"
     },
     {
-      "source": "/api/auth/login",
-      "destination": "/api/auth-login"
+      "source": "/api/create-promptpay",
+      "destination": "/api/payments/promptpay"
     },
     {
-      "source": "/api/auth/me",
-      "destination": "/api/auth-me"
+      "source": "/api/stripe-webhook",
+      "destination": "/api/webhooks/stripe"
     },
     {
-      "source": "/api/auth/orders",
-      "destination": "/api/auth-orders"
-    },
-    {
-      "source": "/api/auth/update-billing",
-      "destination": "/api/auth-update-billing"
+      "source": "/api/omise-webhook",
+      "destination": "/api/webhooks/omise"
     },
     {
       "source": "/api/cart",
