@@ -135,7 +135,6 @@ export default function Checkout() {
   const [error, setError] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
   const [addressSynced, setAddressSynced] = useState(false);
-  const [lastPayload, setLastPayload] = useState(null);
   const [shippingPackages, setShippingPackages] = useState([]);
   const [selectedRates, setSelectedRates] = useState({});
   const [shippingChecked, setShippingChecked] = useState(false);
@@ -284,9 +283,6 @@ export default function Checkout() {
       const payloadKey = stableCustomerPayloadKey(payload);
 
       if (payloadKey && payloadKey === lastSentKeyRef.current && addressSynced) {
-        if (source === 'submit') {
-          setStatusMessage('ข้อมูลลูกค้าและที่อยู่ตรงกับ WooCommerce แล้ว');
-        }
         return true;
       }
 
@@ -299,7 +295,7 @@ export default function Checkout() {
       setLoading(true);
       setError('');
       setFieldErrors({});
-      setStatusMessage('กำลังอัปเดตข้อมูลลูกค้าและที่อยู่...');
+      setStatusMessage('');
 
       try {
         console.log('WooCommerce update-customer payload:', payload);
@@ -311,18 +307,14 @@ export default function Checkout() {
         console.log('WooCommerce update-customer response:', updatedCart.raw);
         syncCart(updatedCart);
         lastSentKeyRef.current = payloadKey;
-        setLastPayload(payload);
         setAddressSynced(true);
         setShowErrors(false);
 
         const { packages, nextSelected } = applyShippingFromCart(updatedCart);
 
         if (packages.length === 0) {
-          setStatusMessage('อัปเดตที่อยู่แล้ว — จัดส่งฟรีทั่วประเทศไทย');
           return true;
         }
-
-        setStatusMessage('อัปเดตที่อยู่แล้ว — พบวิธีจัดส่งจาก WooCommerce');
 
         const autoCart = await maybeAutoSelectSingleRates(
           packages,
@@ -333,7 +325,6 @@ export default function Checkout() {
         if (autoCart) {
           syncCart(autoCart);
           applyShippingFromCart(autoCart);
-          setStatusMessage('เลือกวิธีจัดส่งอัตโนมัติแล้ว (มีเพียง 1 วิธี)');
         }
 
         return true;
@@ -905,14 +896,6 @@ export default function Checkout() {
           {statusMessage ? (
             <p className="checkout__status" role="status">
               {statusMessage}
-            </p>
-          ) : null}
-
-          {addressSynced && lastPayload ? (
-            <p className="checkout__status" role="status">
-              ที่อยู่พร้อมสั่งซื้อ (state:{' '}
-              {lastPayload.shipping_address?.state}, postcode:{' '}
-              {lastPayload.shipping_address?.postcode})
             </p>
           ) : null}
 
