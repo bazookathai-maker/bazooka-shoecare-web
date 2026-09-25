@@ -32,14 +32,14 @@ export default async function handler(req, res) {
     const payload = await readJsonBody(req);
     // Never trust client-supplied customer_id. Guest stays guest unless session is valid.
     delete payload.customer_id;
-    // Never allow Omise methods through create-order (online pay = xendit / stripe).
+    // Only Stripe PromptPay is accepted from this storefront.
     const method = String(payload.paymentMethod || payload.payment_method || '').trim();
-    if (method.startsWith('omise') || method === 'omise_promptpay') {
+    if (method !== 'stripe_promptpay') {
       res.statusCode = 400;
       res.end(
         JSON.stringify({
           message:
-            'Omise PromptPay ถูกปิดแล้ว — ใช้ xendit_gateway หรือ stripe_promptpay สำหรับชำระออนไลน์',
+            'วิธีชำระเงินไม่ถูกต้อง — รองรับเฉพาะพร้อมเพย์ผ่าน Stripe (stripe_promptpay)',
         }),
       );
       return;

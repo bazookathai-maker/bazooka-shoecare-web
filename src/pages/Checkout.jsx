@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import ThaiAddressSelector from '../components/ThaiAddressSelector';
 import CheckoutFreeShipping from '../components/CheckoutFreeShipping';
 import { useCart } from '../context/CartContext';
@@ -115,7 +115,6 @@ function buildSelectedRatesMap(packages, previousSelected = {}) {
 }
 
 export default function Checkout() {
-  const navigate = useNavigate();
   const {
     items,
     itemsTotal,
@@ -452,23 +451,10 @@ export default function Checkout() {
     const methodToUse =
       (options.some((opt) => opt.id === paymentMethod)
         ? paymentMethod
-        : options[0]?.id) || '';
+        : options[0]?.id) || 'stripe_promptpay';
 
-    if (!methodToUse) {
-      setError('กรุณาเลือกวิธีชำระเงินทดสอบ (โอนเงินหรือเก็บเงินปลายทาง)');
-      setStatusMessage('');
-      return;
-    }
-
-    // Hard refuse Omise — never fall through to create-order / create-promptpay.
-    if (
-      methodToUse.startsWith('omise') ||
-      methodToUse === 'omise_promptpay' ||
-      String(paymentMethod || '').startsWith('omise')
-    ) {
-      setError(
-        'Omise PromptPay ถูกปิดแล้ว — เลือก Xendit หรือ Stripe PromptPay แล้วรีเฟรชหน้า',
-      );
+    if (methodToUse !== 'stripe_promptpay') {
+      setError('รองรับเฉพาะชำระด้วยพร้อมเพย์ผ่าน Stripe');
       setStatusMessage('');
       return;
     }
@@ -489,32 +475,17 @@ export default function Checkout() {
         // REST order create does not require Store API session.
       }
 
-      const { order, raw, payment_url: paymentUrl } = await createRestOrder({
+      const { order, raw } = await createRestOrder({
         form: formRef.current,
         items,
         shippingTotal: 0,
-        paymentMethod: methodToUse,
+        paymentMethod: 'stripe_promptpay',
       });
 
-      if (methodToUse === 'xendit_gateway') {
-        if (String(order.payment_method || '') !== 'xendit_gateway') {
-          throw new Error(
-            `Order ถูกสร้างด้วย gateway ผิด (${order.payment_method || 'ว่าง'}) — ต้องเป็น xendit_gateway`,
-          );
-        }
-        if (!paymentUrl) {
-          throw new Error(
-            'สร้างคำสั่งซื้อแล้ว แต่ไม่พบ payment_url จาก WooCommerce สำหรับ Xendit',
-          );
-        }
-      }
-
-      if (methodToUse === 'stripe_promptpay') {
-        if (String(order.payment_method || '') !== 'stripe_promptpay') {
-          throw new Error(
-            `Order ถูกสร้างด้วย gateway ผิด (${order.payment_method || 'ว่าง'}) — ต้องเป็น stripe_promptpay`,
-          );
-        }
+      if (String(order.payment_method || '') !== 'stripe_promptpay') {
+        throw new Error(
+          `Order ถูกสร้างด้วย gateway ผิด (${order.payment_method || 'ว่าง'}) — ต้องเป็น stripe_promptpay`,
+        );
       }
 
       if (import.meta.env.DEV) {
@@ -523,8 +494,7 @@ export default function Checkout() {
           order_number: order.order_number,
           order_key: order.order_key ? '[set]' : null,
           status: order.status,
-          payment_method: order.payment_method || methodToUse,
-          payment_url: paymentUrl ? '[set]' : null,
+          payment_method: order.payment_method || 'stripe_promptpay',
         });
         console.log('[rest-order] raw keys', raw && Object.keys(raw));
       }
@@ -557,65 +527,28 @@ export default function Checkout() {
         console.log('[debug-billing] SKIPPED — customer?.id is falsy');
       }
 
-      // Stripe first — create Checkout Session BEFORE clearing the cart.
-      // Clearing cart first made failures land on empty-checkout UI (no error, no redirect).
-      if (methodToUse === 'stripe_promptpay') {
-        setStatusMessage('กำลังพาไปหน้าชำระเงิน Stripe...');
-        console.log('[stripe-flow] before create-stripe-checkout', {
-          order_id: order.order_id,
-          order_number: order.order_number,
-          order_key: order.order_key ? '[set]' : null,
-          payment_method: order.payment_method,
-        });
-        try {
-          const stripeSession = await createStripeCheckoutSession({
-            orderId: order.order_id,
-            orderKey: order.order_key,
-          });
-          console.log('[stripe-flow] create-stripe-checkout ok', {
-            orderId: stripeSession.orderId,
-            sessionId: stripeSession.sessionId ? '[set]' : null,
-            url: stripeSession.url ? '[set]' : null,
-          });
-          if (!stripeSession.url) {
-            throw new Error('ไม่พบ Stripe Checkout URL จากเซิร์ฟเวอร์');
-          }
-          resetCartAfterOrder();
-          window.location.assign(stripeSession.url);
-          return;
-        } catch (stripeErr) {
-          console.error('[stripe-flow] create-stripe-checkout failed', {
-            message:
-              stripeErr instanceof Error ? stripeErr.message : String(stripeErr),
-            status: stripeErr?.status,
-            data: stripeErr?.data,
-          });
-          throw stripeErr;
-        }
-      }
-
-      resetCartAfterOrder();
-
-      // Xendit: hand off to WooCommerce payment_url (plugin creates invoice + redirect).
-      // Never mark paid here — Xendit/Woo callback updates status after Test payment.
-      // Never call Omise / create-promptpay for this path.
-      if (methodToUse === 'xendit_gateway') {
-        setStatusMessage('กำลังพาไปหน้าชำระเงิน Xendit...');
-        window.location.assign(paymentUrl);
-        return;
-      }
-
-      setStatusMessage('');
-      navigate('/order-success', {
-        replace: true,
-        state: {
-          orderId: order.order_id,
-          orderNumber: order.order_number,
-          orderKey: order.order_key,
-          orderStatus: order.status,
-          paymentMethod: methodToUse,
-        },
+      // Stripe PromptPay only: create Checkout Session BEFORE clearing the cart.
+      setStatusMessage('กำลังพาไปหน้าชำระเงิน Stripe...');
+      console.log('[stripe-flow] before create-stripe-checkout', {
+        order_id: order.order_id,
+        order_number: order.order_number,
+        order_key: order.order_key ? '[set]' : null,
+        payment_method: order.payment_method,
       });
+      const stripeSession = await createStripeCheckoutSession({
+        orderId: order.order_id,
+        orderKey: order.order_key,
+      });
+      console.log('[stripe-flow] create-stripe-checkout ok', {
+        orderId: stripeSession.orderId,
+        sessionId: stripeSession.sessionId ? '[set]' : null,
+        url: stripeSession.url ? '[set]' : null,
+      });
+      if (!stripeSession.url) {
+        throw new Error('ไม่พบ Stripe Checkout URL จากเซิร์ฟเวอร์');
+      }
+      resetCartAfterOrder();
+      window.location.assign(stripeSession.url);
     } catch (err) {
       const message =
         err instanceof Error ? err.message : 'ยืนยันคำสั่งซื้อไม่สำเร็จ';
@@ -929,7 +862,7 @@ export default function Checkout() {
           </section>
 
           <section className="checkout__block">
-            <h2 className="checkout__section-title">วิธีชำระเงิน (ทดสอบ)</h2>
+            <h2 className="checkout__section-title">วิธีชำระเงิน</h2>
             <div
               className="checkout__payments"
               role="radiogroup"
@@ -959,8 +892,7 @@ export default function Checkout() {
               })}
             </div>
             <p className="checkout__payment-note">
-              โอนเงินและเก็บเงินปลายทางสร้างออเดอร์ทันที — Xendit หรือ Stripe
-              PromptPay (Test) จะพาไปหน้าชำระเงินหลังสร้างคำสั่งซื้อ
+              ชำระผ่านพร้อมเพย์ด้วย Stripe — ระบบจะพาไปหน้าชำระเงินหลังยืนยันคำสั่งซื้อ
             </p>
           </section>
 

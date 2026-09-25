@@ -37,26 +37,18 @@ export function isRestOrderConfigured() {
   return true;
 }
 
-/** Checkout payment options (bacs/cod unchanged; online: Xendit kept + Stripe PromptPay). */
-const TEST_PAYMENT_METHOD_PRIORITY = [
-  'bacs',
-  'cod',
-  'xendit_gateway',
-  'stripe_promptpay',
-];
+/** Checkout: Stripe PromptPay only. */
+const CHECKOUT_PAYMENT_METHODS = ['stripe_promptpay'];
 
-const TEST_PAYMENT_METHOD_LABELS = {
-  bacs: 'โอนเงินผ่านธนาคาร',
-  cod: 'เก็บเงินปลายทาง',
-  xendit_gateway: 'พร้อมเพย์ / ชำระออนไลน์ (Xendit Test)',
-  stripe_promptpay: 'พร้อมเพย์ (Stripe Checkout Test)',
+const CHECKOUT_PAYMENT_LABELS = {
+  stripe_promptpay: 'พร้อมเพย์ (Stripe)',
 };
 
-/** Static test payment options for REST order create (does not depend on Store API). */
+/** Payment options for REST order create (does not depend on Store API). */
 export function getRestTestPaymentOptions() {
-  return TEST_PAYMENT_METHOD_PRIORITY.map((id) => ({
+  return CHECKOUT_PAYMENT_METHODS.map((id) => ({
     id,
-    label: TEST_PAYMENT_METHOD_LABELS[id] || id,
+    label: CHECKOUT_PAYMENT_LABELS[id] || id,
   }));
 }
 
@@ -949,35 +941,34 @@ function splitFullName(fullName) {
 
 export function resolveWooPaymentMethod(uiPaymentId) {
   const id = String(uiPaymentId || '').trim();
-  if (TEST_PAYMENT_METHOD_PRIORITY.includes(id)) return id;
+  if (CHECKOUT_PAYMENT_METHODS.includes(id)) return id;
   return '';
 }
 
 /**
- * Pick a Phase 3.1 test payment method from live cart `payment_methods`.
- * Prefers bacs, then cod, then Xendit. Never invents gateway IDs.
+ * Pick checkout payment method from available gateways (Stripe PromptPay only).
  */
 export function pickTestPaymentMethod(availableMethods) {
   const available = Array.isArray(availableMethods)
     ? availableMethods.filter((id) => typeof id === 'string' && id.trim())
     : [];
   const selected =
-    TEST_PAYMENT_METHOD_PRIORITY.find((id) => available.includes(id)) || '';
+    CHECKOUT_PAYMENT_METHODS.find((id) => available.includes(id)) ||
+    CHECKOUT_PAYMENT_METHODS[0] ||
+    '';
 
   return {
     selected,
     available,
-    testOptions: TEST_PAYMENT_METHOD_PRIORITY.filter((id) =>
-      available.includes(id),
-    ).map((id) => ({
+    testOptions: CHECKOUT_PAYMENT_METHODS.map((id) => ({
       id,
-      label: TEST_PAYMENT_METHOD_LABELS[id] || id,
+      label: CHECKOUT_PAYMENT_LABELS[id] || id,
     })),
   };
 }
 
 export function getTestPaymentMethodLabel(methodId) {
-  return TEST_PAYMENT_METHOD_LABELS[methodId] || methodId || '';
+  return CHECKOUT_PAYMENT_LABELS[methodId] || methodId || '';
 }
 
 /**
@@ -1258,17 +1249,12 @@ export async function createRestOrder({
   form,
   items,
   shippingTotal = 0,
-  paymentMethod = 'bacs',
+  paymentMethod = 'stripe_promptpay',
 }) {
   const method = resolveWooPaymentMethod(paymentMethod);
-  if (!method) {
+  if (!method || method !== 'stripe_promptpay') {
     throw new Error(
-      'วิธีชำระเงินไม่ถูกต้อง (ใช้ bacs, cod, xendit_gateway หรือ stripe_promptpay)',
-    );
-  }
-  if (method.startsWith('omise') || method === 'omise_promptpay') {
-    throw new Error(
-      'Omise PromptPay ถูกปิดแล้ว — เลือกชำระออนไลน์ผ่าน Xendit หรือ Stripe',
+      'วิธีชำระเงินไม่ถูกต้อง — รองรับเฉพาะพร้อมเพย์ผ่าน Stripe',
     );
   }
 
@@ -1368,18 +1354,6 @@ export async function createRestOrder({
   if (!order?.order_id) {
     const err = new Error('ไม่พบเลขที่คำสั่งซื้อจากเซิร์ฟเวอร์');
     err.status = response.status;
-    err.data = data;
-    throw err;
-  }
-
-  if (
-    method === 'xendit_gateway' &&
-    String(order.payment_method || '') !== 'xendit_gateway'
-  ) {
-    const err = new Error(
-      `คาดหวัง xendit_gateway แต่ได้ payment_method=${order.payment_method || '(ว่าง)'}`,
-    );
-    err.status = 502;
     err.data = data;
     throw err;
   }

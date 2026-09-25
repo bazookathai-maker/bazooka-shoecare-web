@@ -300,12 +300,12 @@ function wooServerDevApi(env) {
               payload.paymentMethod || payload.payment_method || '',
             ).trim()
             console.log('[dev create-order] paymentMethod from client =', method)
-            if (method.startsWith('omise') || method === 'omise_promptpay') {
+            if (method !== 'stripe_promptpay') {
               res.statusCode = 400
               res.end(
                 JSON.stringify({
                   message:
-                    'Omise PromptPay ถูกปิดแล้ว — ใช้ xendit_gateway สำหรับชำระออนไลน์',
+                    'วิธีชำระเงินไม่ถูกต้อง — รองรับเฉพาะพร้อมเพย์ผ่าน Stripe (stripe_promptpay)',
                 }),
               )
               return

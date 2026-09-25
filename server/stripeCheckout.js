@@ -39,11 +39,13 @@ function getStripeSecretKey() {
   if (!key) {
     throw httpError('ยังไม่ได้ตั้งค่า STRIPE_SECRET_KEY บนเซิร์ฟเวอร์', 500);
   }
-  if (key.startsWith('sk_live_')) {
-    throw httpError('รอบนี้รองรับเฉพาะ Stripe Test Mode (sk_test_)', 500);
-  }
-  if (!key.startsWith('sk_test_')) {
-    throw httpError('STRIPE_SECRET_KEY ต้องเป็น Test Mode (sk_test_)', 500);
+  // Accept live or test secrets. Mode is determined solely by the key prefix
+  // from server env (never from the browser).
+  if (!key.startsWith('sk_live_') && !key.startsWith('sk_test_')) {
+    throw httpError(
+      'STRIPE_SECRET_KEY ต้องขึ้นต้นด้วย sk_live_ หรือ sk_test_',
+      500,
+    );
   }
   return key;
 }
@@ -53,12 +55,22 @@ function getStripeWebhookSecret() {
   if (!secret) {
     throw httpError('ยังไม่ได้ตั้งค่า STRIPE_WEBHOOK_SECRET บนเซิร์ฟเวอร์', 500);
   }
+  if (!secret.startsWith('whsec_')) {
+    throw httpError('STRIPE_WEBHOOK_SECRET ไม่ถูกต้อง', 500);
+  }
   return secret;
 }
 
 function getStripe() {
-  // Use package default API version — Test Mode only via sk_test_ gate above.
   return new Stripe(getStripeSecretKey());
+}
+
+/** Live vs test is inferred from STRIPE_SECRET_KEY only (server-side). */
+export function getStripeMode() {
+  const key = cleanEnvValue(process.env.STRIPE_SECRET_KEY);
+  if (key.startsWith('sk_live_')) return 'live';
+  if (key.startsWith('sk_test_')) return 'test';
+  return 'unknown';
 }
 
 function normalizeOrigin(origin) {
@@ -316,8 +328,11 @@ export async function readRawBody(req) {
 
 /** Exported for diagnostics only — never log secret values. */
 export function isStripeTestConfigured() {
-  const key = cleanEnvValue(process.env.STRIPE_SECRET_KEY);
-  return Boolean(key && key.startsWith('sk_test_'));
+  return getStripeMode() === 'test';
+}
+
+export function isStripeLiveConfigured() {
+  return getStripeMode() === 'live';
 }
 
 export function getSavedStripeSessionId(order) {

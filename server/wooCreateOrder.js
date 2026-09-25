@@ -4,13 +4,11 @@
  * Never import this module from browser/client code.
  */
 
-const ALLOWED_PAYMENT_METHODS = new Set([
+const ALLOWED_PAYMENT_METHODS = new Set(['stripe_promptpay']);
+const BLOCKED_PAYMENT_METHODS = new Set([
   'bacs',
   'cod',
   'xendit_gateway',
-  'stripe_promptpay',
-]);
-const BLOCKED_PAYMENT_METHODS = new Set([
   'omise_promptpay',
   'omise',
   'omise_mobilebanking',
@@ -22,10 +20,7 @@ const BLOCKED_PAYMENT_METHODS = new Set([
 ]);
 
 const PAYMENT_TITLES = {
-  bacs: 'โอนเงินผ่านธนาคาร',
-  cod: 'เก็บเงินปลายทาง',
-  xendit_gateway: 'Xendit Payment Gateway',
-  stripe_promptpay: 'พร้อมเพย์ (Stripe Checkout Test)',
+  stripe_promptpay: 'พร้อมเพย์ (Stripe)',
 };
 
 export const OMISE_CHARGE_META_KEY = '_omise_charge_id';
@@ -90,15 +85,18 @@ function toAddress(address, { includeEmail = false } = {}) {
 
 function buildOrderPayload(input) {
   const paymentMethod = String(
-    input.paymentMethod || input.payment_method || 'bacs',
+    input.paymentMethod || input.payment_method || 'stripe_promptpay',
   ).trim();
 
   if (
     BLOCKED_PAYMENT_METHODS.has(paymentMethod) ||
-    paymentMethod.startsWith('omise')
+    paymentMethod.startsWith('omise') ||
+    paymentMethod === 'bacs' ||
+    paymentMethod === 'cod' ||
+    paymentMethod === 'xendit_gateway'
   ) {
     const err = new Error(
-      'วิธีชำระเงินนี้ถูกปิดแล้ว (Omise) — ใช้ xendit_gateway สำหรับชำระออนไลน์',
+      'วิธีชำระเงินนี้ถูกปิดแล้ว — ใช้พร้อมเพย์ผ่าน Stripe เท่านั้น',
     );
     err.status = 400;
     throw err;
@@ -106,7 +104,7 @@ function buildOrderPayload(input) {
 
   if (!ALLOWED_PAYMENT_METHODS.has(paymentMethod)) {
     const err = new Error(
-      'วิธีชำระเงินไม่ถูกต้อง (ใช้ bacs, cod, xendit_gateway หรือ stripe_promptpay)',
+      'วิธีชำระเงินไม่ถูกต้อง (รองรับเฉพาะ stripe_promptpay)',
     );
     err.status = 400;
     throw err;
@@ -142,12 +140,8 @@ function buildOrderPayload(input) {
       : [];
 
   // Status drives WooCommerce transactional emails:
-  // COD → processing, BACS → on-hold,
-  // Xendit / Stripe stay pending until paid via plugin / webhook.
+  // Stripe PromptPay stays pending until paid via webhook.
   const statusByMethod = {
-    cod: 'processing',
-    bacs: 'on-hold',
-    xendit_gateway: 'pending',
     stripe_promptpay: 'pending',
   };
 
@@ -263,59 +257,6 @@ export async function createWooCommerceOrder(input) {
 
   const orderKey = data.order_key ?? null;
   let orderData = data;
-
-  // Xendit: never mark paid. Ensure gateway sticks and use Woo's official payment_url.
-  if (body.payment_method === 'xendit_gateway') {
-    if (String(orderData.payment_method || '') !== 'xendit_gateway') {
-      orderData = await updateWooOrder(orderId, {
-        payment_method: 'xendit_gateway',
-        payment_method_title: PAYMENT_TITLES.xendit_gateway,
-        set_paid: false,
-      });
-    }
-
-    if (String(orderData.payment_method || '') !== 'xendit_gateway') {
-      const err = new Error(
-        'สร้างคำสั่งซื้อแล้ว แต่ WooCommerce ไม่ได้ตั้ง payment_method เป็น xendit_gateway',
-      );
-      err.status = 502;
-      err.data = orderData;
-      throw err;
-    }
-
-    let paymentUrl = String(orderData.payment_url || '').trim();
-    if (!paymentUrl) {
-      orderData = await getWooOrderById(orderId);
-      paymentUrl = String(orderData.payment_url || '').trim();
-    }
-
-    if (!paymentUrl) {
-      const err = new Error(
-        'ไม่พบ payment_url จาก WooCommerce สำหรับชำระผ่าน Xendit',
-      );
-      err.status = 502;
-      err.data = orderData;
-      throw err;
-    }
-
-    return {
-      raw: orderData,
-      order: {
-        order_id: orderId,
-        order_key: orderData.order_key ?? orderKey,
-        order_number:
-          orderData.number != null ? String(orderData.number) : String(orderId),
-        status: orderData.status ?? null,
-        payment_method: 'xendit_gateway',
-      },
-      payment_url: paymentUrl,
-      trace: {
-        payment_method_requested: body.payment_method,
-        payment_method_stored: String(orderData.payment_method || ''),
-        omise_blocked: true,
-      },
-    };
-  }
 
   return {
     raw: orderData,
