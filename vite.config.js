@@ -226,6 +226,53 @@ function wooServerDevApi(env) {
           return
         }
 
+        if (path === '/api/track-order') {
+          res.setHeader('Cache-Control', 'no-store')
+          res.setHeader('Content-Type', 'application/json; charset=utf-8')
+
+          if (req.method === 'OPTIONS') {
+            res.statusCode = 204
+            res.end()
+            return
+          }
+
+          if (req.method !== 'POST') {
+            res.statusCode = 405
+            res.end(JSON.stringify({ message: 'Method Not Allowed' }))
+            return
+          }
+
+          try {
+            const { trackWooOrderByIdAndPhone } = await server.ssrLoadModule(
+              '/server/wooTrackOrder.js',
+            )
+            const payload = await readJsonBody(req)
+            const result = await trackWooOrderByIdAndPhone(payload)
+            console.log('[dev track-order] ok', {
+              orderId: result?.order?.id,
+              wooStatus: result?.order?.wooStatus,
+            })
+            res.statusCode = 200
+            res.end(JSON.stringify(result))
+          } catch (err) {
+            const status = Number(err?.status) || 500
+            console.error('[dev track-order] error', {
+              status,
+              message: err instanceof Error ? err.message : String(err),
+            })
+            res.statusCode = status
+            res.end(
+              JSON.stringify({
+                message:
+                  err instanceof Error
+                    ? err.message
+                    : 'ค้นหาคำสั่งซื้อไม่สำเร็จ',
+              }),
+            )
+          }
+          return
+        }
+
         if (path === '/api/create-order') {
           res.setHeader('Cache-Control', 'no-store')
           res.setHeader('Content-Type', 'application/json; charset=utf-8')
