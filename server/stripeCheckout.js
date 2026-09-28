@@ -39,15 +39,21 @@ function getStripeSecretKey() {
   if (!key) {
     throw httpError('ยังไม่ได้ตั้งค่า STRIPE_SECRET_KEY บนเซิร์ฟเวอร์', 500);
   }
-  // Accept live or test secrets. Mode is determined solely by the key prefix
-  // from server env (never from the browser).
-  if (!key.startsWith('sk_live_') && !key.startsWith('sk_test_')) {
+  // Accept secret (sk_) or restricted (rk_) keys, live or test. Mode is
+  // determined solely by the key prefix from server env (never from the browser).
+  if (keyModeFromPrefix(key) === 'unknown') {
     throw httpError(
-      'STRIPE_SECRET_KEY ต้องขึ้นต้นด้วย sk_live_ หรือ sk_test_',
+      'STRIPE_SECRET_KEY ต้องขึ้นต้นด้วย sk_live_, sk_test_, rk_live_ หรือ rk_test_',
       500,
     );
   }
   return key;
+}
+
+function keyModeFromPrefix(key) {
+  if (key.startsWith('sk_live_') || key.startsWith('rk_live_')) return 'live';
+  if (key.startsWith('sk_test_') || key.startsWith('rk_test_')) return 'test';
+  return 'unknown';
 }
 
 function getStripeWebhookSecret() {
@@ -67,10 +73,7 @@ function getStripe() {
 
 /** Live vs test is inferred from STRIPE_SECRET_KEY only (server-side). */
 export function getStripeMode() {
-  const key = cleanEnvValue(process.env.STRIPE_SECRET_KEY);
-  if (key.startsWith('sk_live_')) return 'live';
-  if (key.startsWith('sk_test_')) return 'test';
-  return 'unknown';
+  return keyModeFromPrefix(cleanEnvValue(process.env.STRIPE_SECRET_KEY));
 }
 
 function normalizeOrigin(origin) {
