@@ -2,6 +2,10 @@ import {
   createWooCommerceOrder,
   readJsonBody,
 } from '../server/wooCreateOrder.js';
+import {
+  getSessionFromRequest,
+  saveCustomerAddressesFromOrder,
+} from '../server/wooCustomerAuth.js';
 
 function setCors(res) {
   res.setHeader('Cache-Control', 'no-store');
@@ -29,7 +33,37 @@ export default async function handler(req, res) {
 
   try {
     const payload = await readJsonBody(req);
+    // Never trust client-supplied customer_id. Guest stays guest unless session is valid.
+    delete payload.customer_id;
+    // Only Stripe PromptPay is accepted from this storefront.
+    const method = String(payload.paymentMethod || payload.payment_method || '').trim();
+    if (method !== 'stripe_promptpay') {
+      res.statusCode = 400;
+      res.end(
+        JSON.stringify({
+          message:
+            'วิธีชำระเงินไม่ถูกต้อง — รองรับเฉพาะพร้อมเพย์ผ่าน Stripe (stripe_promptpay)',
+        }),
+      );
+      return;
+    }
+    const saveAddressToProfile = payload.saveAddressToProfile === true;
+    delete payload.saveAddressToProfile;
+    const session = getSessionFromRequest(req);
+    if (session?.customerId) {
+      payload.customer_id = session.customerId;
+    }
     const result = await createWooCommerceOrder(payload);
+    if (session?.customerId && saveAddressToProfile) {
+      try {
+        await saveCustomerAddressesFromOrder(session, payload.shipping);
+      } catch (profileErr) {
+        // Saving the profile must never block a created order.
+        console.warn('[create-order] profile address not saved', {
+          status: profileErr?.status,
+        });
+      }
+    }
     res.statusCode = 200;
     res.end(JSON.stringify(result));
   } catch (err) {

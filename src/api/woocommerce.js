@@ -1,4 +1,5 @@
 import { resolveThaiWooStateCode } from '../data/thaiWooStates';
+import { getCustomerToken } from './customerAuth';
 
 const CART_TOKEN_STORAGE_KEY = 'bazooka_cart_token';
 const CART_NONCE_STORAGE_KEY = 'bazooka_cart_nonce';
@@ -24,6 +25,7 @@ const STORE_CART_URL = `${STORE_API_ROOT}/cart`;
 const STORE_CHECKOUT_URL = `${STORE_API_ROOT}/checkout`;
 /** Same-origin serverless routes — secrets never leave the server. */
 const CREATE_ORDER_API_URL = '/api/create-order';
+const CREATE_STRIPE_CHECKOUT_API_URL = '/api/create-stripe-checkout';
 const PRODUCTS_API_URL = '/api/products';
 
 export function getStoreApiRoot() {
@@ -35,19 +37,18 @@ export function isRestOrderConfigured() {
   return true;
 }
 
-/** Phase test gateways only — never Omise/card/PromptPay in this phase. */
-const TEST_PAYMENT_METHOD_PRIORITY = ['bacs', 'cod'];
+/** Checkout: Stripe PromptPay only. */
+const CHECKOUT_PAYMENT_METHODS = ['stripe_promptpay'];
 
-const TEST_PAYMENT_METHOD_LABELS = {
-  bacs: 'โอนเงินผ่านธนาคาร',
-  cod: 'เก็บเงินปลายทาง',
+const CHECKOUT_PAYMENT_LABELS = {
+  stripe_promptpay: 'พร้อมเพย์ (Stripe)',
 };
 
-/** Static test payment options for REST order create (does not depend on Store API). */
+/** Payment options for REST order create (does not depend on Store API). */
 export function getRestTestPaymentOptions() {
-  return TEST_PAYMENT_METHOD_PRIORITY.map((id) => ({
+  return CHECKOUT_PAYMENT_METHODS.map((id) => ({
     id,
-    label: TEST_PAYMENT_METHOD_LABELS[id] || id,
+    label: CHECKOUT_PAYMENT_LABELS[id] || id,
   }));
 }
 
@@ -414,9 +415,6 @@ export async function fetchCart() {
 
 export async function updateCartCustomer({ billing_address, shipping_address }) {
   const payload = { billing_address, shipping_address };
-  if (import.meta.env.DEV) {
-    console.log('[store-api-shipping] update-customer payload (raw)', payload);
-  }
 
   const requestToken = getCartToken();
   const cart = await cartRequest('/update-customer', {
@@ -940,35 +938,34 @@ function splitFullName(fullName) {
 
 export function resolveWooPaymentMethod(uiPaymentId) {
   const id = String(uiPaymentId || '').trim();
-  if (TEST_PAYMENT_METHOD_PRIORITY.includes(id)) return id;
+  if (CHECKOUT_PAYMENT_METHODS.includes(id)) return id;
   return '';
 }
 
 /**
- * Pick a Phase 3.1 test payment method from live cart `payment_methods`.
- * Prefers bacs, then cod. Never invents Omise/card/PromptPay.
+ * Pick checkout payment method from available gateways (Stripe PromptPay only).
  */
 export function pickTestPaymentMethod(availableMethods) {
   const available = Array.isArray(availableMethods)
     ? availableMethods.filter((id) => typeof id === 'string' && id.trim())
     : [];
   const selected =
-    TEST_PAYMENT_METHOD_PRIORITY.find((id) => available.includes(id)) || '';
+    CHECKOUT_PAYMENT_METHODS.find((id) => available.includes(id)) ||
+    CHECKOUT_PAYMENT_METHODS[0] ||
+    '';
 
   return {
     selected,
     available,
-    testOptions: TEST_PAYMENT_METHOD_PRIORITY.filter((id) =>
-      available.includes(id),
-    ).map((id) => ({
+    testOptions: CHECKOUT_PAYMENT_METHODS.map((id) => ({
       id,
-      label: TEST_PAYMENT_METHOD_LABELS[id] || id,
+      label: CHECKOUT_PAYMENT_LABELS[id] || id,
     })),
   };
 }
 
 export function getTestPaymentMethodLabel(methodId) {
-  return TEST_PAYMENT_METHOD_LABELS[methodId] || methodId || '';
+  return CHECKOUT_PAYMENT_LABELS[methodId] || methodId || '';
 }
 
 /**
@@ -1249,11 +1246,14 @@ export async function createRestOrder({
   form,
   items,
   shippingTotal = 0,
-  paymentMethod = 'bacs',
+  paymentMethod = 'stripe_promptpay',
+  saveAddressToProfile = false,
 }) {
   const method = resolveWooPaymentMethod(paymentMethod);
-  if (!method) {
-    throw new Error('วิธีชำระเงินทดสอบไม่ถูกต้อง (ใช้ bacs หรือ cod เท่านั้น)');
+  if (!method || method !== 'stripe_promptpay') {
+    throw new Error(
+      'วิธีชำระเงินไม่ถูกต้อง — รองรับเฉพาะพร้อมเพย์ผ่าน Stripe',
+    );
   }
 
   const lineItems = (Array.isArray(items) ? items : [])
@@ -1281,6 +1281,7 @@ export async function createRestOrder({
     shipping: toRestAddress(shipping_address),
     line_items: lineItems,
     shippingTotal: Number(shippingTotal) || 0,
+    saveAddressToProfile: saveAddressToProfile === true,
   };
 
   if (import.meta.env.DEV) {
@@ -1288,32 +1289,21 @@ export async function createRestOrder({
       paymentMethod: payload.paymentMethod,
       line_items: payload.line_items,
       shippingTotal: payload.shippingTotal,
-      billing: {
-        ...payload.billing,
-        first_name: '[set]',
-        last_name: '[set]',
-        address_1: '[set]',
-        email: '[set]',
-        phone: '[set]',
-      },
-      shipping: {
-        ...payload.shipping,
-        first_name: '[set]',
-        last_name: '[set]',
-        address_1: '[set]',
-        phone: payload.shipping.phone ? '[set]' : '',
-      },
     });
   }
 
-  const response = await fetch(CREATE_ORDER_API_URL, {
-    method: 'POST',
-    headers: {
+  const headers = {
       Accept: 'application/json',
       'Content-Type': 'application/json',
       'Cache-Control': 'no-cache',
       Pragma: 'no-cache',
-    },
+    };
+  const token = getCustomerToken();
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  const response = await fetch(CREATE_ORDER_API_URL, {
+    method: 'POST',
+    headers,
     body: JSON.stringify(payload),
     cache: 'no-store',
   });
@@ -1330,6 +1320,9 @@ export async function createRestOrder({
       status: response.status,
       order_id: data?.order?.order_id ?? null,
       order_number: data?.order?.order_number ?? null,
+      payment_method_sent: method,
+      payment_method_stored: data?.order?.payment_method ?? null,
+      trace: data?.trace ?? null,
       message: data?.message ?? null,
     });
   }
@@ -1349,5 +1342,119 @@ export async function createRestOrder({
     throw err;
   }
 
-  return { raw: data?.raw ?? data, order };
+  if (
+    method === 'stripe_promptpay' &&
+    String(order.payment_method || '') !== 'stripe_promptpay'
+  ) {
+    const err = new Error(
+      `คาดหวัง stripe_promptpay แต่ได้ payment_method=${order.payment_method || '(ว่าง)'}`,
+    );
+    err.status = 502;
+    err.data = data;
+    throw err;
+  }
+
+  return {
+    raw: data?.raw ?? data,
+    order,
+    payment_url:
+      typeof data?.payment_url === 'string' && data.payment_url.trim()
+        ? data.payment_url.trim()
+        : '',
+    trace: data?.trace ?? null,
+  };
+}
+
+/**
+ * Create Stripe-hosted Checkout Session for an existing Woo order.
+ * Server uses STRIPE_SECRET_KEY — browser only receives session url.
+ */
+export async function createStripeCheckoutSession({
+  orderId,
+  orderKey = '',
+}) {
+  const id = String(orderId ?? '').trim();
+  if (!id) {
+    throw new Error('ไม่พบเลขที่คำสั่งซื้อสำหรับ Stripe Checkout');
+  }
+
+  const payload = {
+    orderId: id,
+    orderKey: String(orderKey || '').trim(),
+    successOrigin:
+      typeof window !== 'undefined' ? window.location.origin : '',
+  };
+
+  console.log('[stripe-checkout] before fetch', {
+    url: CREATE_STRIPE_CHECKOUT_API_URL,
+    orderId: payload.orderId,
+    orderKey: payload.orderKey ? '[set]' : null,
+    successOrigin: payload.successOrigin || null,
+  });
+
+  const headers = {
+    Accept: 'application/json',
+    'Content-Type': 'application/json',
+    'Cache-Control': 'no-cache',
+    Pragma: 'no-cache',
+  };
+  const token = getCustomerToken();
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  let response;
+  try {
+    response = await fetch(CREATE_STRIPE_CHECKOUT_API_URL, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(payload),
+      cache: 'no-store',
+    });
+  } catch (networkErr) {
+    console.error('[stripe-checkout] fetch network error', networkErr);
+    throw networkErr;
+  }
+
+  let data = null;
+  try {
+    data = await response.json();
+  } catch {
+    data = null;
+  }
+
+  console.log('[stripe-checkout] response', {
+    status: response.status,
+    ok: response.ok,
+    sessionId: data?.sessionId ? '[set]' : null,
+    url: data?.url ? '[set]' : null,
+    message: data?.message ?? null,
+  });
+
+  if (!response.ok) {
+    const err = new Error(
+      (data && typeof data.message === 'string' && data.message.trim()) ||
+        `สร้าง Stripe Checkout ไม่สำเร็จ (${response.status})`,
+    );
+    err.status = response.status;
+    err.data = data;
+    console.error('[stripe-checkout] error response', {
+      status: err.status,
+      message: err.message,
+      data: err.data,
+    });
+    throw err;
+  }
+
+  const url = typeof data?.url === 'string' ? data.url.trim() : '';
+  if (!url) {
+    const err = new Error('ไม่พบ Stripe Checkout URL จากเซิร์ฟเวอร์');
+    console.error('[stripe-checkout] missing url in success body', data);
+    throw err;
+  }
+
+  return {
+    url,
+    sessionId: data?.sessionId ?? null,
+    orderId: data?.orderId ?? id,
+    orderNumber: data?.orderNumber ?? null,
+  };
 }

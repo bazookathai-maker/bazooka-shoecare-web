@@ -26,6 +26,9 @@ export default function Footer() {
           <Link to="/reviews" className="footer__link">
             รีวิว
           </Link>
+          <Link to="/account" className="footer__link">
+            บัญชีของฉัน
+          </Link>
           <Link to="/track-order" className="footer__link">
             ติดตามคำสั่งซื้อ
           </Link>

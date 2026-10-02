@@ -1,19 +1,25 @@
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
-import {
-  createWooCommerceOrder,
-  readJsonBody,
-} from './server/wooCreateOrder.js'
+import { readJsonBody } from './server/wooCreateOrder.js'
 import {
   fetchAllWooProducts,
   fetchWooProductById,
 } from './server/wooProducts.js'
 import { proxyWooStoreCart } from './server/wooCartProxy.js'
-
+import {
+  handleOmiseWebhookEvent,
+} from './server/omisePromptPay.js'
 const WOO_ENV_KEYS = [
   'WOOCOMMERCE_URL',
   'WOOCOMMERCE_CONSUMER_KEY',
   'WOOCOMMERCE_CONSUMER_SECRET',
+  'OMISE_SECRET_KEY',
+  'STRIPE_SECRET_KEY',
+  'STRIPE_WEBHOOK_SECRET',
+  'PUBLIC_SITE_URL',
+  'SITE_URL',
+  'AUTH_SESSION_SECRET',
+  'GOOGLE_CLIENT_ID',
 ]
 
 /**
@@ -31,7 +37,94 @@ function wooServerDevApi(env) {
       server.middlewares.use(async (req, res, next) => {
         const path = req.url?.split('?')[0]
 
+        // Auth + create-order run the exact Vercel handlers (no dev-only copies).
+        const authMatch = path?.match(/^\/api\/auth[/-]([a-z-]+)$/)
+        if (authMatch) {
+          const { default: authHandler } = await server.ssrLoadModule(
+            '/api/auth/[action].js',
+          )
+          req.query = { action: authMatch[1] }
+          await authHandler(req, res)
+          return
+        }
+
         if (path === '/api/create-order') {
+          const { default: createOrderHandler } = await server.ssrLoadModule(
+            '/api/create-order.js',
+          )
+          req.query = {}
+          await createOrderHandler(req, res)
+          return
+        }
+
+        if (path === '/api/track-order') {
+          res.setHeader('Cache-Control', 'no-store')
+          res.setHeader('Content-Type', 'application/json; charset=utf-8')
+
+          if (req.method === 'OPTIONS') {
+            res.statusCode = 204
+            res.end()
+            return
+          }
+
+          if (req.method !== 'POST') {
+            res.statusCode = 405
+            res.end(JSON.stringify({ message: 'Method Not Allowed' }))
+            return
+          }
+
+          try {
+            const { trackWooOrderByIdAndPhone } = await server.ssrLoadModule(
+              '/server/wooTrackOrder.js',
+            )
+            const payload = await readJsonBody(req)
+            const result = await trackWooOrderByIdAndPhone(payload)
+            console.log('[dev track-order] ok', {
+              orderId: result?.order?.id,
+              wooStatus: result?.order?.wooStatus,
+            })
+            res.statusCode = 200
+            res.end(JSON.stringify(result))
+          } catch (err) {
+            const status = Number(err?.status) || 500
+            console.error('[dev track-order] error', {
+              status,
+              message: err instanceof Error ? err.message : String(err),
+            })
+            res.statusCode = status
+            res.end(
+              JSON.stringify({
+                message:
+                  err instanceof Error
+                    ? err.message
+                    : 'ค้นหาคำสั่งซื้อไม่สำเร็จ',
+              }),
+            )
+          }
+          return
+        }
+
+        if (path === '/api/create-promptpay') {
+          res.setHeader('Cache-Control', 'no-store')
+          res.setHeader('Content-Type', 'application/json; charset=utf-8')
+
+          if (req.method === 'OPTIONS') {
+            res.statusCode = 204
+            res.end()
+            return
+          }
+
+          res.statusCode = 410
+          res.end(
+            JSON.stringify({
+              message:
+                'Omise PromptPay ถูกปิดแล้ว — ใช้ xendit_gateway ผ่าน WooCommerce payment_url',
+            }),
+          )
+          return
+        }
+
+        if (path === '/api/create-stripe-checkout') {
           res.setHeader('Cache-Control', 'no-store')
           res.setHeader('Content-Type', 'application/json; charset=utf-8')
 
@@ -49,7 +142,77 @@ function wooServerDevApi(env) {
 
           try {
             const payload = await readJsonBody(req)
-            const result = await createWooCommerceOrder(payload)
+            const orderId = payload.orderId ?? payload.order_id
+            const orderKey = payload.orderKey ?? payload.order_key ?? ''
+            const successOrigin =
+              String(payload.successOrigin || req.headers.origin || '').trim() ||
+              'http://localhost:5173'
+            console.log('[dev create-stripe-checkout] request', {
+              orderId,
+              orderKey: orderKey ? '[set]' : null,
+              successOrigin,
+            })
+            const {
+              createStripeCheckoutForWooOrder,
+            } = await server.ssrLoadModule('/server/stripeCheckout.js')
+            const result = await createStripeCheckoutForWooOrder(orderId, {
+              orderKey,
+              successOrigin,
+            })
+            console.log('[dev create-stripe-checkout] ok', {
+              orderId: result.orderId,
+              sessionId: result.sessionId ? '[set]' : null,
+              url: result.url ? '[set]' : null,
+            })
+            res.statusCode = 200
+            res.end(JSON.stringify(result))
+          } catch (err) {
+            const status = Number(err?.status) || 500
+            console.error('[dev create-stripe-checkout] error', {
+              status,
+              message: err instanceof Error ? err.message : String(err),
+            })
+            res.statusCode = status
+            res.end(
+              JSON.stringify({
+                message:
+                  err instanceof Error
+                    ? err.message
+                    : 'สร้าง Stripe Checkout ไม่สำเร็จ',
+              }),
+            )
+          }
+          return
+        }
+
+        if (path === '/api/stripe-webhook') {
+          res.setHeader('Cache-Control', 'no-store')
+          res.setHeader('Content-Type', 'application/json; charset=utf-8')
+
+          if (req.method === 'OPTIONS') {
+            res.statusCode = 204
+            res.end()
+            return
+          }
+
+          if (req.method !== 'POST') {
+            res.statusCode = 405
+            res.end(JSON.stringify({ message: 'Method Not Allowed' }))
+            return
+          }
+
+          try {
+            const { handleStripeWebhook, readRawBody } =
+              await server.ssrLoadModule('/server/stripeCheckout.js')
+            const rawBody = await readRawBody(req)
+            const signature = req.headers['stripe-signature']
+            const result = await handleStripeWebhook(rawBody, signature)
+            console.log('[dev stripe-webhook]', {
+              type: result?.type,
+              orderId: result?.orderId,
+              markedPaid: result?.markedPaid,
+              skipped: result?.skipped,
+            })
             res.statusCode = 200
             res.end(JSON.stringify(result))
           } catch (err) {
@@ -57,11 +220,48 @@ function wooServerDevApi(env) {
             res.statusCode = status
             res.end(
               JSON.stringify({
+                ok: false,
                 message:
                   err instanceof Error
                     ? err.message
-                    : 'สร้างคำสั่งซื้อไม่สำเร็จ',
-                code: err?.data?.code || undefined,
+                    : 'ประมวลผล Stripe webhook ไม่สำเร็จ',
+              }),
+            )
+          }
+          return
+        }
+
+        if (path === '/api/omise-webhook') {
+          res.setHeader('Cache-Control', 'no-store')
+          res.setHeader('Content-Type', 'application/json; charset=utf-8')
+
+          if (req.method === 'OPTIONS') {
+            res.statusCode = 204
+            res.end()
+            return
+          }
+
+          if (req.method !== 'POST') {
+            res.statusCode = 405
+            res.end(JSON.stringify({ message: 'Method Not Allowed' }))
+            return
+          }
+
+          try {
+            const event = await readJsonBody(req)
+            const result = await handleOmiseWebhookEvent(event)
+            res.statusCode = 200
+            res.end(JSON.stringify({ ok: true, ...result }))
+          } catch (err) {
+            const status = Number(err?.status) || 500
+            res.statusCode = status
+            res.end(
+              JSON.stringify({
+                ok: false,
+                message:
+                  err instanceof Error
+                    ? err.message
+                    : 'ประมวลผล webhook ไม่สำเร็จ',
               }),
             )
           }
