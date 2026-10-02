@@ -4,8 +4,10 @@ import {
   fetchCustomerProfile,
   getCustomerToken,
   loginCustomerAccount,
+  loginWithGoogleCredential,
   registerCustomerAccount,
   setCustomerToken,
+  updateCustomerProfile,
 } from '../api/customerAuth';
 
 const AuthContext = createContext(null);
@@ -73,12 +75,32 @@ export function AuthProvider({ children }) {
   );
 
   const login = useCallback(
-    async ({ email, password }) => {
-      const result = await loginCustomerAccount({ email, password });
+    async ({ email, password, googleLinkTicket }) => {
+      const result = await loginCustomerAccount({
+        email,
+        password,
+        googleLinkTicket,
+      });
       return applyAuth(result);
     },
     [applyAuth],
   );
+
+  /** Returns `{ customer, isNew }` so pages can send new accounts to profile setup. */
+  const loginWithGoogle = useCallback(
+    async (credential) => {
+      const result = await loginWithGoogleCredential(credential);
+      const nextCustomer = applyAuth(result);
+      return { customer: nextCustomer, isNew: Boolean(result?.isNew) };
+    },
+    [applyAuth],
+  );
+
+  const saveProfile = useCallback(async (address) => {
+    const updated = await updateCustomerProfile(address);
+    if (updated) setCustomer(updated);
+    return updated;
+  }, []);
 
   const logout = useCallback(() => {
     clearCustomerToken();
@@ -94,9 +116,11 @@ export function AuthProvider({ children }) {
       isLoggedIn: Boolean(token && customer),
       register,
       login,
+      loginWithGoogle,
+      saveProfile,
       logout,
     }),
-    [ready, token, customer, register, login, logout],
+    [ready, token, customer, register, login, loginWithGoogle, saveProfile, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

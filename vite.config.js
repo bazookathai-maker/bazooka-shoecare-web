@@ -9,15 +9,6 @@ import { proxyWooStoreCart } from './server/wooCartProxy.js'
 import {
   handleOmiseWebhookEvent,
 } from './server/omisePromptPay.js'
-import {
-  getAuthenticatedCustomer,
-  getAuthenticatedOrders,
-  getSessionFromRequest,
-  loginCustomer,
-  registerCustomer,
-  updateCustomerBilling,
-} from './server/wooCustomerAuth.js'
-
 const WOO_ENV_KEYS = [
   'WOOCOMMERCE_URL',
   'WOOCOMMERCE_CONSUMER_KEY',
@@ -27,6 +18,8 @@ const WOO_ENV_KEYS = [
   'STRIPE_WEBHOOK_SECRET',
   'PUBLIC_SITE_URL',
   'SITE_URL',
+  'AUTH_SESSION_SECRET',
+  'GOOGLE_CLIENT_ID',
 ]
 
 /**
@@ -44,185 +37,23 @@ function wooServerDevApi(env) {
       server.middlewares.use(async (req, res, next) => {
         const path = req.url?.split('?')[0]
 
-        if (path === '/api/auth/register' || path === '/api/auth-register') {
-          res.setHeader('Cache-Control', 'no-store')
-          res.setHeader('Content-Type', 'application/json; charset=utf-8')
-
-          if (req.method === 'OPTIONS') {
-            res.statusCode = 204
-            res.end()
-            return
-          }
-
-          if (req.method !== 'POST') {
-            res.statusCode = 405
-            res.end(JSON.stringify({ message: 'Method Not Allowed' }))
-            return
-          }
-
-          try {
-            const payload = await readJsonBody(req)
-            const result = await registerCustomer(payload)
-            res.statusCode = 200
-            res.end(JSON.stringify(result))
-          } catch (err) {
-            const status = Number(err?.status) || 500
-            res.statusCode = status
-            res.end(
-              JSON.stringify({
-                message:
-                  err instanceof Error ? err.message : 'สมัครบัญชีไม่สำเร็จ',
-              }),
-            )
-          }
+        // Auth + create-order run the exact Vercel handlers (no dev-only copies).
+        const authMatch = path?.match(/^\/api\/auth[/-]([a-z-]+)$/)
+        if (authMatch) {
+          const { default: authHandler } = await server.ssrLoadModule(
+            '/api/auth/[action].js',
+          )
+          req.query = { action: authMatch[1] }
+          await authHandler(req, res)
           return
         }
 
-        if (path === '/api/auth/login' || path === '/api/auth-login') {
-          res.setHeader('Cache-Control', 'no-store')
-          res.setHeader('Content-Type', 'application/json; charset=utf-8')
-
-          if (req.method === 'OPTIONS') {
-            res.statusCode = 204
-            res.end()
-            return
-          }
-
-          if (req.method !== 'POST') {
-            res.statusCode = 405
-            res.end(JSON.stringify({ message: 'Method Not Allowed' }))
-            return
-          }
-
-          try {
-            const payload = await readJsonBody(req)
-            const result = await loginCustomer(payload)
-            res.statusCode = 200
-            res.end(JSON.stringify(result))
-          } catch (err) {
-            const status = Number(err?.status) || 500
-            res.statusCode = status
-            res.end(
-              JSON.stringify({
-                message:
-                  err instanceof Error ? err.message : 'เข้าสู่ระบบไม่สำเร็จ',
-              }),
-            )
-          }
-          return
-        }
-
-        if (path === '/api/auth/me' || path === '/api/auth-me') {
-          res.setHeader('Cache-Control', 'no-store')
-          res.setHeader('Content-Type', 'application/json; charset=utf-8')
-
-          if (req.method === 'OPTIONS') {
-            res.statusCode = 204
-            res.end()
-            return
-          }
-
-          if (req.method !== 'GET') {
-            res.statusCode = 405
-            res.end(JSON.stringify({ message: 'Method Not Allowed' }))
-            return
-          }
-
-          try {
-            const customer = await getAuthenticatedCustomer(req)
-            res.statusCode = 200
-            res.end(JSON.stringify({ customer }))
-          } catch (err) {
-            const status = Number(err?.status) || 500
-            res.statusCode = status
-            res.end(
-              JSON.stringify({
-                message:
-                  err instanceof Error
-                    ? err.message
-                    : 'โหลดข้อมูลบัญชีไม่สำเร็จ',
-              }),
-            )
-          }
-          return
-        }
-
-        if (path === '/api/auth/orders' || path === '/api/auth-orders') {
-          res.setHeader('Cache-Control', 'no-store')
-          res.setHeader('Content-Type', 'application/json; charset=utf-8')
-
-          if (req.method === 'OPTIONS') {
-            res.statusCode = 204
-            res.end()
-            return
-          }
-
-          if (req.method !== 'GET') {
-            res.statusCode = 405
-            res.end(JSON.stringify({ message: 'Method Not Allowed' }))
-            return
-          }
-
-          try {
-            const orders = await getAuthenticatedOrders(req)
-            res.statusCode = 200
-            res.end(JSON.stringify({ orders }))
-          } catch (err) {
-            const status = Number(err?.status) || 500
-            res.statusCode = status
-            res.end(
-              JSON.stringify({
-                message:
-                  err instanceof Error
-                    ? err.message
-                    : 'โหลดประวัติคำสั่งซื้อไม่สำเร็จ',
-              }),
-            )
-          }
-          return
-        }
-
-        if (
-          path === '/api/auth/update-billing' ||
-          path === '/api/auth-update-billing'
-        ) {
-          res.setHeader('Cache-Control', 'no-store')
-          res.setHeader('Content-Type', 'application/json; charset=utf-8')
-
-          if (req.method === 'OPTIONS') {
-            res.statusCode = 204
-            res.end()
-            return
-          }
-
-          if (req.method !== 'PUT' && req.method !== 'POST') {
-            res.statusCode = 405
-            res.end(JSON.stringify({ message: 'Method Not Allowed' }))
-            return
-          }
-
-          try {
-            const payload = await readJsonBody(req)
-            console.log('[debug-billing-server] received PUT /api/auth/update-billing')
-            console.log('[debug-billing-server] billing payload phone:', payload?.billing?.phone)
-            console.log('[debug-billing-server] billing payload address_1:', payload?.billing?.address_1)
-            const customer = await updateCustomerBilling(req, payload.billing)
-            console.log('[debug-billing-server] WooCommerce updated, customer.id:', customer?.id)
-            res.statusCode = 200
-            res.end(JSON.stringify({ customer }))
-          } catch (err) {
-            const status = Number(err?.status) || 500
-            console.error('[debug-billing-server] FAILED status:', status, 'message:', err?.message)
-            res.statusCode = status
-            res.end(
-              JSON.stringify({
-                message:
-                  err instanceof Error
-                    ? err.message
-                    : 'อัปเดตข้อมูลบัญชีไม่สำเร็จ',
-              }),
-            )
-          }
+        if (path === '/api/create-order') {
+          const { default: createOrderHandler } = await server.ssrLoadModule(
+            '/api/create-order.js',
+          )
+          req.query = {}
+          await createOrderHandler(req, res)
           return
         }
 
@@ -267,72 +98,6 @@ function wooServerDevApi(env) {
                   err instanceof Error
                     ? err.message
                     : 'ค้นหาคำสั่งซื้อไม่สำเร็จ',
-              }),
-            )
-          }
-          return
-        }
-
-        if (path === '/api/create-order') {
-          res.setHeader('Cache-Control', 'no-store')
-          res.setHeader('Content-Type', 'application/json; charset=utf-8')
-
-          if (req.method === 'OPTIONS') {
-            res.statusCode = 204
-            res.end()
-            return
-          }
-
-          if (req.method !== 'POST') {
-            res.statusCode = 405
-            res.end(JSON.stringify({ message: 'Method Not Allowed' }))
-            return
-          }
-
-          try {
-            // Always reload server module — static import stays stale across HMR.
-            const { createWooCommerceOrder } = await server.ssrLoadModule(
-              '/server/wooCreateOrder.js',
-            )
-            const payload = await readJsonBody(req)
-            delete payload.customer_id
-            const method = String(
-              payload.paymentMethod || payload.payment_method || '',
-            ).trim()
-            console.log('[dev create-order] paymentMethod from client =', method)
-            if (method !== 'stripe_promptpay') {
-              res.statusCode = 400
-              res.end(
-                JSON.stringify({
-                  message:
-                    'วิธีชำระเงินไม่ถูกต้อง — รองรับเฉพาะพร้อมเพย์ผ่าน Stripe (stripe_promptpay)',
-                }),
-              )
-              return
-            }
-            const session = getSessionFromRequest(req)
-            if (session?.customerId) {
-              payload.customer_id = session.customerId
-            }
-            const result = await createWooCommerceOrder(payload)
-            console.log('[dev create-order] stored payment_method =', {
-              requested: method,
-              stored: result?.order?.payment_method ?? result?.raw?.payment_method,
-              order_id: result?.order?.order_id,
-              trace: result?.trace,
-            })
-            res.statusCode = 200
-            res.end(JSON.stringify(result))
-          } catch (err) {
-            const status = Number(err?.status) || 500
-            res.statusCode = status
-            res.end(
-              JSON.stringify({
-                message:
-                  err instanceof Error
-                    ? err.message
-                    : 'สร้างคำสั่งซื้อไม่สำเร็จ',
-                code: err?.data?.code || undefined,
               }),
             )
           }

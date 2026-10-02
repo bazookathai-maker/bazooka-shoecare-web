@@ -1,0 +1,39 @@
+.google-signin {
+  display: grid;
+  gap: 1rem;
+}
+
+.google-signin__button {
+  display: flex;
+  justify-content: center;
+  min-height: 44px;
+}
+
+.google-signin__button--disabled {
+  pointer-events: none;
+  opacity: 0.55;
+}
+
+.google-signin__note {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  line-height: var(--line-height-thai);
+  text-align: center;
+}
+
+.google-signin__divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+}
+
+.google-signin__divider::before,
+.google-signin__divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}

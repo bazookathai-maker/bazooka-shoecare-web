@@ -2,7 +2,10 @@ import {
   createWooCommerceOrder,
   readJsonBody,
 } from '../server/wooCreateOrder.js';
-import { getSessionFromRequest } from '../server/wooCustomerAuth.js';
+import {
+  getSessionFromRequest,
+  saveCustomerAddressesFromOrder,
+} from '../server/wooCustomerAuth.js';
 
 function setCors(res) {
   res.setHeader('Cache-Control', 'no-store');
@@ -44,11 +47,23 @@ export default async function handler(req, res) {
       );
       return;
     }
+    const saveAddressToProfile = payload.saveAddressToProfile === true;
+    delete payload.saveAddressToProfile;
     const session = getSessionFromRequest(req);
     if (session?.customerId) {
       payload.customer_id = session.customerId;
     }
     const result = await createWooCommerceOrder(payload);
+    if (session?.customerId && saveAddressToProfile) {
+      try {
+        await saveCustomerAddressesFromOrder(session, payload.shipping);
+      } catch (profileErr) {
+        // Saving the profile must never block a created order.
+        console.warn('[create-order] profile address not saved', {
+          status: profileErr?.status,
+        });
+      }
+    }
     res.statusCode = 200;
     res.end(JSON.stringify(result));
   } catch (err) {

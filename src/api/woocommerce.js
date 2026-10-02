@@ -415,9 +415,6 @@ export async function fetchCart() {
 
 export async function updateCartCustomer({ billing_address, shipping_address }) {
   const payload = { billing_address, shipping_address };
-  if (import.meta.env.DEV) {
-    console.log('[store-api-shipping] update-customer payload (raw)', payload);
-  }
 
   const requestToken = getCartToken();
   const cart = await cartRequest('/update-customer', {
@@ -1250,6 +1247,7 @@ export async function createRestOrder({
   items,
   shippingTotal = 0,
   paymentMethod = 'stripe_promptpay',
+  saveAddressToProfile = false,
 }) {
   const method = resolveWooPaymentMethod(paymentMethod);
   if (!method || method !== 'stripe_promptpay') {
@@ -1283,6 +1281,7 @@ export async function createRestOrder({
     shipping: toRestAddress(shipping_address),
     line_items: lineItems,
     shippingTotal: Number(shippingTotal) || 0,
+    saveAddressToProfile: saveAddressToProfile === true,
   };
 
   if (import.meta.env.DEV) {
@@ -1290,21 +1289,6 @@ export async function createRestOrder({
       paymentMethod: payload.paymentMethod,
       line_items: payload.line_items,
       shippingTotal: payload.shippingTotal,
-      billing: {
-        ...payload.billing,
-        first_name: '[set]',
-        last_name: '[set]',
-        address_1: '[set]',
-        email: '[set]',
-        phone: '[set]',
-      },
-      shipping: {
-        ...payload.shipping,
-        first_name: '[set]',
-        last_name: '[set]',
-        address_1: '[set]',
-        phone: payload.shipping.phone ? '[set]' : '',
-      },
     });
   }
 

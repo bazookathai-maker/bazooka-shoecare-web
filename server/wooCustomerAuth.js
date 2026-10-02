@@ -5,10 +5,16 @@
  */
 
 import crypto from 'node:crypto';
+import { signToken, verifyToken } from './authTokens.js';
 
 const DEFAULT_WOO_HOST = 'https://bazookashoecare.com';
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30;
+// Long enough to finish a WordPress password reset email round-trip.
+const GOOGLE_LINK_TTL_SECONDS = 30 * 60;
 const SENSITIVE_PLACEHOLDER = /^\[SENSITIVE]$/i;
+// WooCommerce REST silently drops "_"-prefixed (protected) meta on write and hides it on read.
+export const GOOGLE_SUB_META_KEY = 'bazooka_google_sub';
+const MAX_FIELD_LENGTH = 200;
 
 function trimSlash(url) {
   return String(url || '').replace(/\/$/, '');
@@ -61,14 +67,6 @@ function resolveWooRestBase(wooUrl) {
   if (/\/wp-json\/wc\/v3$/i.test(raw)) return raw;
   if (/\/wp-json$/i.test(raw)) return `${raw}/wc/v3`;
   return `${raw}/wp-json/wc/v3`;
-}
-
-function getSessionSecret() {
-  const dedicated = cleanEnvValue(process.env.AUTH_SESSION_SECRET);
-  if (dedicated) return dedicated;
-  const fallback = cleanEnvValue(process.env.WOOCOMMERCE_CONSUMER_SECRET);
-  if (fallback) return fallback;
-  throw httpError('ยังไม่ได้ตั้งค่า secret สำหรับ session บัญชี', 500);
 }
 
 function escapeXml(value) {
@@ -133,27 +131,51 @@ function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+function publicAddress(address) {
+  const src = address && typeof address === 'object' ? address : {};
+  return {
+    first_name: String(src.first_name || '').trim(),
+    last_name: String(src.last_name || '').trim(),
+    phone: String(src.phone || '').trim(),
+    address_1: String(src.address_1 || '').trim(),
+    address_2: String(src.address_2 || '').trim(),
+    city: String(src.city || '').trim(),
+    state: String(src.state || '').trim(),
+    postcode: String(src.postcode || '').trim(),
+    country: String(src.country || 'TH').trim() || 'TH',
+  };
+}
+
+function isAddressComplete(address) {
+  return Boolean(
+    address.first_name &&
+      address.last_name &&
+      address.phone &&
+      address.address_1 &&
+      address.city &&
+      address.state &&
+      address.postcode,
+  );
+}
+
+function getCustomerMeta(customer, key) {
+  const meta = Array.isArray(customer?.meta_data) ? customer.meta_data : [];
+  const hit = meta.find((item) => item?.key === key);
+  return hit && hit.value != null ? String(hit.value).trim() : '';
+}
+
 function publicCustomer(customer) {
-  const billing = customer?.billing && typeof customer.billing === 'object'
-    ? customer.billing
-    : {};
+  const billing = publicAddress(customer?.billing);
   return {
     id: Number(customer.id),
     email: String(customer.email || '').trim(),
     username: String(customer.username || '').trim(),
     first_name: String(customer.first_name || '').trim(),
     last_name: String(customer.last_name || '').trim(),
-    billing: {
-      first_name: String(billing.first_name || '').trim(),
-      last_name: String(billing.last_name || '').trim(),
-      phone: String(billing.phone || '').trim(),
-      address_1: String(billing.address_1 || '').trim(),
-      address_2: String(billing.address_2 || '').trim(),
-      city: String(billing.city || '').trim(),
-      state: String(billing.state || '').trim(),
-      postcode: String(billing.postcode || '').trim(),
-      country: String(billing.country || 'TH').trim() || 'TH',
-    },
+    billing,
+    shipping: publicAddress(customer?.shipping),
+    google_linked: Boolean(getCustomerMeta(customer, GOOGLE_SUB_META_KEY)),
+    profile_complete: isAddressComplete(billing),
   };
 }
 
@@ -178,54 +200,21 @@ function publicOrder(order) {
 }
 
 function signCustomerSession({ customerId, email }) {
-  const secret = getSessionSecret();
-  const exp = Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS;
-  const payload = Buffer.from(
-    JSON.stringify({
-      sub: Number(customerId),
-      email: normalizeEmail(email),
-      exp,
-    }),
-  ).toString('base64url');
-  const sig = crypto.createHmac('sha256', secret).update(payload).digest('base64url');
-  return `${payload}.${sig}`;
+  return signToken(
+    'session',
+    { sub: Number(customerId), email: normalizeEmail(email) },
+    SESSION_TTL_SECONDS,
+  );
 }
 
 export function verifyCustomerSession(token) {
-  const raw = String(token || '').trim();
-  const parts = raw.split('.');
-  if (parts.length !== 2) return null;
-  const [payload, sig] = parts;
-  if (!payload || !sig) return null;
-
-  let secret;
-  try {
-    secret = getSessionSecret();
-  } catch {
-    return null;
-  }
-
-  const expected = crypto
-    .createHmac('sha256', secret)
-    .update(payload)
-    .digest('base64url');
-  const sigBuf = Buffer.from(sig);
-  const expectedBuf = Buffer.from(expected);
-  if (sigBuf.length !== expectedBuf.length) return null;
-  if (!crypto.timingSafeEqual(sigBuf, expectedBuf)) return null;
-
-  try {
-    const data = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
-    const customerId = Number(data?.sub);
-    const email = normalizeEmail(data?.email);
-    const exp = Number(data?.exp);
-    if (!Number.isInteger(customerId) || customerId <= 0) return null;
-    if (!email) return null;
-    if (!Number.isFinite(exp) || exp < Math.floor(Date.now() / 1000)) return null;
-    return { customerId, email };
-  } catch {
-    return null;
-  }
+  const data = verifyToken(token, 'session');
+  if (!data) return null;
+  const customerId = Number(data.sub);
+  const email = normalizeEmail(data.email);
+  if (!Number.isInteger(customerId) || customerId <= 0) return null;
+  if (!email) return null;
+  return { customerId, email };
 }
 
 export function readBearerToken(req) {
@@ -256,9 +245,7 @@ async function findCustomerByEmail(email) {
   });
   if (!Array.isArray(list) || !list.length) return null;
   const normalized = normalizeEmail(email);
-  return (
-    list.find((item) => normalizeEmail(item?.email) === normalized) || list[0]
-  );
+  return list.find((item) => normalizeEmail(item?.email) === normalized) || null;
 }
 
 async function getCustomerById(customerId) {
@@ -458,12 +445,52 @@ export async function registerCustomer(input) {
   }
 }
 
+function issueGoogleLinkTicket(identity) {
+  return signToken(
+    'glink',
+    { gsub: identity.sub, email: normalizeEmail(identity.email) },
+    GOOGLE_LINK_TTL_SECONDS,
+  );
+}
+
+async function setCustomerGoogleSub(customerId, googleSub) {
+  const updated = await wooRestRequest(`/customers/${Number(customerId)}`, {
+    method: 'PUT',
+    body: { meta_data: [{ key: GOOGLE_SUB_META_KEY, value: googleSub }] },
+  });
+  if (getCustomerMeta(updated, GOOGLE_SUB_META_KEY) !== googleSub) {
+    throw httpError('บันทึกการเชื่อมบัญชี Google ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง', 502);
+  }
+  return updated;
+}
+
+export function getPasswordResetUrl() {
+  const { url } = getServerCredentials();
+  return `${resolveWooSiteOrigin(url)}/wp-login.php?action=lostpassword`;
+}
+
 export async function loginCustomer(input) {
   const email = normalizeEmail(input?.email);
   const password = String(input?.password || '');
+  const rawLinkTicket = String(input?.googleLinkTicket || '').trim();
 
   if (!isValidEmail(email) || !password) {
     throw httpError('กรุณากรอกอีเมลและรหัสผ่าน', 400);
+  }
+
+  let link = null;
+  if (rawLinkTicket) {
+    link = verifyToken(rawLinkTicket, 'glink');
+    if (!link || typeof link.gsub !== 'string' || !link.gsub) {
+      throw httpError(
+        'คำขอเชื่อมบัญชี Google หมดอายุ กรุณากด "เข้าสู่ระบบด้วย Google" ใหม่อีกครั้ง',
+        400,
+        { code: 'google_link_expired' },
+      );
+    }
+    if (normalizeEmail(link.email) !== email) {
+      throw httpError('อีเมลไม่ตรงกับบัญชี Google ที่ต้องการเชื่อม', 400);
+    }
   }
 
   const verified = await verifyCustomerPassword(email, password);
@@ -471,16 +498,105 @@ export async function loginCustomer(input) {
     throw httpError('อีเมลหรือรหัสผ่านไม่ถูกต้อง', 401);
   }
 
-  const customer =
+  let customer =
     verified.customer || (await findCustomerByEmail(email));
   if (!customer) {
     throw httpError('ไม่พบบัญชีลูกค้าใน WooCommerce สำหรับอีเมลนี้', 404);
   }
 
+  if (link) {
+    const existingSub = getCustomerMeta(customer, GOOGLE_SUB_META_KEY);
+    if (existingSub && existingSub !== link.gsub) {
+      throw httpError('บัญชีนี้เชื่อมกับบัญชี Google อื่นอยู่แล้ว', 409);
+    }
+    if (!existingSub) {
+      customer = await setCustomerGoogleSub(customer.id, link.gsub);
+    }
+  }
+
   return authResult(customer);
 }
 
-export async function getAuthenticatedCustomer(req) {
+function generateUsername(email) {
+  const local = email.split('@')[0].replace(/[^a-zA-Z0-9._-]/g, '') || 'customer';
+  return `${local.slice(0, 40)}${crypto.randomInt(1000, 9999)}`;
+}
+
+/**
+ * Sign in with a Google identity that googleAuth.verifyGoogleIdToken already
+ * verified. The link key is the Google `sub`; a matching email alone never
+ * merges into an existing account — the owner must prove the password first.
+ */
+export async function loginWithGoogleIdentity(identity) {
+  const googleSub = String(identity?.sub || '').trim();
+  const email = normalizeEmail(identity?.email);
+  if (!googleSub || !isValidEmail(email)) {
+    throw httpError('ข้อมูลบัญชี Google ไม่ถูกต้อง', 400);
+  }
+
+  const existing = await findCustomerByEmail(email);
+  if (existing) {
+    const linkedSub = getCustomerMeta(existing, GOOGLE_SUB_META_KEY);
+    if (linkedSub && linkedSub === googleSub) {
+      return { ...authResult(existing), isNew: false };
+    }
+    if (linkedSub) {
+      throw httpError('อีเมลนี้เชื่อมกับบัญชี Google อื่นอยู่แล้ว', 409, {
+        code: 'google_account_mismatch',
+      });
+    }
+    throw httpError(
+      'พบบัญชีเดิมที่ใช้อีเมลนี้ กรุณาเข้าสู่ระบบด้วยรหัสผ่านของบัญชีเดิมเพื่อยืนยันก่อนเชื่อมกับ Google',
+      409,
+      {
+        code: 'google_link_required',
+        email,
+        linkTicket: issueGoogleLinkTicket({ sub: googleSub, email }),
+      },
+    );
+  }
+
+  const firstName = limitText(identity?.givenName);
+  const lastName = limitText(identity?.familyName);
+  const baseBody = {
+    email,
+    // Random password: Google accounts sign in via Google; WordPress
+    // "lost password" still lets the owner set one later.
+    password: crypto.randomBytes(24).toString('base64url'),
+    first_name: firstName,
+    last_name: lastName,
+    billing: { email, first_name: firstName, last_name: lastName },
+    meta_data: [{ key: GOOGLE_SUB_META_KEY, value: googleSub }],
+  };
+
+  let created;
+  try {
+    created = await wooRestRequest('/customers', {
+      method: 'POST',
+      body: { ...baseBody, username: email },
+    });
+  } catch (err) {
+    if (err?.status === 400 && /username/i.test(err.message || '')) {
+      created = await wooRestRequest('/customers', {
+        method: 'POST',
+        body: { ...baseBody, username: generateUsername(email) },
+      });
+    } else {
+      throw err;
+    }
+  }
+  if (getCustomerMeta(created, GOOGLE_SUB_META_KEY) !== googleSub) {
+    try {
+      created = await setCustomerGoogleSub(created.id, googleSub);
+    } catch {
+      console.warn('[google-auth] new customer created but Google link was not persisted');
+    }
+  }
+  return { ...authResult(created), isNew: true };
+}
+
+/** Load the session's own Woo customer; never trusts ids from the browser. */
+async function requireSessionCustomer(req) {
   const session = getSessionFromRequest(req);
   if (!session) {
     throw httpError('กรุณาเข้าสู่ระบบ', 401);
@@ -489,14 +605,16 @@ export async function getAuthenticatedCustomer(req) {
   if (normalizeEmail(customer.email) !== session.email) {
     throw httpError('กรุณาเข้าสู่ระบบอีกครั้ง', 401);
   }
+  return { session, customer };
+}
+
+export async function getAuthenticatedCustomer(req) {
+  const { customer } = await requireSessionCustomer(req);
   return publicCustomer(customer);
 }
 
 export async function getAuthenticatedOrders(req) {
-  const session = getSessionFromRequest(req);
-  if (!session) {
-    throw httpError('กรุณาเข้าสู่ระบบ', 401);
-  }
+  const { session } = await requireSessionCustomer(req);
 
   const list = await wooRestRequest('/orders', {
     query: {
@@ -510,27 +628,92 @@ export async function getAuthenticatedOrders(req) {
   return Array.isArray(list) ? list.map(publicOrder) : [];
 }
 
-export async function updateCustomerBilling(req, billingInput) {
-  const session = getSessionFromRequest(req);
-  if (!session) {
-    throw httpError('กรุณาเข้าสู่ระบบ', 401);
-  }
-  const src = billingInput && typeof billingInput === 'object' ? billingInput : {};
-  const billing = {
-    first_name: String(src.first_name || '').trim(),
-    last_name: String(src.last_name || '').trim(),
-    email: String(src.email || session.email || '').trim(),
-    phone: String(src.phone || '').trim(),
-    address_1: String(src.address_1 || '').trim(),
-    address_2: String(src.address_2 || '').trim(),
-    city: String(src.city || '').trim(),
-    state: String(src.state || '').trim(),
-    postcode: String(src.postcode || '').trim(),
-    country: String(src.country || 'TH').trim() || 'TH',
+function limitText(value) {
+  return String(value ?? '')
+    .replace(/\p{Cc}/gu, ' ')
+    .trim()
+    .slice(0, MAX_FIELD_LENGTH);
+}
+
+/**
+ * Sanitize + validate a Thai address from the browser. Returns the Woo address
+ * shape (no email). Throws 400 with a Thai message on invalid input.
+ */
+function sanitizeProfileAddress(input) {
+  const src = input && typeof input === 'object' ? input : {};
+  const phoneDigits = String(src.phone || '').replace(/\D/g, '');
+  const address = {
+    first_name: limitText(src.first_name),
+    last_name: limitText(src.last_name),
+    company: '',
+    phone: phoneDigits,
+    address_1: limitText(src.address_1),
+    address_2: limitText(src.address_2),
+    city: limitText(src.city),
+    state: limitText(src.state).toUpperCase(),
+    postcode: String(src.postcode || '').replace(/\s/g, ''),
+    country: 'TH',
   };
-  const updated = await wooRestRequest(`/customers/${session.customerId}`, {
+
+  if (!address.first_name || !address.last_name) {
+    throw httpError('กรุณากรอกชื่อและนามสกุล', 400);
+  }
+  if (phoneDigits.length < 9 || phoneDigits.length > 10) {
+    throw httpError('เบอร์โทรศัพท์ต้องมี 9–10 หลัก', 400);
+  }
+  if (!address.address_1 || !address.city) {
+    throw httpError('กรุณากรอกที่อยู่ให้ครบ', 400);
+  }
+  if (!/^TH-\d{2}$/.test(address.state)) {
+    throw httpError('กรุณาเลือกจังหวัดให้ถูกต้อง', 400);
+  }
+  if (!/^\d{5}$/.test(address.postcode)) {
+    throw httpError('รหัสไปรษณีย์ต้องเป็นตัวเลข 5 หลัก', 400);
+  }
+  return address;
+}
+
+/**
+ * Save name / phone / address for the signed-in customer only.
+ * The target id comes from the verified session, never from the request body.
+ */
+export async function updateCustomerProfile(req, input) {
+  const { customer } = await requireSessionCustomer(req);
+  const address = sanitizeProfileAddress(input?.address ?? input);
+  const accountEmail = String(customer.email || '').trim();
+
+  const updated = await wooRestRequest(`/customers/${Number(customer.id)}`, {
     method: 'PUT',
-    body: { billing },
+    body: {
+      first_name: address.first_name,
+      last_name: address.last_name,
+      billing: { ...address, email: accountEmail },
+      shipping: address,
+    },
+  });
+  return publicCustomer(updated);
+}
+
+/**
+ * After a signed-in checkout, remember the address the customer actually used
+ * (only when they opted in). Billing email stays the account email.
+ */
+export async function saveCustomerAddressesFromOrder(session, shippingInput) {
+  if (!session?.customerId) return null;
+  const customer = await getCustomerById(session.customerId);
+  if (normalizeEmail(customer.email) !== session.email) return null;
+
+  const address = sanitizeProfileAddress(shippingInput);
+  const body = {
+    billing: { ...address, email: String(customer.email || '').trim() },
+    shipping: address,
+  };
+  if (!String(customer.first_name || '').trim()) body.first_name = address.first_name;
+  if (!String(customer.last_name || '').trim()) body.last_name = address.last_name;
+
+  const updated = await wooRestRequest(`/customers/${Number(customer.id)}`, {
+    method: 'PUT',
+    body,
   });
   return publicCustomer(updated);
 }

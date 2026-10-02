@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import GoogleSignInButton from '../components/GoogleSignInButton';
 import './Account.css';
 
 export default function Register() {
   const navigate = useNavigate();
-  const { register } = useAuth();
+  const { register, loginWithGoogle } = useAuth();
   const [form, setForm] = useState({
     firstName: '',
     lastName: '',
@@ -27,9 +28,36 @@ export default function Register() {
     setError('');
     try {
       await register(form);
-      navigate('/account', { replace: true });
+      navigate('/account?setup=1', { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'สมัครบัญชีไม่สำเร็จ');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleGoogleCredential = async (credential) => {
+    if (!credential) {
+      setError('สมัครด้วย Google ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง');
+      return;
+    }
+    setSubmitting(true);
+    setError('');
+    try {
+      const { customer, isNew } = await loginWithGoogle(credential);
+      navigate(
+        isNew || !customer?.profile_complete ? '/account?setup=1' : '/account',
+        { replace: true },
+      );
+    } catch (err) {
+      if (err?.code === 'google_link_required' && err.linkTicket) {
+        navigate('/login', {
+          replace: true,
+          state: { googleLink: { ticket: err.linkTicket, email: err.email || '' } },
+        });
+        return;
+      }
+      setError(err instanceof Error ? err.message : 'สมัครด้วย Google ไม่สำเร็จ');
     } finally {
       setSubmitting(false);
     }
@@ -46,6 +74,12 @@ export default function Register() {
 
       <div className="container account-page__body">
         <form className="account-form" onSubmit={handleSubmit}>
+          <GoogleSignInButton
+            context="signup"
+            onCredential={handleGoogleCredential}
+            disabled={submitting}
+            dividerText="หรือสมัครด้วยอีเมล"
+          />
           <div className="account-form__row">
             <label className="account-form__field">
               <span className="account-form__label">ชื่อ</span>

@@ -1,11 +1,21 @@
 import {
   getAuthenticatedCustomer,
   getAuthenticatedOrders,
+  getPasswordResetUrl,
   loginCustomer,
+  loginWithGoogleIdentity,
   readJsonBody,
   registerCustomer,
-  updateCustomerBilling,
+  updateCustomerProfile,
 } from '../../server/wooCustomerAuth.js';
+import {
+  clearGoogleNonceCookie,
+  getGoogleClientId,
+  issueGoogleNonce,
+  readGoogleNonce,
+  verifyGoogleIdToken,
+} from '../../server/googleAuth.js';
+import { assertSameOriginJsonRequest } from '../../server/authTokens.js';
 
 function setJson(res) {
   res.setHeader('Cache-Control', 'no-store');
@@ -17,13 +27,24 @@ function methodNotAllowed(res) {
   res.end(JSON.stringify({ message: 'Method Not Allowed' }));
 }
 
+const FALLBACK_MESSAGES = {
+  register: 'สมัครบัญชีไม่สำเร็จ',
+  login: 'เข้าสู่ระบบไม่สำเร็จ',
+  google: 'เข้าสู่ระบบด้วย Google ไม่สำเร็จ',
+  orders: 'โหลดประวัติคำสั่งซื้อไม่สำเร็จ',
+  profile: 'บันทึกข้อมูลบัญชีไม่สำเร็จ',
+};
+
 /**
  * Consolidated auth routes (1 serverless function):
  * POST /api/auth/register
- * POST /api/auth/login
+ * POST /api/auth/login          (optional googleLinkTicket to link Google)
+ * GET  /api/auth/google-config  (client id + single-use nonce cookie)
+ * GET  /api/auth/password-reset (WordPress lost-password page URL)
+ * POST /api/auth/google         (GIS ID token → session)
  * GET  /api/auth/me
  * GET  /api/auth/orders
- * PUT|POST /api/auth/update-billing
+ * PUT  /api/auth/profile
  */
 export default async function handler(req, res) {
   setJson(res);
@@ -51,7 +72,44 @@ export default async function handler(req, res) {
     if (action === 'login') {
       if (req.method !== 'POST') return methodNotAllowed(res);
       const payload = await readJsonBody(req);
+      if (payload?.googleLinkTicket) assertSameOriginJsonRequest(req);
       const result = await loginCustomer(payload);
+      res.statusCode = 200;
+      res.end(JSON.stringify(result));
+      return;
+    }
+
+    if (action === 'google-config') {
+      if (req.method !== 'GET') return methodNotAllowed(res);
+      const clientId = getGoogleClientId();
+      if (!clientId) {
+        res.statusCode = 200;
+        res.end(JSON.stringify({ enabled: false }));
+        return;
+      }
+      const { nonce, setCookie } = issueGoogleNonce(req);
+      res.setHeader('Set-Cookie', setCookie);
+      res.statusCode = 200;
+      res.end(JSON.stringify({ enabled: true, clientId, nonce }));
+      return;
+    }
+
+    if (action === 'password-reset') {
+      if (req.method !== 'GET') return methodNotAllowed(res);
+      res.statusCode = 200;
+      res.end(JSON.stringify({ url: getPasswordResetUrl() }));
+      return;
+    }
+
+    if (action === 'google') {
+      if (req.method !== 'POST') return methodNotAllowed(res);
+      assertSameOriginJsonRequest(req);
+      const expectedNonce = readGoogleNonce(req);
+      // Nonce is single-use: clear it whatever the outcome.
+      res.setHeader('Set-Cookie', clearGoogleNonceCookie(req));
+      const payload = await readJsonBody(req);
+      const identity = await verifyGoogleIdToken(payload?.credential, expectedNonce);
+      const result = await loginWithGoogleIdentity(identity);
       res.statusCode = 200;
       res.end(JSON.stringify(result));
       return;
@@ -73,12 +131,10 @@ export default async function handler(req, res) {
       return;
     }
 
-    if (action === 'update-billing') {
-      if (req.method !== 'PUT' && req.method !== 'POST') {
-        return methodNotAllowed(res);
-      }
+    if (action === 'profile') {
+      if (req.method !== 'PUT') return methodNotAllowed(res);
       const payload = await readJsonBody(req);
-      const customer = await updateCustomerBilling(req, payload.billing);
+      const customer = await updateCustomerProfile(req, payload);
       res.statusCode = 200;
       res.end(JSON.stringify({ customer }));
       return;
@@ -89,20 +145,20 @@ export default async function handler(req, res) {
   } catch (err) {
     const status = Number(err?.status) || 500;
     res.statusCode = status;
-    const fallback =
-      action === 'register'
-        ? 'สมัครบัญชีไม่สำเร็จ'
-        : action === 'login'
-          ? 'เข้าสู่ระบบไม่สำเร็จ'
-          : action === 'orders'
-            ? 'โหลดประวัติคำสั่งซื้อไม่สำเร็จ'
-            : action === 'update-billing'
-              ? 'อัปเดตข้อมูลบัญชีไม่สำเร็จ'
-              : 'โหลดข้อมูลบัญชีไม่สำเร็จ';
-    res.end(
-      JSON.stringify({
-        message: err instanceof Error ? err.message : fallback,
-      }),
-    );
+    const body = {
+      message:
+        err instanceof Error && err.message
+          ? err.message
+          : FALLBACK_MESSAGES[action] || 'โหลดข้อมูลบัญชีไม่สำเร็จ',
+    };
+    const code = err?.data?.code;
+    if (typeof code === 'string' && code.startsWith('google_')) {
+      body.code = code;
+      if (code === 'google_link_required') {
+        body.email = err.data.email;
+        body.linkTicket = err.data.linkTicket;
+      }
+    }
+    res.end(JSON.stringify(body));
   }
 }

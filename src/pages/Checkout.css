@@ -25,6 +25,21 @@
   font-size: 0.9375rem;
 }
 
+.checkout__save-profile {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  color: var(--text-secondary);
+  font-size: 0.9375rem;
+  line-height: var(--line-height-thai);
+  cursor: pointer;
+}
+
+.checkout__save-profile input {
+  margin-top: 0.3rem;
+  accent-color: var(--navy);
+}
+
 .checkout__layout {
   display: grid;
   grid-template-columns: 1fr;

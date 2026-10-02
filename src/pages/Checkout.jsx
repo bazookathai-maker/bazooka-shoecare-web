@@ -4,7 +4,12 @@ import ThaiAddressSelector from '../components/ThaiAddressSelector';
 import CheckoutFreeShipping from '../components/CheckoutFreeShipping';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { updateCustomerBilling } from '../api/customerAuth';
+import {
+  formFromCustomerProfile,
+  formFromWooAddresses,
+  getCartAddressOwner,
+  setCartAddressOwner,
+} from '../utils/customerAddressForm';
 import {
   buildStoreAddressesFromForm,
   createRestOrder,
@@ -15,7 +20,6 @@ import {
   updateCartCustomer,
   validateCheckoutCustomerForm,
 } from '../api/woocommerce';
-import { resolveThaiProvinceFromWooState } from '../data/thaiWooStates';
 import './Checkout.css';
 
 const SYNC_DEBOUNCE_MS = 700;
@@ -56,41 +60,6 @@ function stableCustomerPayloadKey(payload) {
   }
 }
 
-function splitAddress2Parts(address2) {
-  return String(address2 || '')
-    .split(',')
-    .map((part) => part.trim())
-    .filter(Boolean);
-}
-
-function formFromWooAddresses(billing, shipping) {
-  const bill = billing || {};
-  const ship = shipping || bill;
-  const address2Parts = splitAddress2Parts(ship.address_2 || bill.address_2);
-  const street = address2Parts.find((part) => part.startsWith('ถนน')) || '';
-  const remaining = address2Parts.filter((part) => part !== street);
-  const subdistrict = remaining[0] || '';
-  const addressNote = remaining.slice(1).join(', ');
-  const stateCode = ship.state || bill.state || '';
-  const province =
-    resolveThaiProvinceFromWooState(stateCode) || stateCode || '';
-
-  return {
-    firstName: String(bill.first_name || ship.first_name || '').trim(),
-    lastName: String(bill.last_name || ship.last_name || '').trim(),
-    email: String(bill.email || '').trim(),
-    phone: String(bill.phone || ship.phone || '').trim(),
-    addressLine: String(ship.address_1 || bill.address_1 || '').trim(),
-    province,
-    district: String(ship.city || bill.city || '').trim(),
-    subdistrict,
-    street: street.replace(/^ถนน/, ''),
-    postalCode: String(ship.postcode || bill.postcode || '').trim(),
-    addressNote,
-    note: '',
-  };
-}
-
 function buildSelectedRatesMap(packages, previousSelected = {}) {
   const next = {};
   for (const pkg of packages) {
@@ -125,8 +94,9 @@ export default function Checkout() {
     resetCartAfterOrder,
     hydrating,
   } = useCart();
-  const { customer } = useAuth();
+  const { customer, ready: authReady } = useAuth();
   const [form, setForm] = useState(initialForm);
+  const [saveAddressToProfile, setSaveAddressToProfile] = useState(true);
   const [fieldErrors, setFieldErrors] = useState({});
   const [showErrors, setShowErrors] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -138,10 +108,17 @@ export default function Checkout() {
   const [shippingPackages, setShippingPackages] = useState([]);
   const [selectedRates, setSelectedRates] = useState({});
   const [shippingChecked, setShippingChecked] = useState(false);
-  const [formHydrated, setFormHydrated] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('');
 
   const formRef = useRef(form);
+  const touchedFieldsRef = useRef(new Set());
+  const prefillRef = useRef({ owner: '', fields: new Set() });
+  const identity = !authReady ? '' : customer?.id ? `c:${customer.id}` : 'guest';
+  const identityRef = useRef(identity);
+
+  useEffect(() => {
+    identityRef.current = identity;
+  }, [identity]);
   const inFlightRef = useRef(false);
   const lastSentKeyRef = useRef('');
   const debounceTimerRef = useRef(0);
@@ -169,47 +146,6 @@ export default function Checkout() {
 
   const paymentOptions = getRestTestPaymentOptions();
 
-  useEffect(() => {
-    if (hydrating || formHydrated) return;
-    const hasAddress =
-      Boolean(shippingAddress?.address_1) ||
-      Boolean(billingAddress?.address_1) ||
-      Boolean(billingAddress?.email);
-    if (!hasAddress) {
-      setFormHydrated(true);
-      return;
-    }
-
-    const hydrated = formFromWooAddresses(billingAddress, shippingAddress);
-    setForm(hydrated);
-    formRef.current = hydrated;
-    setAddressSynced(true);
-    setFormHydrated(true);
-  }, [hydrating, formHydrated, billingAddress, shippingAddress]);
-
-  useEffect(() => {
-    if (!formHydrated || !customer) return;
-    setForm((prev) => {
-      if (prev.email || prev.firstName || prev.phone) return prev;
-      const bill = customer.billing || {};
-      const hydrated = formFromWooAddresses(bill, bill);
-      return {
-        ...prev,
-        firstName: hydrated.firstName || customer.first_name || '',
-        lastName: hydrated.lastName || customer.last_name || '',
-        email: customer.email || hydrated.email || '',
-        phone: hydrated.phone || '',
-        addressLine: hydrated.addressLine || prev.addressLine,
-        province: hydrated.province || prev.province,
-        district: hydrated.district || prev.district,
-        subdistrict: hydrated.subdistrict || prev.subdistrict,
-        street: hydrated.street || prev.street,
-        postalCode: hydrated.postalCode || prev.postalCode,
-        addressNote: hydrated.addressNote || prev.addressNote,
-      };
-    });
-  }, [formHydrated, customer]);
-
   useEffect(
     () => () => {
       window.clearTimeout(debounceTimerRef.current);
@@ -218,15 +154,6 @@ export default function Checkout() {
   );
 
   const applyShippingFromCart = useCallback((cart) => {
-    const rawRates = cart?.raw?.shipping_rates ?? cart?.shippingRates ?? null;
-    console.log('WooCommerce shipping_rates response:', rawRates);
-    console.log(
-      'shipping_rates isArray:',
-      Array.isArray(rawRates),
-      'packageCount:',
-      Array.isArray(rawRates) ? rawRates.length : 0,
-    );
-
     const packages = extractShippingPackages(cart);
     setShippingPackages(packages);
     setShippingChecked(true);
@@ -252,10 +179,6 @@ export default function Checkout() {
         // Only auto-select when package has exactly one rate from Woo.
         if (pkg.rates.length !== 1) continue;
         latestCart = await selectShippingRate(pkg.packageId, rateId);
-        console.log(
-          'WooCommerce select-shipping-rate (auto) response:',
-          latestCart.raw,
-        );
       }
       return latestCart;
     },
@@ -277,7 +200,7 @@ export default function Checkout() {
         return false;
       }
 
-      const { billing_address, shipping_address, stateCode } =
+      const { billing_address, shipping_address } =
         buildStoreAddressesFromForm(nextForm);
       const payload = { billing_address, shipping_address };
       const payloadKey = stableCustomerPayloadKey(payload);
@@ -298,14 +221,11 @@ export default function Checkout() {
       setStatusMessage('');
 
       try {
-        console.log('WooCommerce update-customer payload:', payload);
-        console.log('Resolved Woo state code:', stateCode);
-
         let updatedCart = await updateCartCustomer(payload);
         if (seq !== requestSeqRef.current) return false;
 
-        console.log('WooCommerce update-customer response:', updatedCart.raw);
         syncCart(updatedCart);
+        setCartAddressOwner(identityRef.current);
         lastSentKeyRef.current = payloadKey;
         setAddressSynced(true);
         setShowErrors(false);
@@ -368,8 +288,58 @@ export default function Checkout() {
     [syncCustomerToWoo],
   );
 
+  // Pre-fill once per identity: the signed-in customer's saved profile, or a
+  // guest's own cart address. Only empty, untouched fields are filled, and
+  // values pre-filled for a previous identity are cleared on switch.
+  useEffect(() => {
+    if (hydrating || !identity) return;
+    if (prefillRef.current.owner === identity) return;
+
+    let source = null;
+    if (identity === 'guest') {
+      if (getCartAddressOwner() === 'guest') {
+        source = formFromWooAddresses(billingAddress, shippingAddress);
+      }
+    } else {
+      source = formFromCustomerProfile(customer);
+    }
+
+    const touched = touchedFieldsRef.current;
+    const next = { ...formRef.current };
+    for (const field of prefillRef.current.fields) {
+      if (!touched.has(field)) next[field] = '';
+    }
+
+    const filled = new Set();
+    if (source) {
+      for (const [field, value] of Object.entries(source)) {
+        if (!(field in initialForm) || field === 'note') continue;
+        if (!value || touched.has(field) || next[field]) continue;
+        next[field] = value;
+        filled.add(field);
+      }
+    }
+
+    const hadPrefill = prefillRef.current.fields.size > 0;
+    prefillRef.current = { owner: identity, fields: filled };
+    if (!filled.size && !hadPrefill) return;
+
+    formRef.current = next;
+    setForm(next);
+    setAddressSynced(false);
+    scheduleAutoSync(next);
+  }, [
+    hydrating,
+    identity,
+    customer,
+    billingAddress,
+    shippingAddress,
+    scheduleAutoSync,
+  ]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
+    touchedFieldsRef.current.add(name);
     setForm((prev) => {
       const next = { ...prev, [name]: value };
       formRef.current = next;
@@ -389,6 +359,7 @@ export default function Checkout() {
   };
 
   const handleAddressChange = (fields) => {
+    for (const key of Object.keys(fields)) touchedFieldsRef.current.add(key);
     setForm((prev) => {
       const next = { ...prev, ...fields };
       formRef.current = next;
@@ -471,6 +442,7 @@ export default function Checkout() {
         items,
         shippingTotal: 0,
         paymentMethod: 'stripe_promptpay',
+        saveAddressToProfile: Boolean(customer?.id && saveAddressToProfile),
       });
 
       if (String(order.payment_method || '') !== 'stripe_promptpay') {
@@ -488,34 +460,6 @@ export default function Checkout() {
           payment_method: order.payment_method || 'stripe_promptpay',
         });
         console.log('[rest-order] raw keys', raw && Object.keys(raw));
-      }
-
-      console.log('[debug-billing] customer?.id =', customer?.id);
-      console.log('[debug-billing] order_id =', order.order_id);
-      console.log('[debug-billing] raw.customer_id =', raw?.customer_id);
-      console.log('[debug-billing] raw.billing.phone =', raw?.billing?.phone);
-      console.log('[debug-billing] raw.billing.address_1 =', raw?.billing?.address_1);
-      console.log('[debug-billing] raw.billing.city =', raw?.billing?.city);
-
-      if (customer?.id) {
-        const { billing_address } = buildStoreAddressesFromForm(formRef.current);
-        console.log('[debug-billing] calling updateCustomerBilling with:', {
-          first_name: billing_address.first_name,
-          last_name: billing_address.last_name,
-          phone: billing_address.phone,
-          address_1: billing_address.address_1,
-          city: billing_address.city,
-          state: billing_address.state,
-          postcode: billing_address.postcode,
-        });
-        try {
-          const updatedCustomer = await updateCustomerBilling(billing_address);
-          console.log('[debug-billing] updateCustomerBilling SUCCESS:', updatedCustomer);
-        } catch (billingErr) {
-          console.error('[debug-billing] updateCustomerBilling FAILED:', billingErr);
-        }
-      } else {
-        console.log('[debug-billing] SKIPPED — customer?.id is falsy');
       }
 
       // Stripe PromptPay only: create Checkout Session BEFORE clearing the cart.
@@ -575,10 +519,6 @@ export default function Checkout() {
 
     try {
       const selectedCart = await selectShippingRate(packageId, rateId);
-      console.log(
-        'WooCommerce select-shipping-rate response:',
-        selectedCart.raw,
-      );
       syncCart(selectedCart);
       applyShippingFromCart(selectedCart);
       setSelectedRates((prev) => ({
@@ -829,6 +769,17 @@ export default function Checkout() {
                   disabled={busy}
                 />
               </label>
+              {customer?.id ? (
+                <label className="checkout__field checkout__field--full checkout__save-profile">
+                  <input
+                    type="checkbox"
+                    checked={saveAddressToProfile}
+                    onChange={(e) => setSaveAddressToProfile(e.target.checked)}
+                    disabled={busy}
+                  />
+                  <span>บันทึกชื่อ เบอร์โทร และที่อยู่นี้ไว้ในบัญชีสำหรับการสั่งซื้อครั้งถัดไป</span>
+                </label>
+              ) : null}
             </div>
           </section>
 
