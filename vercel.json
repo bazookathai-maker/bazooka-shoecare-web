@@ -1,6 +1,22 @@
 {
   "rewrites": [
     {
+      "source": "/api/create-stripe-checkout",
+      "destination": "/api/payments/stripe-checkout"
+    },
+    {
+      "source": "/api/create-promptpay",
+      "destination": "/api/payments/promptpay"
+    },
+    {
+      "source": "/api/stripe-webhook",
+      "destination": "/api/webhooks/stripe"
+    },
+    {
+      "source": "/api/omise-webhook",
+      "destination": "/api/webhooks/omise"
+    },
+    {
       "source": "/api/cart",
       "destination": "/api/cart-proxy"
     },

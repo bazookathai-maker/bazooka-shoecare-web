@@ -195,6 +195,12 @@ export function resolveThaiProvinceFromWooState(stateCode) {
   return entry?.[0] || '';
 }
 
+/** Display-only: Thai province name for a TH-xx code, otherwise the original value. */
+export function formatThaiProvince(stateCode) {
+  const raw = String(stateCode || '').trim();
+  return resolveThaiProvinceFromWooState(raw) || raw;
+}
+
 export function listThaiWooStateCodes() {
   return { ...THAI_PROVINCE_TO_WOO_STATE };
 }

@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { findOrderByIdAndPhone } from '../utils/orderStorage';
 import './OrderPages.css';
+
+const TRACK_ORDER_API_URL = '/api/track-order';
 
 export default function TrackOrder() {
   const navigate = useNavigate();
   const [form, setForm] = useState({ orderId: '', phone: '' });
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -14,18 +16,55 @@ export default function TrackOrder() {
     if (error) setError('');
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
+    setError('');
+    setLoading(true);
 
-    const order = findOrderByIdAndPhone(form.orderId, form.phone);
-    if (!order) {
+    try {
+      const response = await fetch(TRACK_ORDER_API_URL, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache',
+        },
+        body: JSON.stringify({
+          orderId: form.orderId,
+          phone: form.phone,
+        }),
+        cache: 'no-store',
+      });
+
+      let data = null;
+      try {
+        data = await response.json();
+      } catch {
+        data = null;
+      }
+
+      if (!response.ok || !data?.order) {
+        throw new Error(
+          (data && typeof data.message === 'string' && data.message.trim()) ||
+            'ไม่พบคำสั่งซื้อ กรุณาตรวจสอบเลขคำสั่งซื้อหรือเบอร์โทรศัพท์อีกครั้ง',
+        );
+      }
+
+      // Pass verified order only via navigation state (lost on hard refresh /
+      // direct URL). Never persist customer PII in sessionStorage.
+      navigate(`/order-status/${encodeURIComponent(data.order.id)}`, {
+        replace: false,
+        state: { order: data.order, phoneVerified: true },
+      });
+    } catch (err) {
       setError(
-        'ไม่พบคำสั่งซื้อ กรุณาตรวจสอบเลขคำสั่งซื้อหรือเบอร์โทรศัพท์อีกครั้ง',
+        err instanceof Error
+          ? err.message
+          : 'ไม่พบคำสั่งซื้อ กรุณาตรวจสอบเลขคำสั่งซื้อหรือเบอร์โทรศัพท์อีกครั้ง',
       );
-      return;
+    } finally {
+      setLoading(false);
     }
-
-    navigate(`/order-status/${order.id}`);
   };
 
   return (
@@ -52,8 +91,9 @@ export default function TrackOrder() {
                 onChange={handleChange}
                 required
                 className="order-track-form__input"
-                placeholder="เช่น BZK-20260618-0001"
+                placeholder="เช่น 873"
                 autoComplete="off"
+                disabled={loading}
               />
             </label>
 
@@ -66,20 +106,29 @@ export default function TrackOrder() {
                 onChange={handleChange}
                 required
                 className="order-track-form__input"
-                placeholder="เบอร์ที่ใช้สั่งซื้อ"
+                placeholder="เบอร์ที่ใช้สั่งซื้อ เช่น 0615359918"
                 autoComplete="tel"
+                disabled={loading}
               />
             </label>
           </div>
 
           {error ? (
-            <p className="order-page__message" role="alert" style={{ marginTop: '1.25rem' }}>
+            <p
+              className="order-page__message"
+              role="alert"
+              style={{ marginTop: '1.25rem' }}
+            >
               {error}
             </p>
           ) : null}
 
-          <button type="submit" className="btn-primary order-track-form__submit">
-            ตรวจสอบสถานะ
+          <button
+            type="submit"
+            className="btn-primary order-track-form__submit"
+            disabled={loading}
+          >
+            {loading ? 'กำลังค้นหา...' : 'ตรวจสอบสถานะ'}
           </button>
         </form>
       </div>
