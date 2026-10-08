@@ -52,7 +52,7 @@
   width: 100%;
   padding: 0.7rem 0.85rem;
   font-family: var(--font-family);
-  font-size: 0.9375rem;
+  font-size: var(--text-body);
   font-weight: var(--font-weight-regular);
   color: var(--navy);
   background: var(--white-pure);
@@ -71,11 +71,11 @@
 .search-overlay__submit {
   flex-shrink: 0;
   min-height: 2.75rem;
-  padding: 0.7rem 0.95rem;
+  padding: 0.5rem 1rem;
   font-family: var(--font-family);
-  font-size: 0.625rem;
+  font-size: var(--text-ui);
   font-weight: var(--font-weight-medium);
-  letter-spacing: var(--letter-spacing-button);
+  letter-spacing: var(--letter-spacing-ui);
   text-transform: uppercase;
   color: var(--white-pure);
   background: var(--navy);
@@ -131,7 +131,7 @@
 .search-overlay__empty p {
   margin: 0;
   font-family: var(--font-family);
-  font-size: 0.9375rem;
+  font-size: var(--text-body-sm);
   font-weight: var(--font-weight-regular);
   color: var(--text-secondary);
   text-align: center;
@@ -150,11 +150,11 @@
   align-items: center;
   justify-content: center;
   min-height: 2.75rem;
-  padding: 0.7rem 1.15rem;
+  padding: 0.5rem 1.15rem;
   font-family: var(--font-family);
-  font-size: 0.625rem;
+  font-size: var(--text-ui);
   font-weight: var(--font-weight-medium);
-  letter-spacing: var(--letter-spacing-button);
+  letter-spacing: var(--letter-spacing-ui);
   text-transform: uppercase;
   color: var(--white-pure);
   background: var(--navy);
@@ -184,9 +184,9 @@
 .search-overlay__section-title {
   margin: 0 0 0.75rem;
   font-family: var(--font-family);
-  font-size: 0.6875rem;
+  font-size: var(--text-meta);
   font-weight: var(--font-weight-medium);
-  letter-spacing: 0.1em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--navy-muted);
 }
@@ -235,18 +235,18 @@
 
 .search-result__meta {
   font-family: var(--font-family);
-  font-size: 0.625rem;
+  font-size: var(--text-meta);
   font-weight: var(--font-weight-medium);
-  letter-spacing: 0.08em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--navy-muted);
 }
 
 .search-result__title {
   font-family: var(--font-family);
-  font-size: 0.875rem;
+  font-size: var(--text-body-sm);
   font-weight: var(--font-weight-medium);
-  line-height: 1.35;
+  line-height: 1.5;
   color: var(--navy);
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -256,7 +256,7 @@
 
 .search-result__price {
   font-family: var(--font-family);
-  font-size: 0.8125rem;
+  font-size: var(--text-meta);
   font-weight: var(--font-weight-regular);
   color: var(--text-secondary);
 }

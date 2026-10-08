@@ -72,9 +72,10 @@
 }
 
 .account-form__label {
-  font-size: 0.6875rem;
+  font-size: var(--text-body-sm);
   font-weight: var(--font-weight-medium);
-  letter-spacing: 0.08em;
+  line-height: 1.5;
+  letter-spacing: 0.01em;
   text-transform: uppercase;
   color: var(--muted-green);
 }
@@ -85,7 +86,7 @@
   border: 1px solid var(--border-strong);
   border-radius: 8px;
   font-family: inherit;
-  font-size: 1rem;
+  font-size: var(--text-body);
   color: var(--navy);
   background: var(--white-pure);
 }
@@ -93,7 +94,7 @@
 .account-form__error {
   margin: 0;
   color: #b52f2f;
-  font-size: 0.9375rem;
+  font-size: var(--text-body-sm);
 }
 
 .account-form__hint {
@@ -108,7 +109,7 @@
   margin: 0;
   padding: 0.85rem 1rem;
   border-radius: 8px;
-  font-size: 0.9375rem;
+  font-size: var(--text-body-sm);
   line-height: var(--line-height-thai);
 }
 
@@ -144,7 +145,7 @@
   display: inline-flex;
   align-items: center;
   min-height: 2.75rem;
-  font-size: 0.875rem;
+  font-size: var(--text-body-sm);
   color: var(--navy);
   text-decoration: underline;
   text-underline-offset: 0.18em;
@@ -164,9 +165,10 @@
   justify-self: start;
   padding: 0;
   border: 0;
+  min-height: 2.75rem;
   background: none;
   font: inherit;
-  font-size: 0.875rem;
+  font-size: var(--text-body-sm);
   color: var(--navy);
   text-decoration: underline;
   text-underline-offset: 0.18em;
@@ -179,7 +181,7 @@
   padding: 0.1rem 0.55rem;
   border: 1px solid var(--border);
   border-radius: 999px;
-  font-size: 0.75rem;
+  font-size: var(--text-meta);
   color: var(--text-secondary);
   vertical-align: middle;
 }
@@ -204,16 +206,16 @@
 
 .account-card__title {
   margin: 0;
-  font-size: 0.6875rem;
+  font-size: var(--text-body);
   font-weight: var(--font-weight-medium);
-  letter-spacing: var(--letter-spacing-label);
+  line-height: 1.5;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
-  color: var(--blue-gray);
+  color: var(--blue-gray-dark);
 }
 
 .account-card__logout {
-  padding: 0.65rem 1.1rem;
-  font-size: 0.6875rem;
+  padding: 0.625rem 1.1rem;
 }
 
 .account-meta {
@@ -223,9 +225,9 @@
 }
 
 .account-meta dt {
-  font-size: 0.6875rem;
+  font-size: var(--text-meta);
   font-weight: var(--font-weight-medium);
-  letter-spacing: 0.08em;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
   color: var(--muted-green);
 }
@@ -272,7 +274,7 @@
 .account-order__items {
   margin: 0.35rem 0 0;
   color: var(--text-secondary);
-  font-size: 0.9375rem;
+  font-size: var(--text-body-sm);
 }
 
 .account-order__items {

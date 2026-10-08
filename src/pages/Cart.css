@@ -35,13 +35,13 @@
 .cart-page__subtitle {
   margin: 0.65rem 0 0;
   color: var(--text-secondary);
-  font-size: 0.9375rem;
+  font-size: var(--text-body);
 }
 
 .cart-page__error {
   margin: 0 0 1rem;
   color: #8a3030;
-  font-size: 0.875rem;
+  font-size: var(--text-body-sm);
 }
 
 .cart-page__empty-message {
@@ -56,7 +56,7 @@
 
 @media (min-width: 900px) {
   .cart-page__layout {
-    grid-template-columns: minmax(0, 1fr) 18rem;
+    grid-template-columns: minmax(0, 1fr) 20rem;
     align-items: start;
   }
 }
@@ -107,21 +107,21 @@
 
 .cart-page__name {
   margin: 0;
-  font-size: clamp(0.95rem, 2vw, 1.0625rem);
+  font-size: var(--text-body);
   font-weight: var(--font-weight-medium);
-  line-height: 1.35;
+  line-height: 1.5;
   color: var(--navy);
 }
 
 .cart-page__sku {
   margin: 0.2rem 0 0;
-  font-size: 0.75rem;
+  font-size: var(--text-meta);
   color: var(--text-secondary);
 }
 
 .cart-page__unit {
   margin: 0;
-  font-size: 0.875rem;
+  font-size: var(--text-body-sm);
   color: var(--text-secondary);
 }
 
@@ -141,11 +141,12 @@
 }
 
 .cart-page__qty button {
-  width: 2rem;
-  height: 2rem;
+  width: 2.75rem;
+  height: 2.75rem;
   border: 0;
   background: transparent;
   color: var(--navy);
+  font-size: 1.125rem;
   cursor: pointer;
 }
 
@@ -157,14 +158,16 @@
 .cart-page__qty span {
   min-width: 1.5rem;
   text-align: center;
-  font-size: 0.875rem;
+  font-size: var(--text-ui);
 }
 
 .cart-page__remove {
+  min-width: 2.75rem;
+  min-height: 2.75rem;
   border: 0;
   background: transparent;
-  padding: 0;
-  font-size: 0.8125rem;
+  padding: 0 0.25rem;
+  font-size: var(--text-meta);
   color: var(--text-secondary);
   text-decoration: underline;
   cursor: pointer;
@@ -172,8 +175,8 @@
 
 .cart-page__line-total {
   margin: 0 0 0 auto;
-  font-size: 0.9375rem;
-  font-weight: var(--font-weight-medium);
+  font-size: var(--text-body);
+  font-weight: var(--font-weight-semibold);
   color: var(--navy);
 }
 
@@ -192,7 +195,7 @@
   justify-content: space-between;
   margin-bottom: 0.35rem;
   color: var(--navy);
-  font-size: 1rem;
+  font-size: var(--text-body);
 }
 
 .cart-page__checkout,

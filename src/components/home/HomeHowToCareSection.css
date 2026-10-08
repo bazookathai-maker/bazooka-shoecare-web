@@ -31,7 +31,7 @@
 
 .home-how-to-care__lead {
   margin: 0.85rem 0 0;
-  font-size: clamp(1rem, 1.8vw, 1.125rem);
+  font-size: var(--text-lead);
   font-weight: var(--font-weight-regular);
   line-height: var(--line-height-thai);
   color: var(--text-secondary);
@@ -84,16 +84,16 @@
 
 .home-how-to-care__block-title {
   margin: 0;
-  font-size: clamp(1.25rem, 2.2vw, 1.625rem);
+  font-size: clamp(1.375rem, 1.2rem + 0.8vw, 1.75rem);
   font-weight: var(--font-weight-medium);
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
   color: var(--navy);
-  line-height: 1.2;
+  line-height: 1.35;
 }
 
 .home-how-to-care__block-subtitle {
   margin: 0;
-  font-size: clamp(0.9375rem, 1.5vw, 1.0625rem);
+  font-size: var(--text-body);
   font-weight: var(--font-weight-regular);
   line-height: var(--line-height-thai);
   color: var(--text-secondary);
@@ -127,10 +127,8 @@
 }
 
 .home-how-to-care__articles-link {
-  padding: 1.15rem clamp(1.75rem, 4vw, 3rem);
+  padding: 0.875rem clamp(1.75rem, 4vw, 3rem);
   min-width: min(100%, 13.5rem);
-  font-size: clamp(0.75rem, 2vw, 0.8125rem);
-  letter-spacing: 0.1em;
   text-transform: none;
   text-align: center;
   transition:
@@ -157,10 +155,8 @@
 
 .home-how-to-care__guide-link {
   margin-top: 0;
-  padding: 1.15rem 3rem;
+  padding: 0.875rem 3rem;
   min-width: 13.5rem;
-  font-size: 0.8125rem;
-  letter-spacing: 0.1em;
   text-transform: none;
 }
 
@@ -246,8 +242,8 @@
 }
 
 .home-how-to-care__slider-arrow {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   padding: 0;
   border-radius: 999px;
   border: 1px solid rgba(28, 45, 69, 0.1);

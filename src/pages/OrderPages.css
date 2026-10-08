@@ -21,7 +21,7 @@
 .order-page__lead {
   margin-top: 0.85rem;
   max-width: 36rem;
-  font-size: clamp(0.9375rem, 1.8vw, 1.0625rem);
+  font-size: var(--text-lead);
   font-weight: var(--font-weight-light);
   line-height: 1.75;
   color: var(--text-secondary);
@@ -50,9 +50,10 @@
 
 .order-card__title {
   margin-bottom: 1.25rem;
-  font-size: 0.6875rem;
+  font-size: var(--text-body);
   font-weight: var(--font-weight-medium);
-  letter-spacing: var(--letter-spacing-label);
+  line-height: 1.5;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
   color: var(--blue-gray);
 }
@@ -69,22 +70,22 @@
 }
 
 .order-meta__label {
-  font-size: 0.6875rem;
+  font-size: var(--text-meta);
   font-weight: var(--font-weight-medium);
-  letter-spacing: 0.08em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--muted-green);
 }
 
 .order-meta__value {
-  font-size: 0.9375rem;
+  font-size: var(--text-body);
   line-height: 1.65;
   color: var(--blue-gray-dark);
   word-break: break-word;
 }
 
 .order-meta__value--id {
-  font-size: 1.0625rem;
+  font-size: 1.25rem;
   font-weight: var(--font-weight-medium);
   letter-spacing: 0.03em;
 }
@@ -120,21 +121,21 @@
 }
 
 .order-items__name {
-  font-size: 0.9375rem;
+  font-size: var(--text-body);
   font-weight: var(--font-weight-medium);
   color: var(--blue-gray-dark);
-  line-height: var(--line-height-thai-tight);
+  line-height: 1.5;
 }
 
 .order-items__meta {
   margin-top: 0.25rem;
-  font-size: 0.8125rem;
+  font-size: var(--text-meta);
   color: var(--text-secondary);
 }
 
 .order-items__price {
   margin-top: 0.35rem;
-  font-size: 0.875rem;
+  font-size: var(--text-body-sm);
   font-weight: var(--font-weight-medium);
   color: var(--blue-gray-dark);
 }
@@ -150,8 +151,8 @@
 }
 
 .order-total__label {
-  font-size: 0.8125rem;
-  letter-spacing: 0.06em;
+  font-size: var(--text-body-sm);
+  letter-spacing: 0.02em;
   text-transform: uppercase;
   color: var(--text-secondary);
 }
@@ -177,7 +178,7 @@
   border-radius: 12px;
   background: rgba(180, 70, 70, 0.04);
   color: #8f3f3f;
-  font-size: 0.9375rem;
+  font-size: var(--text-body-sm);
   line-height: 1.7;
   text-align: center;
 }
@@ -199,9 +200,9 @@
 }
 
 .order-track-form__label {
-  font-size: 0.75rem;
+  font-size: var(--text-body-sm);
   font-weight: var(--font-weight-medium);
-  letter-spacing: 0.06em;
+  letter-spacing: 0.01em;
   color: var(--blue-gray-dark);
 }
 
@@ -214,8 +215,8 @@
   background: var(--white-pure);
   color: var(--blue-gray-dark);
   font-family: inherit;
-  font-size: 0.9375rem;
-  line-height: var(--line-height-thai-tight);
+  font-size: var(--text-body);
+  line-height: 1.5;
 }
 
 .order-track-form__input:focus {
@@ -250,7 +251,7 @@
 
 .order-success-card__text {
   margin-top: 0.75rem;
-  font-size: 0.9375rem;
+  font-size: var(--text-body);
   line-height: 1.75;
   color: var(--text-secondary);
 }

@@ -132,11 +132,13 @@ export function buildHomeOurProducts(liveProducts = []) {
   const catalog = Array.isArray(liveProducts) ? liveProducts : [];
 
   return homeOurProducts.map((pillar) => {
-    const matched = pickBestProduct(catalog, pillar.id);
+    const matched = pillar.productId
+      ? catalog.find((product) => String(product.id) === String(pillar.productId))
+      : pickBestProduct(catalog, pillar.id);
     if (!matched) {
       return {
         ...pillar,
-        href: '/products',
+        href: pillar.productId ? `/products/${pillar.productId}` : '/products',
         source: 'fallback',
       };
     }

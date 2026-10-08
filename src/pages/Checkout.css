@@ -22,7 +22,7 @@
 .checkout__account-note {
   margin-top: 0.65rem;
   color: var(--text-secondary);
-  font-size: 0.9375rem;
+  font-size: var(--text-body-sm);
 }
 
 .checkout__save-profile {
@@ -30,7 +30,7 @@
   align-items: flex-start;
   gap: 0.6rem;
   color: var(--text-secondary);
-  font-size: 0.9375rem;
+  font-size: var(--text-body-sm);
   line-height: var(--line-height-thai);
   cursor: pointer;
 }
@@ -62,9 +62,10 @@
 
 .checkout__section-title {
   font-family: var(--font-family);
-  font-size: 0.6875rem;
+  font-size: var(--text-body);
   font-weight: var(--font-weight-medium);
-  letter-spacing: var(--letter-spacing-label);
+  line-height: 1.5;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
   color: var(--blue-gray);
   margin-bottom: 1.5rem;
@@ -114,9 +115,9 @@
 
 .checkout__item-name {
   font-family: var(--font-family);
-  font-size: 1rem;
+  font-size: var(--text-body);
   font-weight: var(--font-weight-medium);
-  line-height: 1.4;
+  line-height: 1.5;
   color: var(--blue-gray-dark);
   letter-spacing: 0.02em;
 }
@@ -134,16 +135,17 @@
   align-items: center;
   gap: 0.5rem;
   font-family: var(--font-family);
-  font-size: 0.6875rem;
+  font-size: var(--text-meta);
   font-weight: var(--font-weight-medium);
-  letter-spacing: 0.1em;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
   color: var(--text-secondary);
 }
 
 .checkout__qty-select {
   font-family: var(--font-family);
-  font-size: 0.8125rem;
+  font-size: var(--text-ui);
+  min-height: 2.75rem;
   font-weight: var(--font-weight-medium);
   color: var(--blue-gray-dark);
   padding: 0.35rem 0.5rem;
@@ -155,16 +157,16 @@
 
 .checkout__item-price {
   font-family: var(--font-family);
-  font-size: 0.9375rem;
-  font-weight: var(--font-weight-medium);
-  letter-spacing: 0.04em;
+  font-size: var(--text-body);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.02em;
   color: var(--muted-green-dark);
 }
 
 .checkout__item-unit {
   margin-top: 0.35rem;
   font-family: var(--font-family);
-  font-size: 0.75rem;
+  font-size: var(--text-meta);
   color: var(--text-secondary);
   letter-spacing: 0.02em;
 }
@@ -186,7 +188,7 @@
 
 .checkout__total-row--sub .checkout__total-label,
 .checkout__total-row--sub .checkout__total-value {
-  font-size: 0.8125rem;
+  font-size: var(--text-body-sm);
   font-weight: var(--font-weight-regular);
   letter-spacing: 0.02em;
   text-transform: none;
@@ -195,22 +197,22 @@
 
 .checkout__payment-note {
   margin: 0 0 0.85rem;
-  font-size: 0.8125rem;
+  font-size: var(--text-meta);
   color: var(--text-secondary);
 }
 
 .checkout__total-label {
   font-family: var(--font-family);
-  font-size: 0.75rem;
+  font-size: var(--text-body-sm);
   font-weight: var(--font-weight-medium);
-  letter-spacing: 0.14em;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
   color: var(--text-secondary);
 }
 
 .checkout__total-value {
   font-family: var(--font-family);
-  font-size: clamp(1.25rem, 3vw, 1.5rem);
+  font-size: clamp(1.375rem, 1.2rem + 0.8vw, 1.625rem);
   font-weight: var(--font-weight-medium);
   letter-spacing: 0.02em;
   color: var(--blue-gray-dark);
@@ -251,9 +253,10 @@
 
 .checkout__field-label {
   font-family: var(--font-family);
-  font-size: 0.6875rem;
+  font-size: var(--text-body-sm);
   font-weight: var(--font-weight-medium);
-  letter-spacing: 0.12em;
+  line-height: 1.5;
+  letter-spacing: 0.01em;
   text-transform: uppercase;
   color: var(--blue-gray);
 }
@@ -263,7 +266,7 @@
 .checkout__select {
   width: 100%;
   font-family: var(--font-family);
-  font-size: 0.9375rem;
+  font-size: var(--text-body);
   font-weight: var(--font-weight-regular);
   color: var(--blue-gray-dark);
   background: var(--white-pure);
@@ -353,7 +356,7 @@
 
 .checkout__payment-label {
   font-family: var(--font-family);
-  font-size: 0.875rem;
+  font-size: var(--text-body-sm);
   font-weight: var(--font-weight-medium);
   color: var(--blue-gray-dark);
   letter-spacing: 0.02em;
@@ -362,7 +365,7 @@
 .checkout__payment-label-th {
   grid-column: 2;
   font-family: var(--font-family);
-  font-size: 0.75rem;
+  font-size: var(--text-meta);
   font-weight: var(--font-weight-light);
   color: var(--text-secondary);
   letter-spacing: 0.02em;
@@ -385,7 +388,7 @@
 .checkout__payment-price {
   flex-shrink: 0;
   font-family: var(--font-family);
-  font-size: 0.875rem;
+  font-size: var(--text-body-sm);
   font-weight: var(--font-weight-medium);
   color: var(--blue-gray-dark);
   letter-spacing: 0.02em;
@@ -419,7 +422,7 @@
 .checkout__empty-message {
   margin-top: 1.25rem;
   font-family: var(--font-family);
-  font-size: 1.0625rem;
+  font-size: var(--text-body);
   font-weight: var(--font-weight-light);
   color: var(--text-secondary);
   letter-spacing: 0.02em;
@@ -498,8 +501,7 @@
 
   .checkout__item-name {
     grid-column: 1 / -1;
-    font-size: 0.9375rem;
-    line-height: 1.45;
+    line-height: 1.5;
     overflow-wrap: anywhere;
     word-break: break-word;
   }
@@ -516,7 +518,6 @@
 
   .checkout__qty-label {
     flex-shrink: 0;
-    font-size: 0.625rem;
   }
 
   .checkout__qty-select {
@@ -598,15 +599,15 @@
 
 .checkout__error {
   margin: 0 0 1rem;
-  font-size: 0.9375rem;
+  font-size: var(--text-body-sm);
   line-height: 1.6;
   color: #8a3030;
 }
 
 .checkout__field-error {
   margin: 0.35rem 0 0;
-  font-size: 0.75rem;
-  line-height: 1.4;
+  font-size: var(--text-meta);
+  line-height: 1.5;
   color: #8a3030;
 }
 
@@ -616,7 +617,7 @@
 
 .checkout__status {
   margin: 0 0 1rem;
-  font-size: 0.9375rem;
+  font-size: var(--text-body-sm);
   line-height: 1.6;
   color: var(--text-secondary);
 }
@@ -631,9 +632,9 @@
 
 .checkout__shipping-package-name {
   margin: 0 0 0.75rem;
-  font-size: 0.8125rem;
+  font-size: var(--text-meta);
   font-weight: var(--font-weight-medium);
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
   color: var(--text-secondary);
 }
 
@@ -656,7 +657,7 @@
 .checkout__shipping-option-price {
   flex-shrink: 0;
   font-family: var(--font-family);
-  font-size: 0.875rem;
+  font-size: var(--text-body-sm);
   font-weight: var(--font-weight-medium);
   color: var(--blue-gray-dark);
   letter-spacing: 0.02em;

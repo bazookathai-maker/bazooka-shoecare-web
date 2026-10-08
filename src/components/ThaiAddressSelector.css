@@ -35,14 +35,15 @@
 .address-combobox__option {
   display: block;
   width: 100%;
-  padding: 0.65rem 0.75rem;
+  min-height: 2.75rem;
+  padding: 0.625rem 0.75rem;
   border: 0;
   border-radius: 8px;
   background: transparent;
   color: var(--blue-gray-dark);
   font-family: inherit;
-  font-size: 0.875rem;
-  line-height: var(--line-height-thai-tight);
+  font-size: var(--text-body-sm);
+  line-height: 1.5;
   text-align: left;
   cursor: pointer;
 }
@@ -57,7 +58,7 @@
 
 .address-combobox__empty {
   padding: 0.75rem;
-  font-size: 0.8125rem;
+  font-size: var(--text-meta);
   color: var(--text-secondary);
 }
 

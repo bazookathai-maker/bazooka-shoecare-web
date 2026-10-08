@@ -17,7 +17,7 @@
 .google-signin__note {
   margin: 0;
   color: var(--text-secondary);
-  font-size: 0.875rem;
+  font-size: var(--text-meta);
   line-height: var(--line-height-thai);
   text-align: center;
 }
@@ -27,7 +27,7 @@
   align-items: center;
   gap: 0.75rem;
   color: var(--text-secondary);
-  font-size: 0.8125rem;
+  font-size: var(--text-meta);
 }
 
 .google-signin__divider::before,
