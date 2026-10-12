@@ -189,6 +189,9 @@ export function buildHomeGroupSlide(liveProducts = []) {
   };
 }
 
+/** Hidden from Home TOP PRODUCT only; still listed in the shop. 147 = *SET COMPLETE* ฿715. */
+const HOME_TOP_PICKS_HIDDEN_IDS = new Set(['147']);
+
 /**
  * TOP PRODUCT / สินค้าแนะนำ — live Woo catalog only.
  * Prefer bestsellers, then fill remaining slots.
@@ -206,7 +209,9 @@ export function buildHomeTopPicks(liveProducts = [], limit = 6) {
 
   const bestsellers = catalog.filter((product) => product.isBestseller);
   const rest = catalog.filter((product) => !product.isBestseller);
-  const selected = [...bestsellers, ...rest].slice(0, limit);
+  const selected = [...bestsellers, ...rest]
+    .slice(0, limit)
+    .filter((product) => !HOME_TOP_PICKS_HIDDEN_IDS.has(String(product.id)));
 
   return selected.map((product) => {
     const wooImage = product.image || '';
