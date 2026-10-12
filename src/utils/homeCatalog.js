@@ -221,6 +221,8 @@ export function buildHomeTopPicks(liveProducts = [], limit = 6) {
       name: formatListingName(product.name),
       description: product.shortDescription || product.description || '',
       price: product.price,
+      regularPrice: product.regularPrice,
+      isOnSale: product.isOnSale,
       badge: product.isBestseller ? 'BEST SELLER' : product.category,
       image: wooImage,
       // No local fallback when Woo already provided a primary image

@@ -786,6 +786,8 @@ export function mapStoreProduct(wooProduct) {
     description: cardDescription,
     longDescription: description,
     price: mapPrice(wooProduct.prices),
+    regularPrice: mapPrice(wooProduct.prices, 'regular_price'),
+    isOnSale: Boolean(wooProduct.on_sale),
     image: gallery[0]?.src || '',
     imageFit: 'contain',
     category: resolveCategoryLabel(wooProduct, filterCategory),

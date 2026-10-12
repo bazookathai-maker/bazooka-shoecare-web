@@ -6,6 +6,7 @@ import {
   formatListingName,
 } from '../utils/productListingCopy';
 import AddToCartButton from './AddToCartButton';
+import ProductPrice from './ProductPrice';
 import './ProductCard.css';
 
 function getDetailPath(product, linkToDetail) {
@@ -102,7 +103,11 @@ export default function ProductCard({
         ) : null}
         {showPrice && (
           <p className="product-card__price">
-            ฿{Number(product.price || 0).toLocaleString()}
+            <ProductPrice
+              price={product.price}
+              regularPrice={product.regularPrice}
+              isOnSale={product.isOnSale}
+            />
           </p>
         )}
       </div>
