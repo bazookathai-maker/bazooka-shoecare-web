@@ -5,6 +5,9 @@ import ProductCard from '../components/ProductCard';
 import ScrollReveal from '../components/ScrollReveal';
 import './Products.css';
 
+/** Hidden from the /products listing only; still in WooCommerce. 147 = *SET COMPLETE* ฿715. */
+const PRODUCTS_PAGE_HIDDEN_IDS = new Set(['147']);
+
 export default function Products() {
   const [activeFilter, setActiveFilter] = useState('all');
   const [products, setProducts] = useState([]);
@@ -21,7 +24,11 @@ export default function Products() {
       try {
         const data = await fetchStoreProducts();
         if (!cancelled) {
-          setProducts(data);
+          setProducts(
+            data.filter(
+              (product) => !PRODUCTS_PAGE_HIDDEN_IDS.has(String(product.id)),
+            ),
+          );
         }
       } catch (err) {
         if (!cancelled) {
