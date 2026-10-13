@@ -6,7 +6,7 @@ import {
   buildHomeTopPicks,
   getCachedStoreProducts,
 } from '../../utils/homeCatalog';
-import { hasActiveDiscount } from '../../utils/productSale';
+import { showSaleBadge } from '../../utils/productSale';
 import './HomeRecommendedPromotionSection.css';
 
 function PickImage({ src, fallback, alt }) {
@@ -45,7 +45,7 @@ function TopPickCard({ item, index }) {
           className="home-top-picks__card-media-link"
         >
           <div className="home-top-picks__media" ref={mediaRef}>
-            {hasActiveDiscount(item) ? (
+            {showSaleBadge(item) ? (
               <span className="home-top-picks__sale-badge">ลดราคา</span>
             ) : null}
             <PickImage

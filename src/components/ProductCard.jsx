@@ -5,13 +5,13 @@ import {
   formatListingDescription,
   formatListingName,
 } from '../utils/productListingCopy';
-import { hasActiveDiscount } from '../utils/productSale';
+import { showSaleBadge } from '../utils/productSale';
 import AddToCartButton from './AddToCartButton';
 import ProductPrice from './ProductPrice';
 import './ProductCard.css';
 
-/** Badge only; the product stays in the bestseller filter and Home ordering. 134 = Refresh Spray. */
-const BESTSELLER_BADGE_HIDDEN_IDS = new Set(['134']);
+/** Badge only; the product stays in the bestseller filter and Home ordering. 134 = Refresh Spray, 126 = Bazooka Cleaner single bottle. */
+const BESTSELLER_BADGE_HIDDEN_IDS = new Set(['134', '126']);
 
 function getDetailPath(product, linkToDetail) {
   if (!linkToDetail) return null;
@@ -43,7 +43,7 @@ export default function ProductCard({
   const detailPath = getDetailPath(product, linkToDetail);
   const isListingCard = variant === 'compact';
   const isRecommendCard = variant === 'recommend';
-  const isDiscounted = hasActiveDiscount(product);
+  const isDiscounted = showSaleBadge(product);
   const showBestsellerBadge =
     product.isBestseller && !BESTSELLER_BADGE_HIDDEN_IDS.has(String(product.id));
 
