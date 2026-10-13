@@ -197,7 +197,7 @@ const HOME_TOP_PICKS_HIDDEN_IDS = new Set(['147']);
  * Prefer bestsellers, then fill remaining slots.
  * Local `homeTopPicks` images are used only when the catalog is empty.
  */
-export function buildHomeTopPicks(liveProducts = [], limit = 6) {
+export function buildHomeTopPicks(liveProducts = [], limit = 6, appendIds = []) {
   const catalog = Array.isArray(liveProducts) ? liveProducts : [];
   if (!catalog.length) {
     return homeTopPicks.slice(0, limit).map((item) => ({
@@ -209,9 +209,14 @@ export function buildHomeTopPicks(liveProducts = [], limit = 6) {
 
   const bestsellers = catalog.filter((product) => product.isBestseller);
   const rest = catalog.filter((product) => !product.isBestseller);
-  const selected = [...bestsellers, ...rest]
+  const picked = [...bestsellers, ...rest]
     .slice(0, limit)
     .filter((product) => !HOME_TOP_PICKS_HIDDEN_IDS.has(String(product.id)));
+  const pickedIds = new Set(picked.map((product) => String(product.id)));
+  const appended = appendIds
+    .map((id) => catalog.find((product) => String(product.id) === String(id)))
+    .filter((product) => product && !pickedIds.has(String(product.id)));
+  const selected = [...picked, ...appended].slice(0, limit);
 
   return selected.map((product) => {
     const wooImage = product.image || '';

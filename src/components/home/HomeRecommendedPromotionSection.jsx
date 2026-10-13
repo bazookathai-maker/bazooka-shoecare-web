@@ -8,6 +8,9 @@ import {
 } from '../../utils/homeCatalog';
 import './HomeRecommendedPromotionSection.css';
 
+/** Added after the bestseller picks on Home only. 128 = Protector Spray single bottle. */
+const HOME_TOP_PICKS_APPEND_IDS = ['128'];
+
 function PickImage({ src, fallback, alt }) {
   if (!src && !fallback) {
     return (
@@ -88,7 +91,7 @@ export default function HomeRecommendedPromotionSection() {
       try {
         const products = await getCachedStoreProducts({ force: true });
         if (!cancelled) {
-          setItems(buildHomeTopPicks(products, 6));
+          setItems(buildHomeTopPicks(products, 6, HOME_TOP_PICKS_APPEND_IDS));
           setStatus('ready');
         }
       } catch {
