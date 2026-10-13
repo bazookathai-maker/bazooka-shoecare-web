@@ -8,8 +8,15 @@ import './Products.css';
 /** Hidden from the /products listing only; still in WooCommerce. 147 = *SET COMPLETE* ฿715. */
 const PRODUCTS_PAGE_HIDDEN_IDS = new Set(['147']);
 
-/** Pairs of product IDs whose positions are swapped on /products. 140 = Bazooka Cleaner 2, 128 = BAZOOKA SPRAY single bottle. */
-const PRODUCTS_PAGE_SWAPPED_IDS = [['140', '128']];
+/**
+ * Pairs of product IDs whose positions are swapped on /products.
+ * 140 = Bazooka Cleaner 2, 128 = BAZOOKA SPRAY single bottle,
+ * 134 = Refresh Spray, 68 = BAZOOKA CLEANER with free cloth and brush.
+ */
+const PRODUCTS_PAGE_SWAPPED_IDS = [
+  ['140', '128'],
+  ['134', '68'],
+];
 
 function applyProductSwaps(list) {
   const result = [...list];
