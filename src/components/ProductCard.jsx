@@ -5,6 +5,7 @@ import {
   formatListingDescription,
   formatListingName,
 } from '../utils/productListingCopy';
+import { hasActiveDiscount } from '../utils/productSale';
 import AddToCartButton from './AddToCartButton';
 import ProductPrice from './ProductPrice';
 import './ProductCard.css';
@@ -39,6 +40,7 @@ export default function ProductCard({
   const detailPath = getDetailPath(product, linkToDetail);
   const isListingCard = variant === 'compact';
   const isRecommendCard = variant === 'recommend';
+  const isDiscounted = hasActiveDiscount(product);
 
   const displayName =
     isListingCard || isRecommendCard
@@ -68,8 +70,15 @@ export default function ProductCard({
       )}
 
       <div className="product-card__media" ref={mediaRef}>
-        {!isRecommendCard && product.isBestseller ? (
-          <span className="product-card__bestseller-badge">ขายดี</span>
+        {!isRecommendCard && (isDiscounted || product.isBestseller) ? (
+          <div className="product-card__badges">
+            {isDiscounted ? (
+              <span className="product-card__sale-badge">ลดราคา</span>
+            ) : null}
+            {product.isBestseller ? (
+              <span className="product-card__bestseller-badge">ขายดี</span>
+            ) : null}
+          </div>
         ) : null}
         {!isRecommendCard ? (
           <span className="product-card__category">{product.category}</span>

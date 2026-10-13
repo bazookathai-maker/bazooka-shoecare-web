@@ -1,3 +1,4 @@
+import { hasActiveDiscount } from '../utils/productSale';
 import './ProductPrice.css';
 
 function formatBaht(value) {
@@ -8,13 +9,9 @@ function formatBaht(value) {
 export default function ProductPrice({ price, regularPrice, isOnSale }) {
   const sale = Number(price);
   const regular = Number(regularPrice);
-  const showRegular =
-    Boolean(isOnSale) &&
-    Number.isFinite(regular) &&
-    Number.isFinite(sale) &&
-    regular > sale;
-
-  if (!showRegular) return formatBaht(price);
+  if (!hasActiveDiscount({ price, regularPrice, isOnSale })) {
+    return formatBaht(price);
+  }
 
   return (
     <span className="product-price">
