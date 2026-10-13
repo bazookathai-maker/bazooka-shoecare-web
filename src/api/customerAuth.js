@@ -172,6 +172,28 @@ export async function fetchCustomerOrders(token = getCustomerToken()) {
   return Array.isArray(data?.orders) ? data.orders : [];
 }
 
+/** Payment state of one of the signed-in customer's own orders. Errors carry `status`. */
+export async function fetchOrderPaymentStatus(orderId, token = getCustomerToken()) {
+  const response = await fetch(
+    `/api/auth/order-payment?orderId=${encodeURIComponent(orderId)}`,
+    {
+      method: 'GET',
+      headers: authHeaders(token),
+      cache: 'no-store',
+    },
+  );
+  const data = await parseJson(response);
+  if (!response.ok) {
+    try {
+      throwApiError(data, 'ตรวจสอบสถานะการชำระเงินไม่สำเร็จ');
+    } catch (err) {
+      err.status = response.status;
+      throw err;
+    }
+  }
+  return data?.order ?? null;
+}
+
 /** Save name / phone / address for the signed-in customer (Woo billing + shipping). */
 export async function updateCustomerProfile(address, token = getCustomerToken()) {
   const response = await fetch('/api/auth/profile', {
