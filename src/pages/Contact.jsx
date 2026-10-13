@@ -13,13 +13,6 @@ const contactInfo = [
     icon: 'mail',
   },
   {
-    id: 'phone',
-    label: 'โทรศัพท์',
-    value: '098-556-5388',
-    href: 'tel:0985565388',
-    icon: 'phone',
-  },
-  {
     // No confirmed page URL yet — keep as text until one is provided.
     id: 'facebook',
     label: 'Facebook',
@@ -62,16 +55,6 @@ function ContactIcon({ type }) {
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
           <rect x="3" y="5" width="18" height="14" rx="1.5" />
           <path d="M3.5 7l8.5 6 8.5-6" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      );
-    case 'phone':
-      return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
-          <path
-            d="M7 3.5h3.2l1.2 4.2-2 1.2a11 11 0 0 0 5.7 5.7l1.2-2 4.2 1.2V17a2 2 0 0 1-2.2 2A15.5 15.5 0 0 1 5 5.7 2 2 0 0 1 7 3.5z"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
         </svg>
       );
     case 'facebook':
