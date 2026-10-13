@@ -640,6 +640,8 @@ const FILTER_CATEGORY_BY_PRODUCT_ID = {
   68: 'cleaners',
   130: 'brushes',
   140: 'cleaners',
+  126: 'cleaners',
+  134: 'refresh',
 };
 
 /** Bestsellers by their original Woo names (โปรจับคู่, 1แถม1, SPRAY+/PRO2, 2-in-1, ฟรี ผ้าแปรง) before renaming. */
