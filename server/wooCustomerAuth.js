@@ -6,6 +6,10 @@
 
 import crypto from 'node:crypto';
 import { signToken, verifyToken } from './authTokens.js';
+import {
+  getWooOrderShipmentTrackings,
+  wooOrderStatusLabel,
+} from './wooOrderTracking.js';
 
 const DEFAULT_WOO_HOST = 'https://bazookashoecare.com';
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30;
@@ -595,15 +599,26 @@ export async function loginWithGoogleIdentity(identity) {
   return { ...authResult(created), isNew: true };
 }
 
-/** Load the session's own Woo customer; never trusts ids from the browser. */
-async function requireSessionCustomer(req) {
+/**
+ * Load the session's own Woo customer; never trusts ids from the browser.
+ * 401 carries `code: 'auth_required'` so the storefront can send the shopper to login.
+ */
+export async function requireSessionCustomer(req) {
   const session = getSessionFromRequest(req);
   if (!session) {
-    throw httpError('กรุณาเข้าสู่ระบบ', 401);
+    throw httpError('กรุณาเข้าสู่ระบบ', 401, { code: 'auth_required' });
   }
-  const customer = await getCustomerById(session.customerId);
+  let customer;
+  try {
+    customer = await getCustomerById(session.customerId);
+  } catch (err) {
+    if (err?.status === 404) {
+      throw httpError('กรุณาเข้าสู่ระบบอีกครั้ง', 401, { code: 'auth_required' });
+    }
+    throw err;
+  }
   if (normalizeEmail(customer.email) !== session.email) {
-    throw httpError('กรุณาเข้าสู่ระบบอีกครั้ง', 401);
+    throw httpError('กรุณาเข้าสู่ระบบอีกครั้ง', 401, { code: 'auth_required' });
   }
   return { session, customer };
 }
@@ -625,7 +640,14 @@ export async function getAuthenticatedOrders(req) {
     },
   });
 
-  return Array.isArray(list) ? list.map(publicOrder) : [];
+  if (!Array.isArray(list)) return [];
+  return Promise.all(
+    list.map(async (order) => ({
+      ...publicOrder(order),
+      status_label: wooOrderStatusLabel(order.status),
+      tracking: await getWooOrderShipmentTrackings(order),
+    })),
+  );
 }
 
 function limitText(value) {

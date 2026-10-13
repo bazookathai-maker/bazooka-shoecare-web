@@ -8,6 +8,10 @@ import {
   resolveWooRestOrdersUrl,
   readJsonBody,
 } from './wooCreateOrder.js';
+import {
+  getWooOrderShipmentTrackings,
+  wooOrderStatusLabel,
+} from './wooOrderTracking.js';
 
 const SENSITIVE_PLACEHOLDER = /^\[SENSITIVE]$/i;
 
@@ -84,15 +88,13 @@ function cleanOrderRef(orderId) {
     .replace(/\s+/g, '');
 }
 
+// The store labels Woo "completed" as จัดส่งแล้ว; "delivered" (จัดส่งสำเร็จ) is the final step.
 function mapWooStatusToTimeline(wooStatus) {
   const status = String(wooStatus || '').toLowerCase();
-  if (status === 'completed') return 'completed';
-  if (status === 'processing') return 'preparing';
-  if (status === 'shipped' || status === 'completed-shipped') return 'shipped';
-  if (status === 'cancelled' || status === 'refunded' || status === 'failed') {
-    return 'received';
-  }
-  // pending, on-hold, etc.
+  if (status === 'delivered') return 'completed';
+  if (status === 'shipped' || status === 'completed') return 'shipped';
+  if (status === 'processing' || status === 'preparing') return 'preparing';
+  // pending, on-hold, cancelled, refunded, failed, etc.
   return 'received';
 }
 
@@ -268,7 +270,13 @@ export async function trackWooOrderByIdAndPhone(input) {
     );
   }
 
-  return { order: publicTrackOrder(order) };
+  return {
+    order: {
+      ...publicTrackOrder(order),
+      statusLabel: wooOrderStatusLabel(order.status),
+      tracking: await getWooOrderShipmentTrackings(order),
+    },
+  };
 }
 
 export { readJsonBody };

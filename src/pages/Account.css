@@ -271,10 +271,21 @@
 .account-order__status,
 .account-order__date,
 .account-order__total,
-.account-order__items {
+.account-order__items,
+.account-order__tracking {
   margin: 0.35rem 0 0;
   color: var(--text-secondary);
   font-size: var(--text-body-sm);
+}
+
+.account-order__tracking strong {
+  color: var(--navy);
+  font-weight: var(--font-weight-medium);
+}
+
+.account-order__tracking a {
+  color: var(--navy);
+  text-decoration: underline;
 }
 
 .account-order__items {

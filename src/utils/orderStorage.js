@@ -4,7 +4,7 @@ export const ORDER_STATUS_STEPS = [
   { id: 'received', label: 'รับคำสั่งซื้อแล้ว' },
   { id: 'preparing', label: 'กำลังเตรียมสินค้า' },
   { id: 'shipped', label: 'จัดส่งแล้ว' },
-  { id: 'completed', label: 'สำเร็จ' },
+  { id: 'completed', label: 'จัดส่งสำเร็จ' },
 ];
 
 export const DEFAULT_ORDER_STATUS = 'received';

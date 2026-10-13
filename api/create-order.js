@@ -3,7 +3,7 @@ import {
   readJsonBody,
 } from '../server/wooCreateOrder.js';
 import {
-  getSessionFromRequest,
+  requireSessionCustomer,
   saveCustomerAddressesFromOrder,
 } from '../server/wooCustomerAuth.js';
 
@@ -32,8 +32,9 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Members only: the order owner comes from the verified session, never the body.
+    const { session, customer } = await requireSessionCustomer(req);
     const payload = await readJsonBody(req);
-    // Never trust client-supplied customer_id. Guest stays guest unless session is valid.
     delete payload.customer_id;
     // Only Stripe PromptPay is accepted from this storefront.
     const method = String(payload.paymentMethod || payload.payment_method || '').trim();
@@ -49,12 +50,12 @@ export default async function handler(req, res) {
     }
     const saveAddressToProfile = payload.saveAddressToProfile === true;
     delete payload.saveAddressToProfile;
-    const session = getSessionFromRequest(req);
-    if (session?.customerId) {
-      payload.customer_id = session.customerId;
+    payload.customer_id = Number(customer.id);
+    if (payload.billing && typeof payload.billing === 'object' && !payload.billing.email) {
+      payload.billing.email = String(customer.email || '').trim();
     }
     const result = await createWooCommerceOrder(payload);
-    if (session?.customerId && saveAddressToProfile) {
+    if (saveAddressToProfile) {
       try {
         await saveCustomerAddressesFromOrder(session, payload.shipping);
       } catch (profileErr) {

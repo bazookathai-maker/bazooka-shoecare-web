@@ -1,6 +1,8 @@
 import { useEffect, useId, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
+import { CHECKOUT_PATH, loginPath } from '../utils/authRedirect';
 import './MiniCart.css';
 
 function formatPrice(value) {
@@ -15,6 +17,9 @@ function lineAmount(item) {
 export default function MiniCart({ open, onClose }) {
   const titleId = useId();
   const panelRef = useRef(null);
+  const { ready: authReady, isLoggedIn } = useAuth();
+  const checkoutHref =
+    authReady && !isLoggedIn ? loginPath(CHECKOUT_PATH) : CHECKOUT_PATH;
   const {
     items,
     count,
@@ -173,7 +178,7 @@ export default function MiniCart({ open, onClose }) {
                 ดูตะกร้า
               </Link>
               <Link
-                to="/checkout"
+                to={checkoutHref}
                 className="btn-primary mini-cart__link"
                 onClick={onClose}
               >

@@ -3,13 +3,14 @@ import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { fetchPasswordResetUrl } from '../api/customerAuth';
 import GoogleSignInButton from '../components/GoogleSignInButton';
+import { CHECKOUT_PATH, readNextPath, registerPath } from '../utils/authRedirect';
 import './Account.css';
 
-function getRedirectPath(search) {
-  const next = new URLSearchParams(search).get('next');
-  // Browsers treat "\" like "/" (so "/\evil.com" is off-site); also reject control chars.
-  if (next && /^\/(?![/\\])[^\\\s]*$/.test(next)) return next;
-  return '/account';
+/** An explicit `next` (e.g. checkout) wins over profile setup; setup still happens at checkout. */
+function afterSignInPath(search, profileComplete) {
+  const next = readNextPath(search);
+  if (next && next !== '/account') return next;
+  return profileComplete ? '/account' : '/account?setup=1';
 }
 
 function readLinkState(state) {
@@ -21,7 +22,9 @@ function readLinkState(state) {
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, loginWithGoogle, isLoggedIn, ready } = useAuth();
+  const { login, loginWithGoogle, logout, isLoggedIn, ready } = useAuth();
+  const nextPath = readNextPath(location.search);
+  const sessionExpired = location.state?.reason === 'session_expired';
   const [googleLink, setGoogleLink] = useState(() => readLinkState(location.state));
   const [form, setForm] = useState(() => ({
     email: readLinkState(location.state)?.email || '',
@@ -30,6 +33,10 @@ export default function Login() {
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [passwordResetUrl, setPasswordResetUrl] = useState('');
+
+  useEffect(() => {
+    if (sessionExpired) logout();
+  }, [sessionExpired, logout]);
 
   useEffect(() => {
     let cancelled = false;
@@ -58,9 +65,7 @@ export default function Login() {
         googleLinkTicket: googleLink?.ticket,
       });
       navigate(
-        signedIn && !signedIn.profile_complete
-          ? '/account?setup=1'
-          : getRedirectPath(location.search),
+        afterSignInPath(location.search, Boolean(signedIn?.profile_complete)),
         { replace: true },
       );
     } catch (err) {
@@ -84,9 +89,10 @@ export default function Login() {
     try {
       const { customer, isNew } = await loginWithGoogle(credential);
       navigate(
-        isNew || !customer?.profile_complete
-          ? '/account?setup=1'
-          : getRedirectPath(location.search),
+        afterSignInPath(
+          location.search,
+          !isNew && Boolean(customer?.profile_complete),
+        ),
         { replace: true },
       );
     } catch (err) {
@@ -109,8 +115,8 @@ export default function Login() {
     setError('');
   };
 
-  if (ready && isLoggedIn && !submitting) {
-    return <Navigate to={getRedirectPath(location.search)} replace />;
+  if (ready && isLoggedIn && !submitting && !sessionExpired) {
+    return <Navigate to={nextPath || '/account'} replace />;
   }
 
   return (
@@ -124,6 +130,17 @@ export default function Login() {
 
       <div className="container account-page__body">
         <form className="account-form" onSubmit={handleSubmit}>
+          {sessionExpired ? (
+            <p className="account-form__notice" role="status">
+              เซสชันหมดอายุ กรุณาเข้าสู่ระบบอีกครั้งเพื่อสั่งซื้อต่อ
+              สินค้าในตะกร้ายังอยู่ครบ
+            </p>
+          ) : nextPath === CHECKOUT_PATH ? (
+            <p className="account-form__notice" role="status">
+              กรุณาเข้าสู่ระบบหรือสมัครสมาชิกก่อนสั่งซื้อ
+              สินค้าในตะกร้ายังอยู่ครบ
+            </p>
+          ) : null}
           {googleLink ? (
             <div className="account-form__notice" role="status">
               <p>
@@ -217,7 +234,7 @@ export default function Login() {
           </button>
           <p className="account-form__hint">
             ยังไม่มีบัญชี?{' '}
-            <Link to="/register">สมัครบัญชี</Link>
+            <Link to={registerPath(nextPath)}>สมัครบัญชี</Link>
           </p>
         </form>
       </div>

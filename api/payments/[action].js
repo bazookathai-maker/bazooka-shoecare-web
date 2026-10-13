@@ -2,6 +2,7 @@ import {
   createStripeCheckoutForWooOrder,
 } from '../../server/stripeCheckout.js';
 import { readJsonBody } from '../../server/wooCreateOrder.js';
+import { requireSessionCustomer } from '../../server/wooCustomerAuth.js';
 
 function setJson(res) {
   res.setHeader('Cache-Control', 'no-store');
@@ -62,6 +63,7 @@ export default async function handler(req, res) {
     }
 
     try {
+      const { customer } = await requireSessionCustomer(req);
       const payload = await readJsonBody(req);
       const orderId = payload.orderId ?? payload.order_id;
       const orderKey = payload.orderKey ?? payload.order_key ?? '';
@@ -69,6 +71,7 @@ export default async function handler(req, res) {
       const result = await createStripeCheckoutForWooOrder(orderId, {
         orderKey,
         successOrigin,
+        customerId: customer.id,
       });
       res.statusCode = 200;
       res.end(JSON.stringify(result));
@@ -81,6 +84,7 @@ export default async function handler(req, res) {
             err instanceof Error
               ? err.message
               : 'สร้าง Stripe Checkout ไม่สำเร็จ',
+          code: err?.data?.code || undefined,
         }),
       );
     }

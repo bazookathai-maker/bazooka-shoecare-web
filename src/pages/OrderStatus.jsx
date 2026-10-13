@@ -171,7 +171,7 @@ export default function OrderStatus() {
   }
 
   const paymentLabel = order.payment || order.paymentMethod || '-';
-  const statusLabel = order.wooStatus || order.status || '';
+  const statusLabel = order.statusLabel || order.wooStatus || order.status || '';
 
   return (
     <main className="order-page">
@@ -274,6 +274,34 @@ export default function OrderStatus() {
               <h2 className="order-card__title">สถานะการจัดส่ง</h2>
               <OrderStatusTimeline status={order.status} />
             </section>
+            {order.tracking?.length ? (
+              <section className="order-card" style={{ marginTop: '1.25rem' }}>
+                <h2 className="order-card__title">ข้อมูลพัสดุ</h2>
+                <div className="order-meta">
+                  {order.tracking.map((tracking) => (
+                    <div
+                      key={`${tracking.provider}-${tracking.number}`}
+                      className="order-meta__row"
+                    >
+                      <span className="order-meta__label">
+                        {tracking.provider || 'ขนส่ง'}
+                      </span>
+                      <span className="order-meta__value">
+                        {tracking.number}
+                        {tracking.link ? (
+                          <>
+                            {' · '}
+                            <a href={tracking.link} target="_blank" rel="noopener noreferrer">
+                              ติดตามพัสดุ
+                            </a>
+                          </>
+                        ) : null}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            ) : null}
           </aside>
         </div>
 

@@ -124,64 +124,15 @@ function wooServerDevApi(env) {
           return
         }
 
-        if (path === '/api/create-stripe-checkout') {
-          res.setHeader('Cache-Control', 'no-store')
-          res.setHeader('Content-Type', 'application/json; charset=utf-8')
-
-          if (req.method === 'OPTIONS') {
-            res.statusCode = 204
-            res.end()
-            return
-          }
-
-          if (req.method !== 'POST') {
-            res.statusCode = 405
-            res.end(JSON.stringify({ message: 'Method Not Allowed' }))
-            return
-          }
-
-          try {
-            const payload = await readJsonBody(req)
-            const orderId = payload.orderId ?? payload.order_id
-            const orderKey = payload.orderKey ?? payload.order_key ?? ''
-            const successOrigin =
-              String(payload.successOrigin || req.headers.origin || '').trim() ||
-              'http://localhost:5173'
-            console.log('[dev create-stripe-checkout] request', {
-              orderId,
-              orderKey: orderKey ? '[set]' : null,
-              successOrigin,
-            })
-            const {
-              createStripeCheckoutForWooOrder,
-            } = await server.ssrLoadModule('/server/stripeCheckout.js')
-            const result = await createStripeCheckoutForWooOrder(orderId, {
-              orderKey,
-              successOrigin,
-            })
-            console.log('[dev create-stripe-checkout] ok', {
-              orderId: result.orderId,
-              sessionId: result.sessionId ? '[set]' : null,
-              url: result.url ? '[set]' : null,
-            })
-            res.statusCode = 200
-            res.end(JSON.stringify(result))
-          } catch (err) {
-            const status = Number(err?.status) || 500
-            console.error('[dev create-stripe-checkout] error', {
-              status,
-              message: err instanceof Error ? err.message : String(err),
-            })
-            res.statusCode = status
-            res.end(
-              JSON.stringify({
-                message:
-                  err instanceof Error
-                    ? err.message
-                    : 'สร้าง Stripe Checkout ไม่สำเร็จ',
-              }),
-            )
-          }
+        if (
+          path === '/api/create-stripe-checkout' ||
+          path === '/api/payments/stripe-checkout'
+        ) {
+          const { default: paymentsHandler } = await server.ssrLoadModule(
+            '/api/payments/[action].js',
+          )
+          req.query = { action: 'stripe-checkout' }
+          await paymentsHandler(req, res)
           return
         }
 

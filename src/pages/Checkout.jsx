@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import ThaiAddressSelector from '../components/ThaiAddressSelector';
 import CheckoutFreeShipping from '../components/CheckoutFreeShipping';
 import { useCart } from '../context/CartContext';
@@ -20,6 +20,7 @@ import {
   updateCartCustomer,
   validateCheckoutCustomerForm,
 } from '../api/woocommerce';
+import { CHECKOUT_PATH, loginPath } from '../utils/authRedirect';
 import './Checkout.css';
 
 const SYNC_DEBOUNCE_MS = 700;
@@ -83,7 +84,31 @@ function buildSelectedRatesMap(packages, previousSelected = {}) {
   return next;
 }
 
+/** Members only: the order APIs enforce this too; the guard just routes shoppers to login. */
 export default function Checkout() {
+  const { ready, isLoggedIn } = useAuth();
+
+  if (!ready) {
+    return (
+      <main className="checkout checkout--empty">
+        <div className="container checkout__empty-inner">
+          <p className="checkout__empty-message" role="status">
+            กำลังตรวจสอบการเข้าสู่ระบบ...
+          </p>
+        </div>
+      </main>
+    );
+  }
+
+  if (!isLoggedIn) {
+    return <Navigate to={loginPath(CHECKOUT_PATH)} replace />;
+  }
+
+  return <CheckoutForm />;
+}
+
+function CheckoutForm() {
+  const navigate = useNavigate();
   const {
     items,
     itemsTotal,
@@ -485,6 +510,15 @@ export default function Checkout() {
       resetCartAfterOrder();
       window.location.assign(stripeSession.url);
     } catch (err) {
+      if (err?.status === 401) {
+        // Session expired mid-checkout: the cart is untouched, so just sign in again.
+        // Login clears the stale token itself when it sees this reason.
+        navigate(loginPath(CHECKOUT_PATH), {
+          replace: true,
+          state: { reason: 'session_expired' },
+        });
+        return;
+      }
       const message =
         err instanceof Error ? err.message : 'ยืนยันคำสั่งซื้อไม่สำเร็จ';
       setStatusMessage('');
