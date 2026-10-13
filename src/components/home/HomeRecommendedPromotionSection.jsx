@@ -3,13 +3,11 @@ import { Link } from 'react-router-dom';
 import ProductPrice from '../ProductPrice';
 import ScrollReveal from '../ScrollReveal';
 import {
+  HOME_TOP_PICKS_APPEND_IDS,
   buildHomeTopPicks,
   getCachedStoreProducts,
 } from '../../utils/homeCatalog';
 import './HomeRecommendedPromotionSection.css';
-
-/** Added after the bestseller picks on Home only. 128 = Protector Spray single bottle. */
-const HOME_TOP_PICKS_APPEND_IDS = ['128'];
 
 function PickImage({ src, fallback, alt }) {
   if (!src && !fallback) {

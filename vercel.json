@@ -1,7 +1,7 @@
 {
   "headers": [
     {
-      "source": "/(account|cart|checkout|order-success|track-order|login|register|featured-products)",
+      "source": "/(account|cart|checkout|order-success|track-order|login|register|featured-products|app.html)",
       "headers": [{ "key": "X-Robots-Tag", "value": "noindex" }]
     },
     {
@@ -36,7 +36,7 @@
     },
     {
       "source": "/((?!api/).*)",
-      "destination": "/index.html"
+      "destination": "/app.html"
     }
   ]
 }

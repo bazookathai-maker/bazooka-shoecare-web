@@ -1,5 +1,12 @@
 const WP_BASE_URL = '/wp';
 
+/**
+ * `/wp` is proxied only by the Vite dev server; production has no route for it.
+ * WordPress currently holds only placeholder posts, so the site's articles are the local
+ * care guides unless VITE_WP_ARTICLES_ENABLED=true (which also needs a production `/wp` route).
+ */
+export const WP_ARTICLES_ENABLED = import.meta.env.VITE_WP_ARTICLES_ENABLED === 'true';
+
 function stripHtml(html) {
   return String(html || '')
     .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, ' ')
@@ -87,6 +94,10 @@ async function wpFetch(path) {
 
   if (!response.ok) {
     throw new Error(`โหลดข้อมูล WordPress ไม่สำเร็จ (${response.status})`);
+  }
+
+  if (!/json/i.test(response.headers.get('content-type') || '')) {
+    throw new Error('WordPress API did not return JSON');
   }
 
   return response;

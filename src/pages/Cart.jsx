@@ -2,8 +2,8 @@ import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { CHECKOUT_PATH, loginPath } from '../utils/authRedirect';
-import './Cart.css';
 import useSeo from '../hooks/useSeo';
+import './Cart.css';
 
 function formatPrice(value) {
   return `฿${Number(value || 0).toLocaleString('th-TH')}`;

@@ -1,6 +1,6 @@
 import FeaturedProductsSection from '../components/FeaturedProductsSection';
-import './FeaturedProducts.css';
 import useSeo from '../hooks/useSeo';
+import './FeaturedProducts.css';
 
 export default function FeaturedProducts() {
   useSeo({ title: 'สินค้าแนะนำ', noindex: true });

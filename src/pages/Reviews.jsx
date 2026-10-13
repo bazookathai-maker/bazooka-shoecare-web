@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
 import ScrollReveal from '../components/ScrollReveal';
 import { REVIEW_FILTERS, googleReviews } from '../data/googleReviews';
-import './Reviews.css';
 import useSeo from '../hooks/useSeo';
+import { PAGE_SEO } from '../utils/seo';
+import './Reviews.css';
 
 function ReviewStars({ count = 5 }) {
   return (
@@ -59,11 +60,7 @@ function ReviewCard({ review }) {
 }
 
 export default function Reviews() {
-  useSeo({
-      title: 'รีวิวจากลูกค้า',
-      description: 'รีวิว BAZOOKA เสียงจากลูกค้าที่ใช้ผลิตภัณฑ์ดูแลรองเท้า BAZOOKA จริง',
-      path: '/reviews',
-    });
+  useSeo(PAGE_SEO.reviews);
   const [activeFilter, setActiveFilter] = useState('all');
 
   const filteredReviews = useMemo(() => {

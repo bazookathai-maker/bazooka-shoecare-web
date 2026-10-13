@@ -2,8 +2,8 @@ import { useEffect } from 'react';
 import {
   DEFAULT_DESCRIPTION,
   DEFAULT_OG_IMAGE,
-  SITE_NAME,
   absoluteUrl,
+  formatTitle,
 } from '../utils/seo';
 
 const JSON_LD_ID = 'seo-json-ld';
@@ -66,7 +66,7 @@ export default function useSeo({
   type = 'website',
   jsonLd = null,
 }) {
-  const resolvedTitle = fullTitle || (title ? `${title} | ${SITE_NAME}` : SITE_NAME);
+  const resolvedTitle = formatTitle({ title, fullTitle });
   const resolvedDescription = description || DEFAULT_DESCRIPTION;
   const canonical = !noindex && path ? absoluteUrl(path) : '';
   const jsonLdText = jsonLd ? JSON.stringify(jsonLd) : '';

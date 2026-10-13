@@ -2,18 +2,15 @@ import { useEffect, useState } from 'react';
 import { fetchStoreProducts } from '../api/woocommerce';
 import { buildHomeTopPicks } from '../utils/homeCatalog';
 import ShowcaseProductCard from '../components/ShowcaseProductCard';
-import useSeo from '../hooks/useSeo';
 import '../components/FeaturedProductsSection.css';
+import useSeo from '../hooks/useSeo';
+import { PAGE_SEO } from '../utils/seo';
 import './Recommended.css';
 
 export default function Recommended() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  useSeo({
-    title: 'TOP PRODUCT สินค้าแนะนำ',
-    description: 'TOP PRODUCT สินค้าขายดีและสินค้าแนะนำจาก BAZOOKA สำหรับดูแลรองเท้าคู่โปรด',
-    path: '/recommended',
-  });
+  useSeo(PAGE_SEO.recommended);
 
   useEffect(() => {
     let cancelled = false;

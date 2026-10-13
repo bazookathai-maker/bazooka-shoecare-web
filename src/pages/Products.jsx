@@ -5,6 +5,7 @@ import ProductCard from '../components/ProductCard';
 import ScrollReveal from '../components/ScrollReveal';
 import { LISTING_HIDDEN_PRODUCT_IDS } from '../data/hiddenProducts';
 import useSeo from '../hooks/useSeo';
+import { PAGE_SEO } from '../utils/seo';
 import './Products.css';
 
 /**
@@ -34,12 +35,7 @@ export default function Products() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  useSeo({
-    title: 'สินค้าทั้งหมด',
-    description:
-      'สินค้าทั้งหมดจาก BAZOOKA น้ำยาทำความสะอาดรองเท้า สเปรย์กันน้ำ สเปรย์ดับกลิ่น แปรง และชุดดูแลรองเท้าครบเซต',
-    path: '/products',
-  });
+  useSeo(PAGE_SEO.products);
 
   useEffect(() => {
     let cancelled = false;

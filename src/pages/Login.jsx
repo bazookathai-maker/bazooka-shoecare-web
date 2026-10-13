@@ -4,8 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import { fetchPasswordResetUrl } from '../api/customerAuth';
 import GoogleSignInButton from '../components/GoogleSignInButton';
 import { CHECKOUT_PATH, readNextPath, registerPath } from '../utils/authRedirect';
-import './Account.css';
 import useSeo from '../hooks/useSeo';
+import './Account.css';
 
 /** An explicit `next` (e.g. checkout) wins over profile setup; setup still happens at checkout. */
 function afterSignInPath(search, profileComplete) {

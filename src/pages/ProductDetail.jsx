@@ -9,8 +9,8 @@ import {
   fetchStoreProducts,
 } from '../api/woocommerce';
 import { LISTING_HIDDEN_PRODUCT_IDS } from '../data/hiddenProducts';
+import { buildProductJsonLd, productPath, productSeo } from '../utils/seo';
 import useSeo from '../hooks/useSeo';
-import { buildProductJsonLd, productPath, shortenText } from '../utils/seo';
 import './ProductDetail.css';
 
 const PRODUCT_IDS_WITHOUT_RECOMMENDED = new Set(['881', '143', '134']);
@@ -104,22 +104,14 @@ export default function ProductDetail() {
   useSeo(
     detail
       ? {
-          title: detail.name,
-          description: shortenText(
-            [detail.name, detail.heroDescription || detail.aboutDescription]
-              .filter(Boolean)
-              .join(' – '),
-          ),
-          path: productPath(detail.id),
+          ...productSeo(detail),
           noindex: !isListed,
-          image: detail.gallery?.[0]?.src || detail.image,
-          type: 'product',
           jsonLd: isListed ? buildProductJsonLd(detail) : null,
         }
       : {
           title: 'สินค้า',
           path: productPath(productId),
-          noindex: !loading,
+          noindex: notFound,
         },
   );
 

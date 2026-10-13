@@ -2,8 +2,9 @@ import { useEffect, useId, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import ScrollReveal from '../components/ScrollReveal';
 import { FAQ_CATEGORIES, faqItems } from '../data/faqPage';
-import './Faq.css';
 import useSeo from '../hooks/useSeo';
+import { PAGE_SEO } from '../utils/seo';
+import './Faq.css';
 
 function FaqIcon({ isOpen }) {
   return (
@@ -49,11 +50,7 @@ function FaqAccordionItem({ faq, isOpen, onToggle }) {
 }
 
 export default function Faq() {
-  useSeo({
-      title: 'คำถามที่พบบ่อย',
-      description: 'คำถามที่พบบ่อยเกี่ยวกับสินค้า BAZOOKA การสั่งซื้อ และการจัดส่ง',
-      path: '/faq',
-    });
+  useSeo(PAGE_SEO.faq);
   const { hash } = useLocation();
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');

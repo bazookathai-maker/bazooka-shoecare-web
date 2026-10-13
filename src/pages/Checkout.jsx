@@ -21,8 +21,8 @@ import {
   validateCheckoutCustomerForm,
 } from '../api/woocommerce';
 import { CHECKOUT_PATH, loginPath } from '../utils/authRedirect';
-import './Checkout.css';
 import useSeo from '../hooks/useSeo';
+import './Checkout.css';
 
 const SYNC_DEBOUNCE_MS = 700;
 

@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom';
 import ScrollReveal from '../components/ScrollReveal';
 import { fetchStoreProducts } from '../api/woocommerce';
 import { getRecommendedProducts } from '../utils/siteSearch';
-import './NotFound.css';
 import useSeo from '../hooks/useSeo';
+import './NotFound.css';
 
 function formatPrice(price) {
   return `฿${Number(price || 0).toLocaleString('th-TH')}`;

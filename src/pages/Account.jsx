@@ -9,9 +9,9 @@ import {
 } from '../api/woocommerce';
 import { formFromCustomerProfile } from '../utils/customerAddressForm';
 import { formatThaiProvince } from '../data/thaiWooStates';
+import useSeo from '../hooks/useSeo';
 import './Checkout.css';
 import './Account.css';
-import useSeo from '../hooks/useSeo';
 
 const STATUS_LABELS = {
   pending: 'รอดำเนินการ',

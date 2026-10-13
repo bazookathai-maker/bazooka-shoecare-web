@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import OrderStatusTimeline from '../components/OrderStatusTimeline';
-import './OrderPages.css';
 import useSeo from '../hooks/useSeo';
+import './OrderPages.css';
 
 const TRACK_ORDER_API_URL = '/api/track-order';
 

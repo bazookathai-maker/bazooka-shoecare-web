@@ -3,8 +3,8 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { fetchOrderPaymentStatus } from '../api/customerAuth';
 import { loginPath } from '../utils/authRedirect';
-import './OrderPages.css';
 import useSeo from '../hooks/useSeo';
+import './OrderPages.css';
 
 const POLL_INTERVAL_MS = 4000;
 const POLL_WINDOW_MS = 60000;

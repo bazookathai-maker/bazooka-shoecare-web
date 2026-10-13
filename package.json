@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "vite build && node scripts/generate-sitemap.mjs dist/sitemap.xml",
+    "build": "vite build && node scripts/build-seo.mjs",
     "lint": "eslint .",
     "preview": "vite preview"
   },
