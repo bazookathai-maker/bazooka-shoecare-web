@@ -183,7 +183,6 @@
   pointer-events: none;
 }
 
-.product-card__sale-badge,
 .product-card__bestseller-badge {
   padding: 0.2rem 0.6rem;
   font-family: var(--font-family);

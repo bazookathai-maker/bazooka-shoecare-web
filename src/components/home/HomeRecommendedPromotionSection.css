@@ -142,25 +142,6 @@
   backdrop-filter: blur(8px);
 }
 
-.home-top-picks__sale-badge {
-  position: absolute;
-  top: 0.65rem;
-  right: 0.65rem;
-  z-index: 2;
-  padding: 0.2rem 0.6rem;
-  font-family: var(--font-family);
-  font-size: var(--text-meta);
-  font-weight: var(--font-weight-semibold);
-  letter-spacing: 0.02em;
-  line-height: 1.5;
-  color: var(--white-pure);
-  background: #d63b3b;
-  border: 1px solid #d63b3b;
-  border-radius: 3px;
-  white-space: nowrap;
-  pointer-events: none;
-}
-
 .home-top-picks__body {
   display: flex;
   flex-direction: column;
