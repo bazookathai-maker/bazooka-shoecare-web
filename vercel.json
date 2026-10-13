@@ -1,4 +1,14 @@
 {
+  "headers": [
+    {
+      "source": "/(account|cart|checkout|order-success|track-order|login|register|featured-products)",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex" }]
+    },
+    {
+      "source": "/order-status/:path*",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex" }]
+    }
+  ],
   "rewrites": [
     {
       "source": "/api/create-stripe-checkout",

@@ -11,6 +11,7 @@ import { formFromCustomerProfile } from '../utils/customerAddressForm';
 import { formatThaiProvince } from '../data/thaiWooStates';
 import './Checkout.css';
 import './Account.css';
+import useSeo from '../hooks/useSeo';
 
 const STATUS_LABELS = {
   pending: 'รอดำเนินการ',
@@ -213,6 +214,7 @@ function ProfileEditor({ customer, onSave, onCancel, canCancel }) {
 }
 
 export default function Account() {
+  useSeo({ title: 'บัญชีของฉัน', noindex: true });
   const { ready, isLoggedIn, customer, logout, saveProfile } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const setupRequested = searchParams.get('setup') === '1';

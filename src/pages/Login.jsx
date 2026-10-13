@@ -5,6 +5,7 @@ import { fetchPasswordResetUrl } from '../api/customerAuth';
 import GoogleSignInButton from '../components/GoogleSignInButton';
 import { CHECKOUT_PATH, readNextPath, registerPath } from '../utils/authRedirect';
 import './Account.css';
+import useSeo from '../hooks/useSeo';
 
 /** An explicit `next` (e.g. checkout) wins over profile setup; setup still happens at checkout. */
 function afterSignInPath(search, profileComplete) {
@@ -20,6 +21,7 @@ function readLinkState(state) {
 }
 
 export default function Login() {
+  useSeo({ title: 'เข้าสู่ระบบ', noindex: true });
   const navigate = useNavigate();
   const location = useLocation();
   const { login, loginWithGoogle, logout, isLoggedIn, ready } = useAuth();

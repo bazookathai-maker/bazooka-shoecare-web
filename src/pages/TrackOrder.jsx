@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './OrderPages.css';
+import useSeo from '../hooks/useSeo';
 
 const TRACK_ORDER_API_URL = '/api/track-order';
 
 export default function TrackOrder() {
+  useSeo({ title: 'ติดตามคำสั่งซื้อ', noindex: true });
   const navigate = useNavigate();
   const [form, setForm] = useState({ orderId: '', phone: '' });
   const [error, setError] = useState('');

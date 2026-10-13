@@ -811,6 +811,7 @@ export function mapStoreProduct(wooProduct) {
     longDescription: description,
     price: mapPrice(wooProduct.prices),
     regularPrice: mapPrice(wooProduct.prices, 'regular_price'),
+    currency: wooProduct.prices?.currency_code || 'THB',
     isOnSale: Boolean(wooProduct.on_sale),
     image: gallery[0]?.src || '',
     imageFit: 'contain',

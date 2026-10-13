@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import ScrollReveal from '../components/ScrollReveal';
 import './Contact.css';
+import useSeo from '../hooks/useSeo';
 
 const CONTACT_EMAIL = 'bazookathai@gmail.com';
 
@@ -89,6 +90,11 @@ function buildMailtoHref({ name, email, subject, message }) {
 }
 
 export default function Contact() {
+  useSeo({
+      title: 'ติดต่อเรา',
+      description: 'ติดต่อทีม BAZOOKA สำหรับคำถามเรื่องสินค้าและการดูแลรองเท้า ทางอีเมล LINE @bazookath และโซเชียลมีเดีย',
+      path: '/contact',
+    });
   const [form, setForm] = useState(INITIAL_FORM);
   const [status, setStatus] = useState({ type: '', text: '' });
 

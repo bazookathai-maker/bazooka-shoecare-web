@@ -4,8 +4,10 @@ import { useAuth } from '../context/AuthContext';
 import GoogleSignInButton from '../components/GoogleSignInButton';
 import { CHECKOUT_PATH, loginPath, readNextPath } from '../utils/authRedirect';
 import './Account.css';
+import useSeo from '../hooks/useSeo';
 
 export default function Register() {
+  useSeo({ title: 'สมัครบัญชี', noindex: true });
   const navigate = useNavigate();
   const location = useLocation();
   const nextPath = readNextPath(location.search);

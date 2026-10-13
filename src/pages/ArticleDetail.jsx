@@ -5,6 +5,8 @@ import { ArticleTopicRelated } from '../components/HubRelatedContent';
 import ScrollReveal from '../components/ScrollReveal';
 import { fetchWpPostBySlug } from '../api/wordpress';
 import { getCareGuideBySlug } from '../data/careGuides';
+import useSeo from '../hooks/useSeo';
+import { absoluteUrl, articlePath, shortenText } from '../utils/seo';
 import './Articles.css';
 
 function formatArticleDate(isoDate) {
@@ -93,6 +95,18 @@ export default function ArticleDetail() {
       cancelled = true;
     };
   }, [slug]);
+
+  const seoSource = post || fallbackGuide;
+  useSeo({
+    title: seoSource ? seoSource.title.replace(/\s+/g, ' ').trim() : 'บทความ',
+    description: seoSource ? shortenText(seoSource.summary) : undefined,
+    path: articlePath(slug),
+    noindex: !loading && !seoSource,
+    image: seoSource?.cover?.startsWith('/')
+      ? absoluteUrl(seoSource.cover)
+      : seoSource?.cover,
+    type: 'article',
+  });
 
   if (!loading && notFound) {
     return <Navigate to="/articles" replace />;

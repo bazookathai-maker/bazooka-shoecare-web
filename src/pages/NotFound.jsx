@@ -4,12 +4,14 @@ import ScrollReveal from '../components/ScrollReveal';
 import { fetchStoreProducts } from '../api/woocommerce';
 import { getRecommendedProducts } from '../utils/siteSearch';
 import './NotFound.css';
+import useSeo from '../hooks/useSeo';
 
 function formatPrice(price) {
   return `฿${Number(price || 0).toLocaleString('th-TH')}`;
 }
 
 export default function NotFound() {
+  useSeo({ title: 'ไม่พบหน้าที่คุณกำลังค้นหา', noindex: true });
   const [recommended, setRecommended] = useState([]);
 
   useEffect(() => {

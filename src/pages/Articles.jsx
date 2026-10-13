@@ -3,6 +3,7 @@ import JournalArticleCard from '../components/JournalArticleCard';
 import ScrollReveal from '../components/ScrollReveal';
 import { fetchWpCategories, fetchWpPosts } from '../api/wordpress';
 import { ARTICLE_CATEGORIES, careGuides } from '../data/careGuides';
+import useSeo from '../hooks/useSeo';
 import './Articles.css';
 
 const PAGE_SIZE = 6;
@@ -19,6 +20,12 @@ function buildFallbackPosts() {
 }
 
 export default function Articles() {
+  useSeo({
+    title: 'บทความดูแลรองเท้า',
+    description:
+      'คู่มือดูแลรองเท้าสั้นๆ จากทีม BAZOOKA วิธีทำความสะอาดรองเท้าสีขาว รองเท้าหนังกลับ รองเท้าวิ่ง รองเท้า CROCS การปกป้อง และการดับกลิ่น',
+    path: '/articles',
+  });
   const [posts, setPosts] = useState([]);
   const [categories, setCategories] = useState(buildFallbackCategories);
   const [activeCategory, setActiveCategory] = useState('all');
