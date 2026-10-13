@@ -94,7 +94,7 @@ function PaymentStatus({ orderId, orderNumber }) {
         lastErrorRef.current = err;
       }
 
-      if (Date.now() + POLL_INTERVAL_MS > deadline) {
+      if (Date.now() >= deadline) {
         setPhase(lastErrorRef.current ? 'unavailable' : 'timeout');
         return;
       }
@@ -156,7 +156,7 @@ function PaymentStatus({ orderId, orderNumber }) {
                   </span>
                 </div>
               ) : null}
-              {order?.status_label && current !== 'checking' ? (
+              {order?.status_label && (current === 'paid' || current === 'unpaid') ? (
                 <div className="order-meta__row" style={{ textAlign: 'center' }}>
                   <span className="order-meta__label">สถานะ</span>
                   <span className="order-meta__value">{order.status_label}</span>
