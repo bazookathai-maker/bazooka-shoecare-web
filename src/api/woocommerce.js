@@ -638,7 +638,7 @@ function resolveFilterCategory(wooProduct) {
 function resolveIsBestseller(wooProduct) {
   if (wooProduct.on_sale) return true;
   const name = String(wooProduct.name || '').toLowerCase();
-  return /set complete|โปรจับคู่|spray\s*\+|pro2|1แถม1|2-in-1|ฟรี\s*ผ้าแปรง/.test(
+  return /set complete|โปรจับคู่|spray\s*\+|pro2|1แถม1|แพ็กคู่|2-in-1|ฟรี\s*ผ้าแปรง/.test(
     name,
   );
 }
