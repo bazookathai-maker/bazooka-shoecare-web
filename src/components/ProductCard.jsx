@@ -10,6 +10,9 @@ import AddToCartButton from './AddToCartButton';
 import ProductPrice from './ProductPrice';
 import './ProductCard.css';
 
+/** Badge only; the product stays in the bestseller filter and Home ordering. 134 = Refresh Spray. */
+const BESTSELLER_BADGE_HIDDEN_IDS = new Set(['134']);
+
 function getDetailPath(product, linkToDetail) {
   if (!linkToDetail) return null;
 
@@ -41,6 +44,8 @@ export default function ProductCard({
   const isListingCard = variant === 'compact';
   const isRecommendCard = variant === 'recommend';
   const isDiscounted = hasActiveDiscount(product);
+  const showBestsellerBadge =
+    product.isBestseller && !BESTSELLER_BADGE_HIDDEN_IDS.has(String(product.id));
 
   const displayName =
     isListingCard || isRecommendCard
@@ -70,12 +75,12 @@ export default function ProductCard({
       )}
 
       <div className="product-card__media" ref={mediaRef}>
-        {!isRecommendCard && (isDiscounted || product.isBestseller) ? (
+        {!isRecommendCard && (isDiscounted || showBestsellerBadge) ? (
           <div className="product-card__badges">
             {isDiscounted ? (
               <span className="product-card__sale-badge">ลดราคา</span>
             ) : null}
-            {product.isBestseller ? (
+            {showBestsellerBadge ? (
               <span className="product-card__bestseller-badge">ขายดี</span>
             ) : null}
           </div>
