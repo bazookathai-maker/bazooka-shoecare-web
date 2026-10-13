@@ -23,7 +23,7 @@
 
 .home-reviews__subtitle {
   margin: 0.85rem 0 0;
-  font-size: clamp(1rem, 1.8vw, 1.125rem);
+  font-size: var(--text-lead);
   font-weight: var(--font-weight-regular);
   line-height: var(--line-height-thai);
   color: var(--text-secondary);
@@ -55,8 +55,8 @@
 
 .home-reviews__arrow {
   pointer-events: auto;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   padding: 0;
   border-radius: 999px;
   border: 1px solid rgba(28, 45, 69, 0.1);
@@ -221,7 +221,7 @@
   bottom: 0.85rem;
   z-index: 2;
   padding: 0.2rem 0;
-  font-size: 0.8125rem;
+  font-size: var(--text-meta);
   font-weight: var(--font-weight-medium);
   letter-spacing: 0.02em;
   color: var(--white-pure);
@@ -244,7 +244,7 @@
 
 .home-reviews__quote {
   margin: 0.75rem 0 0;
-  font-size: clamp(0.875rem, 1.4vw, 0.9375rem);
+  font-size: var(--text-body-sm);
   font-weight: var(--font-weight-regular);
   line-height: var(--line-height-thai);
   color: var(--text-secondary);

@@ -1,11 +1,15 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import GoogleSignInButton from '../components/GoogleSignInButton';
+import { CHECKOUT_PATH, loginPath, readNextPath } from '../utils/authRedirect';
 import './Account.css';
 
 export default function Register() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const nextPath = readNextPath(location.search);
+  const continueTo = nextPath && nextPath !== '/account' ? nextPath : null;
   const { register, loginWithGoogle } = useAuth();
   const [form, setForm] = useState({
     firstName: '',
@@ -28,7 +32,7 @@ export default function Register() {
     setError('');
     try {
       await register(form);
-      navigate('/account?setup=1', { replace: true });
+      navigate(continueTo || '/account?setup=1', { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'สมัครบัญชีไม่สำเร็จ');
     } finally {
@@ -46,12 +50,13 @@ export default function Register() {
     try {
       const { customer, isNew } = await loginWithGoogle(credential);
       navigate(
-        isNew || !customer?.profile_complete ? '/account?setup=1' : '/account',
+        continueTo ||
+          (isNew || !customer?.profile_complete ? '/account?setup=1' : '/account'),
         { replace: true },
       );
     } catch (err) {
       if (err?.code === 'google_link_required' && err.linkTicket) {
-        navigate('/login', {
+        navigate(loginPath(nextPath), {
           replace: true,
           state: { googleLink: { ticket: err.linkTicket, email: err.email || '' } },
         });
@@ -74,6 +79,12 @@ export default function Register() {
 
       <div className="container account-page__body">
         <form className="account-form" onSubmit={handleSubmit}>
+          {nextPath === CHECKOUT_PATH ? (
+            <p className="account-form__notice" role="status">
+              สมัครสมาชิกแล้วระบบจะพากลับไปหน้าชำระเงินทันที
+              สินค้าในตะกร้ายังอยู่ครบ
+            </p>
+          ) : null}
           <GoogleSignInButton
             context="signup"
             onCredential={handleGoogleCredential}
@@ -139,7 +150,7 @@ export default function Register() {
           </button>
           <p className="account-form__hint">
             มีบัญชีอยู่แล้ว?{' '}
-            <Link to="/login">เข้าสู่ระบบ</Link>
+            <Link to={loginPath(nextPath)}>เข้าสู่ระบบ</Link>
           </p>
         </form>
       </div>

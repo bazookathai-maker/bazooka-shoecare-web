@@ -132,11 +132,13 @@ export function buildHomeOurProducts(liveProducts = []) {
   const catalog = Array.isArray(liveProducts) ? liveProducts : [];
 
   return homeOurProducts.map((pillar) => {
-    const matched = pickBestProduct(catalog, pillar.id);
+    const matched = pillar.productId
+      ? catalog.find((product) => String(product.id) === String(pillar.productId))
+      : pickBestProduct(catalog, pillar.id);
     if (!matched) {
       return {
         ...pillar,
-        href: '/products',
+        href: pillar.productId ? `/products/${pillar.productId}` : '/products',
         source: 'fallback',
       };
     }
@@ -187,12 +189,15 @@ export function buildHomeGroupSlide(liveProducts = []) {
   };
 }
 
+/** Hidden from Home TOP PRODUCT only; still listed in the shop. 147 = *SET COMPLETE* ฿715. */
+const HOME_TOP_PICKS_HIDDEN_IDS = new Set(['147']);
+
 /**
  * TOP PRODUCT / สินค้าแนะนำ — live Woo catalog only.
  * Prefer bestsellers, then fill remaining slots.
  * Local `homeTopPicks` images are used only when the catalog is empty.
  */
-export function buildHomeTopPicks(liveProducts = [], limit = 6) {
+export function buildHomeTopPicks(liveProducts = [], limit = 6, appendIds = []) {
   const catalog = Array.isArray(liveProducts) ? liveProducts : [];
   if (!catalog.length) {
     return homeTopPicks.slice(0, limit).map((item) => ({
@@ -204,7 +209,14 @@ export function buildHomeTopPicks(liveProducts = [], limit = 6) {
 
   const bestsellers = catalog.filter((product) => product.isBestseller);
   const rest = catalog.filter((product) => !product.isBestseller);
-  const selected = [...bestsellers, ...rest].slice(0, limit);
+  const picked = [...bestsellers, ...rest]
+    .slice(0, limit)
+    .filter((product) => !HOME_TOP_PICKS_HIDDEN_IDS.has(String(product.id)));
+  const pickedIds = new Set(picked.map((product) => String(product.id)));
+  const appended = appendIds
+    .map((id) => catalog.find((product) => String(product.id) === String(id)))
+    .filter((product) => product && !pickedIds.has(String(product.id)));
+  const selected = [...picked, ...appended].slice(0, limit);
 
   return selected.map((product) => {
     const wooImage = product.image || '';
@@ -214,6 +226,8 @@ export function buildHomeTopPicks(liveProducts = [], limit = 6) {
       name: formatListingName(product.name),
       description: product.shortDescription || product.description || '',
       price: product.price,
+      regularPrice: product.regularPrice,
+      isOnSale: product.isOnSale,
       badge: product.isBestseller ? 'BEST SELLER' : product.category,
       image: wooImage,
       // No local fallback when Woo already provided a primary image

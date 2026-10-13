@@ -23,9 +23,6 @@ export default function Hero() {
             <span>ดูแลรองเท้าคู่โปรด</span>
             <span>ได้ครบในเซตเดียว</span>
           </h1>
-          <p className="hero__body">
-            ทำความสะอาด ปกป้อง และฟื้นฟู — สำหรับคู่ที่คุณใส่จริงในชีวิตประจำวัน
-          </p>
 
           <div className="hero__actions">
             <Link to="/products" className="btn-primary">

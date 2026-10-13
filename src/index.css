@@ -42,6 +42,15 @@
   --font-weight-display: 600;
   --line-height-thai: 1.75;
   --line-height-thai-tight: 1.45;
+  /* Type scale — Thai reads small, so nothing below 14px */
+  --text-meta: 0.875rem;
+  --text-ui: 1rem;
+  --text-body-sm: 1rem;
+  --text-body: 1.125rem;
+  --text-lead: clamp(1.125rem, 1.05rem + 0.35vw, 1.3125rem);
+  --text-card-title: clamp(1.125rem, 1.05rem + 0.3vw, 1.25rem);
+  --letter-spacing-ui: 0.02em;
+  --letter-spacing-meta: 0.06em;
   --letter-spacing-tight: -0.035em;
   --letter-spacing-label: 0.22em;
   --letter-spacing-nav: 0.14em;
@@ -84,7 +93,7 @@ html {
 body {
   font-family: var(--font-family);
   font-weight: var(--font-weight-regular);
-  font-size: 1rem;
+  font-size: var(--text-body);
   color: var(--text-primary);
   background: var(--white-pure);
   line-height: var(--line-height-thai);
@@ -234,9 +243,9 @@ select:focus-visible {
 }
 
 .section-label {
-  font-size: 0.625rem;
+  font-size: var(--text-meta);
   font-weight: var(--font-weight-medium);
-  letter-spacing: var(--letter-spacing-label);
+  letter-spacing: var(--letter-spacing-meta);
   text-transform: uppercase;
   color: var(--navy-muted);
   margin-bottom: 1.25rem;
@@ -273,7 +282,7 @@ select:focus-visible {
 .page-hero__desc {
   margin-top: 1.5rem;
   max-width: 34rem;
-  font-size: clamp(1.0625rem, 2vw, 1.25rem);
+  font-size: var(--text-lead);
   font-weight: var(--font-weight-regular);
   color: var(--text-secondary);
   line-height: var(--line-height-thai);
@@ -285,11 +294,12 @@ select:focus-visible {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  min-height: 2.75rem;
-  padding: 1.0625rem 2.5rem;
-  font-size: 0.625rem;
+  min-height: 3rem;
+  padding: 0.8125rem 2rem;
+  font-size: var(--text-ui);
   font-weight: var(--font-weight-medium);
-  letter-spacing: var(--letter-spacing-button);
+  line-height: 1.4;
+  letter-spacing: var(--letter-spacing-ui);
   text-transform: uppercase;
   border-radius: var(--radius-button);
   transition:
@@ -311,7 +321,7 @@ select:focus-visible {
 }
 
 .btn-outline {
-  padding: 1rem 2.25rem;
+  padding: 0.75rem 1.875rem;
   color: var(--navy);
   background: transparent;
   border: 1px solid var(--border-strong);

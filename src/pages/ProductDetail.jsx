@@ -10,6 +10,8 @@ import {
 } from '../api/woocommerce';
 import './ProductDetail.css';
 
+const PRODUCT_IDS_WITHOUT_RECOMMENDED = new Set(['881', '143', '134']);
+
 function DetailStatus({ children, error = false }) {
   return (
     <main className="pdp">
@@ -57,15 +59,17 @@ export default function ProductDetail() {
         }
 
         let recommended = [];
-        try {
-          const allProducts = await fetchStoreProducts();
-          if (!cancelled) {
-            recommended = allProducts
-              .filter((item) => item.id !== product.id)
-              .slice(0, 4);
+        if (!PRODUCT_IDS_WITHOUT_RECOMMENDED.has(String(product.id))) {
+          try {
+            const allProducts = await fetchStoreProducts();
+            if (!cancelled) {
+              recommended = allProducts
+                .filter((item) => item.id !== product.id)
+                .slice(0, 4);
+            }
+          } catch {
+            recommended = [];
           }
-        } catch {
-          recommended = [];
         }
 
         if (!cancelled) {

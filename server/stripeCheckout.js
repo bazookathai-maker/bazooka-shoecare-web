@@ -100,21 +100,31 @@ function resolveSuccessOrigin(preferred) {
 /**
  * Create a Stripe-hosted Checkout Session for an existing Woo order (PromptPay).
  * Amount/currency always come from WooCommerce — never from the client.
+ * `customerId` must come from a verified session; the order must belong to it.
  */
 export async function createStripeCheckoutForWooOrder(
   orderId,
-  { orderKey = '', successOrigin = '' } = {},
+  { orderKey = '', successOrigin = '', customerId } = {},
 ) {
-  const order = await getWooOrderById(orderId);
-
-  if (String(order.payment_method || '') !== STRIPE_PAYMENT_METHOD) {
-    throw httpError('คำสั่งซื้อนี้ไม่ได้เลือก Stripe PromptPay', 400);
+  const ownerId = Number(customerId);
+  if (!Number.isInteger(ownerId) || ownerId <= 0) {
+    throw httpError('กรุณาเข้าสู่ระบบ', 401, { code: 'auth_required' });
   }
+
+  const order = await getWooOrderById(orderId);
 
   const expectedKey = String(order.order_key || '').trim();
   const providedKey = String(orderKey || '').trim();
-  if (expectedKey && providedKey && providedKey !== expectedKey) {
-    throw httpError('order_key ไม่ตรงกับคำสั่งซื้อ', 403);
+  if (
+    Number(order.customer_id) !== ownerId ||
+    !expectedKey ||
+    providedKey !== expectedKey
+  ) {
+    throw httpError('ไม่พบคำสั่งซื้อนี้ในบัญชีของคุณ', 403);
+  }
+
+  if (String(order.payment_method || '') !== STRIPE_PAYMENT_METHOD) {
+    throw httpError('คำสั่งซื้อนี้ไม่ได้เลือก Stripe PromptPay', 400);
   }
 
   if (isWooOrderAlreadyPaid(order)) {

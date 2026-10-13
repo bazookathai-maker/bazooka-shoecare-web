@@ -627,16 +627,40 @@ function mapWooCategoryToFilter(category) {
   return resolveFilterCategoryFromName({ name: category?.name || '' });
 }
 
+/**
+ * Uncategorized Woo products whose names were rewritten for display; the name heuristics
+ * below would otherwise move them to a different filter tab.
+ */
+const FILTER_CATEGORY_BY_PRODUCT_ID = {
+  881: 'kits',
+  145: 'kits',
+  143: 'protectors',
+  128: 'protectors',
+  136: 'kits',
+  68: 'cleaners',
+  130: 'brushes',
+  140: 'cleaners',
+  126: 'cleaners',
+  134: 'refresh',
+};
+
+/** Bestsellers by their original Woo names (โปรจับคู่, 1แถม1, SPRAY+/PRO2, 2-in-1, ฟรี ผ้าแปรง) before renaming. */
+const BESTSELLER_PRODUCT_IDS = new Set([145, 143, 136, 130, 68]);
+
 function resolveFilterCategory(wooProduct) {
   const wooCategory = getPrimaryWooCategory(wooProduct);
   if (wooCategory) {
     return mapWooCategoryToFilter(wooCategory);
   }
-  return resolveFilterCategoryFromName(wooProduct);
+  return (
+    FILTER_CATEGORY_BY_PRODUCT_ID[Number(wooProduct.id)] ||
+    resolveFilterCategoryFromName(wooProduct)
+  );
 }
 
 function resolveIsBestseller(wooProduct) {
   if (wooProduct.on_sale) return true;
+  if (BESTSELLER_PRODUCT_IDS.has(Number(wooProduct.id))) return true;
   const name = String(wooProduct.name || '').toLowerCase();
   return /set complete|โปรจับคู่|spray\s*\+|pro2|1แถม1|2-in-1|ฟรี\s*ผ้าแปรง/.test(
     name,
@@ -786,6 +810,8 @@ export function mapStoreProduct(wooProduct) {
     description: cardDescription,
     longDescription: description,
     price: mapPrice(wooProduct.prices),
+    regularPrice: mapPrice(wooProduct.prices, 'regular_price'),
+    isOnSale: Boolean(wooProduct.on_sale),
     image: gallery[0]?.src || '',
     imageFit: 'contain',
     category: resolveCategoryLabel(wooProduct, filterCategory),

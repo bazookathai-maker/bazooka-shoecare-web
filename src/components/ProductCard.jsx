@@ -6,7 +6,11 @@ import {
   formatListingName,
 } from '../utils/productListingCopy';
 import AddToCartButton from './AddToCartButton';
+import ProductPrice from './ProductPrice';
 import './ProductCard.css';
+
+/** Badge only; the product stays in the bestseller filter and Home ordering. 134 = Refresh Spray, 126 = Bazooka Cleaner single bottle. */
+const BESTSELLER_BADGE_HIDDEN_IDS = new Set(['134', '126']);
 
 function getDetailPath(product, linkToDetail) {
   if (!linkToDetail) return null;
@@ -38,6 +42,8 @@ export default function ProductCard({
   const detailPath = getDetailPath(product, linkToDetail);
   const isListingCard = variant === 'compact';
   const isRecommendCard = variant === 'recommend';
+  const showBestsellerBadge =
+    product.isBestseller && !BESTSELLER_BADGE_HIDDEN_IDS.has(String(product.id));
 
   const displayName =
     isListingCard || isRecommendCard
@@ -67,8 +73,10 @@ export default function ProductCard({
       )}
 
       <div className="product-card__media" ref={mediaRef}>
-        {!isRecommendCard && product.isBestseller ? (
-          <span className="product-card__bestseller-badge">ขายดี</span>
+        {!isRecommendCard && showBestsellerBadge ? (
+          <div className="product-card__badges">
+            <span className="product-card__bestseller-badge">ขายดี</span>
+          </div>
         ) : null}
         {!isRecommendCard ? (
           <span className="product-card__category">{product.category}</span>
@@ -102,7 +110,11 @@ export default function ProductCard({
         ) : null}
         {showPrice && (
           <p className="product-card__price">
-            ฿{Number(product.price || 0).toLocaleString()}
+            <ProductPrice
+              price={product.price}
+              regularPrice={product.regularPrice}
+              isOnSale={product.isOnSale}
+            />
           </p>
         )}
       </div>

@@ -23,7 +23,7 @@
 .featured-products__subtitle {
   margin-top: 1rem;
   font-family: var(--font-family);
-  font-size: 1rem;
+  font-size: var(--text-lead);
   font-weight: var(--font-weight-light);
   color: var(--text-secondary);
   line-height: 1.75;
@@ -33,7 +33,7 @@
 .featured-products__status {
   margin: 0 0 1.25rem;
   text-align: center;
-  font-size: 0.875rem;
+  font-size: var(--text-body-sm);
   color: var(--text-secondary);
 }
 
@@ -107,16 +107,16 @@
 
 .featured-products__name {
   font-family: var(--font-family);
-  font-size: clamp(0.9375rem, 1.8vw, 1.0625rem);
+  font-size: var(--text-body);
   font-weight: var(--font-weight-medium);
-  line-height: 1.4;
+  line-height: 1.45;
   color: var(--blue-gray-dark);
   letter-spacing: 0.02em;
 }
 
 .featured-products__description {
   font-family: var(--font-family);
-  font-size: 0.8125rem;
+  font-size: var(--text-body-sm);
   font-weight: var(--font-weight-regular);
   line-height: 1.7;
   letter-spacing: 0.01em;
@@ -126,9 +126,9 @@
 
 .featured-products__price {
   font-family: var(--font-family);
-  font-size: 0.8125rem;
-  font-weight: var(--font-weight-medium);
-  letter-spacing: 0.06em;
+  font-size: var(--text-body);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.02em;
   color: var(--muted-green-dark);
   margin-top: auto;
   padding-top: 0.5rem;

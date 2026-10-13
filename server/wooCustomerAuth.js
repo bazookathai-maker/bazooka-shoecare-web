@@ -6,6 +6,11 @@
 
 import crypto from 'node:crypto';
 import { signToken, verifyToken } from './authTokens.js';
+import {
+  getWooOrderShipmentTrackings,
+  wooOrderStatusLabel,
+} from './wooOrderTracking.js';
+import { STRIPE_PAID_META_KEY, getWooOrderMeta } from './wooCreateOrder.js';
 
 const DEFAULT_WOO_HOST = 'https://bazookashoecare.com';
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30;
@@ -595,15 +600,26 @@ export async function loginWithGoogleIdentity(identity) {
   return { ...authResult(created), isNew: true };
 }
 
-/** Load the session's own Woo customer; never trusts ids from the browser. */
-async function requireSessionCustomer(req) {
+/**
+ * Load the session's own Woo customer; never trusts ids from the browser.
+ * 401 carries `code: 'auth_required'` so the storefront can send the shopper to login.
+ */
+export async function requireSessionCustomer(req) {
   const session = getSessionFromRequest(req);
   if (!session) {
-    throw httpError('กรุณาเข้าสู่ระบบ', 401);
+    throw httpError('กรุณาเข้าสู่ระบบ', 401, { code: 'auth_required' });
   }
-  const customer = await getCustomerById(session.customerId);
+  let customer;
+  try {
+    customer = await getCustomerById(session.customerId);
+  } catch (err) {
+    if (err?.status === 404) {
+      throw httpError('กรุณาเข้าสู่ระบบอีกครั้ง', 401, { code: 'auth_required' });
+    }
+    throw err;
+  }
   if (normalizeEmail(customer.email) !== session.email) {
-    throw httpError('กรุณาเข้าสู่ระบบอีกครั้ง', 401);
+    throw httpError('กรุณาเข้าสู่ระบบอีกครั้ง', 401, { code: 'auth_required' });
   }
   return { session, customer };
 }
@@ -625,7 +641,54 @@ export async function getAuthenticatedOrders(req) {
     },
   });
 
-  return Array.isArray(list) ? list.map(publicOrder) : [];
+  if (!Array.isArray(list)) return [];
+  return Promise.all(
+    list.map(async (order) => ({
+      ...publicOrder(order),
+      status_label: wooOrderStatusLabel(order.status),
+      tracking: await getWooOrderShipmentTrackings(order),
+    })),
+  );
+}
+
+const UNPAID_FINAL_STATUSES = new Set(['cancelled', 'refunded', 'failed']);
+
+/**
+ * Payment state of one of the session customer's own orders (read-only).
+ * `paid` requires the Stripe paid flag written by the verified webhook plus a paid date;
+ * order status alone is not treated as proof of payment.
+ */
+export async function getAuthenticatedOrderPayment(req, orderId) {
+  const { session } = await requireSessionCustomer(req);
+  const id = String(orderId || '').trim();
+  const notFound = () => httpError('ไม่พบคำสั่งซื้อนี้ในบัญชีของคุณ', 404);
+  if (!/^\d+$/.test(id)) throw notFound();
+
+  let order;
+  try {
+    order = await wooRestRequest(`/orders/${id}`);
+  } catch (err) {
+    if (err?.status === 404) throw notFound();
+    throw err;
+  }
+  if (Number(order?.customer_id) !== Number(session.customerId)) throw notFound();
+
+  const status = String(order.status || '').trim().toLowerCase();
+  const paid =
+    getWooOrderMeta(order, STRIPE_PAID_META_KEY) === 'yes' &&
+    Boolean(order.date_paid) &&
+    !UNPAID_FINAL_STATUSES.has(status);
+
+  return {
+    id: Number(order.id),
+    number: String(order.number || order.id),
+    status,
+    status_label: wooOrderStatusLabel(status),
+    total: String(order.total || '0'),
+    currency: String(order.currency || 'THB'),
+    paid,
+    date_paid: paid ? String(order.date_paid) : null,
+  };
 }
 
 function limitText(value) {

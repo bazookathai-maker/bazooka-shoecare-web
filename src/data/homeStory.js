@@ -8,6 +8,8 @@ export const homeHero = {
 export const homeOurProducts = [
   {
     id: 'cleaner',
+    /** Pinned WooCommerce product (โปรครบเซ็ต BAZOOKA); skips keyword matching. */
+    productId: 881,
     slug: 'organic-cleaner',
     name: 'Bazooka Cleaner',
     benefit: 'น้ำยาทำความสะอาดรองเท้าแบบแห้ง\nสูตรจากธรรมชาติ ไม่มีสารเคมี',

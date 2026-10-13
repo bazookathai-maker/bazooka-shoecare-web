@@ -1,11 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import ProductPrice from '../ProductPrice';
 import ScrollReveal from '../ScrollReveal';
 import {
   buildHomeTopPicks,
   getCachedStoreProducts,
 } from '../../utils/homeCatalog';
 import './HomeRecommendedPromotionSection.css';
+
+/** Added after the bestseller picks on Home only. 128 = Protector Spray single bottle. */
+const HOME_TOP_PICKS_APPEND_IDS = ['128'];
 
 function PickImage({ src, fallback, alt }) {
   if (!src && !fallback) {
@@ -56,9 +60,15 @@ function TopPickCard({ item, index }) {
             <h3 className="home-top-picks__name">{item.name}</h3>
           </Link>
           <p className="home-top-picks__price">
-            {item.price != null
-              ? `฿${Number(item.price).toLocaleString('th-TH')}`
-              : '\u00A0'}
+            {item.price != null ? (
+              <ProductPrice
+                price={item.price}
+                regularPrice={item.regularPrice}
+                isOnSale={item.isOnSale}
+              />
+            ) : (
+              '\u00A0'
+            )}
           </p>
           <Link to={item.href} className="home-top-picks__view-btn">
             ดูสินค้า
@@ -81,7 +91,7 @@ export default function HomeRecommendedPromotionSection() {
       try {
         const products = await getCachedStoreProducts({ force: true });
         if (!cancelled) {
-          setItems(buildHomeTopPicks(products, 6));
+          setItems(buildHomeTopPicks(products, 6, HOME_TOP_PICKS_APPEND_IDS));
           setStatus('ready');
         }
       } catch {

@@ -33,7 +33,7 @@ export function formatListingName(rawName) {
 
   name = name
     .replace(/^\*+[^*]*\*+/g, '')
-    .replace(/\b(PRO\s*\d+|COMPLETE\d*|PRODUO\d*|SKU[:\s]*\S+)/gi, '')
+    .replace(/\b(PRO\s*\d+|COMPLETE\d+|PRODUO\d*|SKU[:\s]*\S+)/gi, '')
     .replace(/\s*[|/]\s*/g, ' ')
     .replace(/\s{2,}/g, ' ')
     .trim();

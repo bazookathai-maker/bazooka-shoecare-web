@@ -2,50 +2,43 @@ import { useState } from 'react';
 import ScrollReveal from '../components/ScrollReveal';
 import './Contact.css';
 
+const CONTACT_EMAIL = 'bazookathai@gmail.com';
+
 const contactInfo = [
   {
     id: 'email',
     label: 'Email',
-    value: 'hello@bazooka.care',
-    href: 'mailto:hello@bazooka.care',
+    value: CONTACT_EMAIL,
+    href: `mailto:${CONTACT_EMAIL}`,
     icon: 'mail',
   },
   {
-    id: 'phone',
-    label: 'โทรศัพท์',
-    value: '02-000-0000',
-    href: 'tel:020000000',
-    icon: 'phone',
-  },
-  {
+    // No confirmed page URL yet — keep as text until one is provided.
     id: 'facebook',
     label: 'Facebook',
-    value: 'BAZOOKA Shoe Care',
-    href: 'https://www.facebook.com/',
+    value: 'Bazooka ผลิตภัณฑ์ดูแลรองเท้า',
     icon: 'facebook',
-    external: true,
   },
   {
     id: 'line',
-    label: 'Line',
-    value: '@bazooka.care',
-    href: 'https://line.me/',
+    label: 'LINE',
+    value: '@bazookath',
+    href: 'https://line.me/R/ti/p/@bazookath',
     icon: 'line',
     external: true,
   },
   {
     id: 'hours',
     label: 'เวลาทำการ',
-    value: 'จันทร์ – ศุกร์ 10:00 – 18:00',
+    value: '08.30–17.30 น.',
     icon: 'clock',
   },
 ];
 
 const socialLinks = [
-  { id: 'facebook', label: 'Facebook', href: 'https://www.facebook.com/' },
-  { id: 'instagram', label: 'Instagram', href: 'https://www.instagram.com/' },
-  { id: 'tiktok', label: 'TikTok', href: 'https://www.tiktok.com/' },
-  { id: 'youtube', label: 'YouTube', href: 'https://www.youtube.com/' },
+  { id: 'instagram', label: 'Instagram', href: 'https://www.instagram.com/bazookashoecare/' },
+  { id: 'tiktok', label: 'TikTok', href: 'https://www.tiktok.com/@bazookashoecare' },
+  { id: 'youtube', label: 'YouTube', href: 'https://www.youtube.com/@bazookathailand' },
 ];
 
 const INITIAL_FORM = {
@@ -62,16 +55,6 @@ function ContactIcon({ type }) {
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
           <rect x="3" y="5" width="18" height="14" rx="1.5" />
           <path d="M3.5 7l8.5 6 8.5-6" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      );
-    case 'phone':
-      return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
-          <path
-            d="M7 3.5h3.2l1.2 4.2-2 1.2a11 11 0 0 0 5.7 5.7l1.2-2 4.2 1.2V17a2 2 0 0 1-2.2 2A15.5 15.5 0 0 1 5 5.7 2 2 0 0 1 7 3.5z"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
         </svg>
       );
     case 'facebook':
@@ -98,20 +81,41 @@ function ContactIcon({ type }) {
   }
 }
 
+/** No mail backend yet: hand the message to the visitor's email app instead of faking a send. */
+function buildMailtoHref({ name, email, subject, message }) {
+  const body = `${message.trim()}\n\n— ${name.trim()} (${email.trim()})`;
+  const params = new URLSearchParams({ subject: subject.trim(), body });
+  return `mailto:${CONTACT_EMAIL}?${params.toString().replace(/\+/g, '%20')}`;
+}
+
 export default function Contact() {
   const [form, setForm] = useState(INITIAL_FORM);
-  const [submitted, setSubmitted] = useState(false);
+  const [status, setStatus] = useState({ type: '', text: '' });
 
   const handleChange = (event) => {
     const { name, value } = event.target;
     setForm((current) => ({ ...current, [name]: value }));
-    if (submitted) setSubmitted(false);
+    if (status.text) setStatus({ type: '', text: '' });
   };
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    setSubmitted(true);
-    setForm(INITIAL_FORM);
+    const missing = ['name', 'email', 'subject', 'message'].some(
+      (field) => !form[field].trim(),
+    );
+    if (missing) {
+      setStatus({ type: 'error', text: 'กรุณากรอกข้อมูลให้ครบทุกช่อง' });
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+      setStatus({ type: 'error', text: 'กรุณากรอกอีเมลให้ถูกต้อง' });
+      return;
+    }
+    window.location.href = buildMailtoHref(form);
+    setStatus({
+      type: 'info',
+      text: `กำลังเปิดแอปอีเมลของคุณ ข้อความจะถูกส่งถึง ${CONTACT_EMAIL} เมื่อคุณกดส่งในแอปอีเมล`,
+    });
   };
 
   return (
@@ -225,14 +229,21 @@ export default function Contact() {
                 </label>
 
                 <button type="submit" className="contact-form__submit">
-                  ส่งข้อความ
+                  ส่งข้อความทางอีเมล
                 </button>
 
-                {submitted ? (
-                  <p className="contact-form__note" role="status">
-                    รับข้อความแล้ว ขอบคุณที่ติดต่อเรา
+                {status.text ? (
+                  <p
+                    className="contact-form__note"
+                    role={status.type === 'error' ? 'alert' : 'status'}
+                  >
+                    {status.text}
                   </p>
-                ) : null}
+                ) : (
+                  <p className="contact-form__note">
+                    ระบบจะเปิดแอปอีเมลของคุณพร้อมข้อความนี้ เพื่อส่งถึง {CONTACT_EMAIL}
+                  </p>
+                )}
               </form>
             </div>
           </div>

@@ -1,5 +1,6 @@
 import {
   getAuthenticatedCustomer,
+  getAuthenticatedOrderPayment,
   getAuthenticatedOrders,
   getPasswordResetUrl,
   loginCustomer,
@@ -32,6 +33,7 @@ const FALLBACK_MESSAGES = {
   login: 'เข้าสู่ระบบไม่สำเร็จ',
   google: 'เข้าสู่ระบบด้วย Google ไม่สำเร็จ',
   orders: 'โหลดประวัติคำสั่งซื้อไม่สำเร็จ',
+  'order-payment': 'ตรวจสอบสถานะการชำระเงินไม่สำเร็จ',
   profile: 'บันทึกข้อมูลบัญชีไม่สำเร็จ',
 };
 
@@ -44,6 +46,7 @@ const FALLBACK_MESSAGES = {
  * POST /api/auth/google         (GIS ID token → session)
  * GET  /api/auth/me
  * GET  /api/auth/orders
+ * GET  /api/auth/order-payment?orderId=  (own order only, read-only)
  * PUT  /api/auth/profile
  */
 export default async function handler(req, res) {
@@ -131,6 +134,14 @@ export default async function handler(req, res) {
       return;
     }
 
+    if (action === 'order-payment') {
+      if (req.method !== 'GET') return methodNotAllowed(res);
+      const order = await getAuthenticatedOrderPayment(req, req.query.orderId);
+      res.statusCode = 200;
+      res.end(JSON.stringify({ order }));
+      return;
+    }
+
     if (action === 'profile') {
       if (req.method !== 'PUT') return methodNotAllowed(res);
       const payload = await readJsonBody(req);
@@ -152,6 +163,7 @@ export default async function handler(req, res) {
           : FALLBACK_MESSAGES[action] || 'โหลดข้อมูลบัญชีไม่สำเร็จ',
     };
     const code = err?.data?.code;
+    if (code === 'auth_required') body.code = code;
     if (typeof code === 'string' && code.startsWith('google_')) {
       body.code = code;
       if (code === 'google_link_required') {

@@ -8,11 +8,13 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.5rem 0.625rem;
-  padding: clamp(1.25rem, 3vw, 1.75rem) 0 clamp(0.85rem, 2vw, 1.25rem);
-  font-size: 0.6875rem;
+  gap: 0 0.625rem;
+  padding-top: clamp(1.25rem, 3vw, 1.75rem);
+  padding-bottom: clamp(0.85rem, 2vw, 1.25rem);
+  font-size: var(--text-meta);
   font-weight: var(--font-weight-medium);
-  letter-spacing: 0.12em;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
   color: var(--text-secondary);
 }
@@ -63,9 +65,9 @@
 }
 
 .pdp__category {
-  font-size: 0.625rem;
+  font-size: var(--text-meta);
   font-weight: var(--font-weight-medium);
-  letter-spacing: var(--letter-spacing-label);
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--muted-green);
   margin-bottom: 0.75rem;
@@ -73,30 +75,30 @@
 
 .pdp__name {
   font-family: var(--font-family);
-  font-size: clamp(1.5rem, 3.2vw, 2.15rem);
+  font-size: clamp(1.625rem, 3.2vw, 2.25rem);
   font-weight: var(--font-weight-light);
-  line-height: 1.2;
-  letter-spacing: var(--letter-spacing-tight);
+  line-height: 1.35;
+  letter-spacing: 0;
   color: var(--blue-gray-dark);
   margin-bottom: 0.85rem;
 }
 
 .pdp__price {
-  font-size: clamp(1.125rem, 2vw, 1.35rem);
-  font-weight: var(--font-weight-medium);
+  font-size: clamp(1.375rem, 1.2rem + 0.6vw, 1.625rem);
+  font-weight: var(--font-weight-semibold);
   color: var(--blue-gray-dark);
   letter-spacing: 0.02em;
   margin-bottom: 0.75rem;
 }
 
 .pdp__description {
-  font-size: 0.9375rem;
+  font-size: var(--text-body);
   font-weight: var(--font-weight-light);
-  line-height: 1.7;
+  line-height: 1.75;
   color: var(--text-secondary);
   letter-spacing: 0.01em;
   margin-bottom: 0.85rem;
-  max-width: 28rem;
+  max-width: 32rem;
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
@@ -104,7 +106,7 @@
 }
 
 .pdp__stock {
-  font-size: 0.75rem;
+  font-size: var(--text-meta);
   font-weight: var(--font-weight-medium);
   letter-spacing: 0.04em;
   color: var(--muted-green);
@@ -117,7 +119,7 @@
 
 .pdp__status {
   padding: clamp(3rem, 8vw, 5rem) 0 0;
-  font-size: 1rem;
+  font-size: var(--text-body);
   font-weight: var(--font-weight-light);
   line-height: 1.7;
   color: var(--text-secondary);
@@ -175,12 +177,12 @@
   letter-spacing: var(--letter-spacing-tight);
   color: var(--navy);
   margin-top: 0.35rem;
-  line-height: 1.15;
+  line-height: 1.3;
 }
 
 .pdp__prose {
   max-width: 40rem;
-  font-size: 1rem;
+  font-size: var(--text-body);
   font-weight: var(--font-weight-light);
   line-height: 1.85;
   letter-spacing: 0.01em;
@@ -203,9 +205,9 @@
 }
 
 .pdp__benefit-list li {
-  font-size: 0.9375rem;
+  font-size: var(--text-body);
   font-weight: var(--font-weight-light);
-  line-height: 1.65;
+  line-height: 1.7;
   color: var(--navy);
   padding-left: 1.15rem;
   position: relative;
@@ -240,23 +242,24 @@
 
 .pdp__meta-row {
   display: grid;
-  grid-template-columns: 6.5rem minmax(0, 1fr);
+  grid-template-columns: 7.5rem minmax(0, 1fr);
   gap: 0.75rem 1rem;
   padding: 0.65rem 0;
   border-bottom: 1px solid rgba(90, 107, 125, 0.1);
 }
 
 .pdp__meta-row dt {
-  font-size: 0.6875rem;
+  font-size: var(--text-meta);
   font-weight: var(--font-weight-medium);
-  letter-spacing: 0.1em;
+  line-height: 1.6;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--text-secondary);
 }
 
 .pdp__meta-row dd {
   margin: 0;
-  font-size: 0.9375rem;
+  font-size: var(--text-body);
   font-weight: var(--font-weight-light);
   color: var(--blue-gray-dark);
   word-break: break-word;
@@ -309,7 +312,7 @@
   }
 
   .pdp__name {
-    font-size: clamp(1.35rem, 6vw, 1.75rem);
+    font-size: clamp(1.5rem, 6.4vw, 1.875rem);
   }
 
   .pdp__layout {

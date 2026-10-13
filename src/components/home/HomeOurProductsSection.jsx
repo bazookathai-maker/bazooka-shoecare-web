@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import ScrollReveal from '../ScrollReveal';
 import {
-  buildHomeGroupSlide,
   buildHomeOurProducts,
   getCachedStoreProducts,
 } from '../../utils/homeCatalog';
@@ -18,7 +17,6 @@ export default function HomeOurProductsSection() {
   const [pillarProducts, setPillarProducts] = useState(() =>
     buildHomeOurProducts([]),
   );
-  const [groupSlide, setGroupSlide] = useState(() => buildHomeGroupSlide([]));
 
   useEffect(() => {
     let cancelled = false;
@@ -28,12 +26,10 @@ export default function HomeOurProductsSection() {
         const products = await getCachedStoreProducts({ force: true });
         if (!cancelled) {
           setPillarProducts(buildHomeOurProducts(products));
-          setGroupSlide(buildHomeGroupSlide(products));
         }
       } catch {
         if (!cancelled) {
           setPillarProducts(buildHomeOurProducts([]));
-          setGroupSlide(buildHomeGroupSlide([]));
         }
       }
     }
@@ -59,8 +55,8 @@ export default function HomeOurProductsSection() {
       href: '/products',
     };
 
-    return [...productSlides, groupSlide, shopSlide];
-  }, [pillarProducts, groupSlide]);
+    return [...productSlides, shopSlide];
+  }, [pillarProducts]);
 
   const maxIndex = slides.length - 1;
 
@@ -285,37 +281,6 @@ export default function HomeOurProductsSection() {
           >
             {cardContent}
           </Link>
-        </li>
-      );
-    }
-
-    if (slide.type === 'group') {
-      return (
-        <li
-          key={slide.id}
-          className={slideClass}
-          aria-hidden={!isActive}
-          data-slide-index={index}
-        >
-          <div
-            className={`home-our-products__card home-our-products__card--group${
-              isActive ? ' home-our-products__card--live' : ''
-            }`}
-          >
-            <p className="home-our-products__step">System</p>
-            <CarouselMedia
-              isActive={isActive}
-              alt={slide.title}
-              posterSrc={slide.image}
-              fallback={slide.fallback}
-            />
-            <div className="home-our-products__body">
-              <h3 className="home-our-products__name">{slide.title}</h3>
-              <p className="home-our-products__benefit">
-                <span>{slide.text}</span>
-              </p>
-            </div>
-          </div>
         </li>
       );
     }

@@ -5,6 +5,31 @@ import ProductCard from '../components/ProductCard';
 import ScrollReveal from '../components/ScrollReveal';
 import './Products.css';
 
+/** Hidden from the /products listing only; still in WooCommerce. 147 = *SET COMPLETE* ฿715. */
+const PRODUCTS_PAGE_HIDDEN_IDS = new Set(['147']);
+
+/**
+ * Pairs of product IDs whose positions are swapped on /products.
+ * 140 = Bazooka Cleaner 2, 128 = BAZOOKA SPRAY single bottle,
+ * 134 = Refresh Spray, 68 = BAZOOKA CLEANER with free cloth and brush.
+ */
+const PRODUCTS_PAGE_SWAPPED_IDS = [
+  ['140', '128'],
+  ['134', '68'],
+];
+
+function applyProductSwaps(list) {
+  const result = [...list];
+  for (const [a, b] of PRODUCTS_PAGE_SWAPPED_IDS) {
+    const i = result.findIndex((p) => String(p.id) === a);
+    const j = result.findIndex((p) => String(p.id) === b);
+    if (i !== -1 && j !== -1) {
+      [result[i], result[j]] = [result[j], result[i]];
+    }
+  }
+  return result;
+}
+
 export default function Products() {
   const [activeFilter, setActiveFilter] = useState('all');
   const [products, setProducts] = useState([]);
@@ -21,7 +46,13 @@ export default function Products() {
       try {
         const data = await fetchStoreProducts();
         if (!cancelled) {
-          setProducts(data);
+          setProducts(
+            applyProductSwaps(
+              data.filter(
+                (product) => !PRODUCTS_PAGE_HIDDEN_IDS.has(String(product.id)),
+              ),
+            ),
+          );
         }
       } catch (err) {
         if (!cancelled) {

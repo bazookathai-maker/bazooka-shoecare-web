@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
+import { CHECKOUT_PATH, loginPath } from '../utils/authRedirect';
 import './Cart.css';
 
 function formatPrice(value) {
@@ -12,6 +14,9 @@ function lineAmount(item) {
 }
 
 export default function Cart() {
+  const { ready: authReady, isLoggedIn } = useAuth();
+  const checkoutHref =
+    authReady && !isLoggedIn ? loginPath(CHECKOUT_PATH) : CHECKOUT_PATH;
   const {
     items,
     count,
@@ -149,7 +154,7 @@ export default function Cart() {
             <span>รวมทั้งสิ้น</span>
             <strong>{formatPrice(displayTotal)}</strong>
           </div>
-          <Link to="/checkout" className="btn-primary cart-page__checkout">
+          <Link to={checkoutHref} className="btn-primary cart-page__checkout">
             ไปชำระเงิน
           </Link>
           <Link to="/products" className="btn-outline cart-page__continue">

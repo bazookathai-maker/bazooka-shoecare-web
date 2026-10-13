@@ -1,67 +1,18 @@
 /*
- * Mobile reading sizes for Thai text. Imported after all page/component CSS,
- * so equal-specificity selectors here win. Desktop (768px and up) is untouched.
+ * Mobile tap targets. Type sizes come from the tokens in index.css and each
+ * component's CSS; only hit areas and spacing that differ on phones live here.
+ * Imported after all page/component CSS, so equal-specificity selectors win.
  */
 @media (max-width: 767px) {
-  /* Shared buttons & labels */
   .btn-primary,
   .btn-outline {
-    font-size: 0.9375rem;
-    letter-spacing: 0.02em;
-    line-height: 1.4;
     padding-left: 1.25rem;
     padding-right: 1.25rem;
   }
 
-  .section-label {
-    font-size: 0.875rem;
-    letter-spacing: 0.04em;
-  }
-
   /* Home */
-  .hero__eyebrow {
-    font-size: 0.875rem;
-    letter-spacing: 0.04em;
-  }
-
-  .hero__body {
-    font-size: 1rem;
-    line-height: var(--line-height-thai);
-  }
-
-  .home-our-products__step {
-    font-size: 0.875rem;
-    letter-spacing: 0.04em;
-  }
-
-  .home-our-products__card--shop .btn-primary {
-    font-size: 0.9375rem;
-    letter-spacing: 0.02em;
-  }
-
   .home-top-picks__name-link {
     min-height: 2.75rem;
-  }
-
-  .home-top-picks__view-btn {
-    min-height: 2.75rem;
-    font-size: 0.875rem;
-    letter-spacing: 0.02em;
-  }
-
-  .home-reviews__handle {
-    font-size: 0.875rem;
-  }
-
-  .home-how-to-care__block-subtitle {
-    font-size: 1rem;
-  }
-
-  .home-our-products__arrow,
-  .home-how-to-care__slider-arrow,
-  .home-reviews__arrow {
-    width: 44px;
-    height: 44px;
   }
 
   /* Pagination dots: 44px hit area, same visible pill drawn by ::before */
@@ -111,63 +62,7 @@
     background: rgba(28, 45, 69, 0.78);
   }
 
-  /* Product listing & cards */
-  .products-page__filter-btn {
-    min-height: 2.75rem;
-    font-size: 0.875rem;
-    letter-spacing: 0.02em;
-  }
-
-  .products-page__filter-hot-badge,
-  .products-page__filter-count {
-    font-size: 0.875rem;
-    letter-spacing: 0.02em;
-  }
-
-  .product-card__bestseller-badge {
-    font-size: 0.875rem;
-    letter-spacing: 0.02em;
-  }
-
-  .product-card__name,
-  .product-card--recommend .product-card__name {
-    font-size: 0.9375rem;
-  }
-
-  .product-card__description,
-  .product-card--compact .product-card__description {
-    font-size: 0.875rem;
-  }
-
-  .product-card__price,
-  .product-card--compact .product-card__price,
-  .product-card--recommend .product-card__price {
-    font-size: 0.875rem;
-    letter-spacing: 0.02em;
-  }
-
-  .product-card__view-btn {
-    min-height: 2.75rem;
-    font-size: 0.875rem;
-    letter-spacing: 0.02em;
-  }
-
-  .add-to-cart,
-  .product-card .add-to-cart,
-  .product-card__body .add-to-cart,
-  .featured-products__card .add-to-cart {
-    min-height: 2.75rem;
-    font-size: 0.875rem;
-    letter-spacing: 0.02em;
-  }
-
   /* Product detail */
-  .pdp__breadcrumb {
-    gap: 0 0.5rem;
-    font-size: 0.875rem;
-    letter-spacing: 0.02em;
-  }
-
   .pdp__breadcrumb a {
     display: inline-flex;
     align-items: center;
@@ -176,126 +71,16 @@
     min-height: 2.75rem;
   }
 
-  .pdp__stock {
-    font-size: 0.875rem;
-  }
-
-  .pdp__description,
-  .pdp__benefit-list li,
-  .pdp__meta-row dd {
-    font-size: 1rem;
-  }
-
-  .pdp__meta-row dt {
-    font-size: 0.875rem;
-    letter-spacing: 0.04em;
-  }
-
   /* Cart page & mini cart */
-  .cart-page__qty button,
-  .mini-cart__qty button,
-  .mini-cart__close {
-    width: 2.75rem;
-    height: 2.75rem;
-  }
-
   .cart-page__remove,
   .mini-cart__remove {
-    min-width: 2.75rem;
-    min-height: 2.75rem;
     padding: 0 0.25rem;
-    font-size: 0.875rem;
-  }
-
-  .mini-cart__meta,
-  .mini-cart__line {
-    font-size: 0.875rem;
-  }
-
-  /* Checkout */
-  .checkout__section-title {
-    font-size: 1rem;
-    letter-spacing: 0.04em;
-  }
-
-  .checkout__field-label {
-    font-size: 0.875rem;
-    letter-spacing: 0.02em;
-  }
-
-  .checkout__input,
-  .checkout__textarea,
-  .checkout__select,
-  .checkout__qty-select {
-    font-size: 1rem;
-  }
-
-  .checkout__qty-select {
-    min-height: 2.75rem;
-  }
-
-  .checkout__qty-label {
-    font-size: 0.875rem;
-    letter-spacing: 0.02em;
-  }
-
-  .checkout__item-unit,
-  .checkout__payment-note,
-  .checkout__payment-label-th,
-  .checkout__field-error {
-    font-size: 0.875rem;
-  }
-
-  .checkout__total-label {
-    font-size: 0.875rem;
-    letter-spacing: 0.04em;
-  }
-
-  .checkout__total-row--sub .checkout__total-label,
-  .checkout__total-row--sub .checkout__total-value {
-    font-size: 0.875rem;
-  }
-
-  .address-combobox__option {
-    min-height: 2.75rem;
-    font-size: 1rem;
-  }
-
-  .address-combobox__empty {
-    font-size: 0.875rem;
   }
 
   /* Login / Register / Account */
-  .account-form__label {
-    font-size: 0.875rem;
-    letter-spacing: 0.02em;
-  }
-
   .account-form__hint a {
     display: inline-flex;
     align-items: center;
     min-height: 2.75rem;
-  }
-
-  .google-signin__divider {
-    font-size: 0.875rem;
-  }
-
-  .account-card__title {
-    font-size: 0.9375rem;
-    letter-spacing: 0.04em;
-  }
-
-  .account-meta dt {
-    font-size: 0.875rem;
-    letter-spacing: 0.02em;
-  }
-
-  .account-meta dd {
-    font-size: 1rem;
-  }
-
-  .account-meta__badge {
-    font-size: 0.875rem;
   }
 }

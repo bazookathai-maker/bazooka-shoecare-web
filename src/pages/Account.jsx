@@ -383,7 +383,7 @@ export default function Account() {
                   <div className="account-order__top">
                     <p className="account-order__number">#{order.number}</p>
                     <p className="account-order__status">
-                      {STATUS_LABELS[order.status] || order.status}
+                      {order.status_label || STATUS_LABELS[order.status] || order.status}
                     </p>
                   </div>
                   <p className="account-order__date">{formatOrderDate(order.date_created)}</p>
@@ -402,6 +402,23 @@ export default function Account() {
                       ))}
                     </ul>
                   ) : null}
+                  {order.tracking?.map((tracking) => (
+                    <p
+                      key={`${tracking.provider}-${tracking.number}`}
+                      className="account-order__tracking"
+                    >
+                      ขนส่ง {tracking.provider || '-'} · เลขพัสดุ{' '}
+                      <strong>{tracking.number}</strong>
+                      {tracking.link ? (
+                        <>
+                          {' · '}
+                          <a href={tracking.link} target="_blank" rel="noopener noreferrer">
+                            ติดตามพัสดุ
+                          </a>
+                        </>
+                      ) : null}
+                    </p>
+                  ))}
                 </li>
               ))}
             </ul>
