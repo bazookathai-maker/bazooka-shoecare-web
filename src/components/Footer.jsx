@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { STORE_POLICIES } from '../data/storePolicies';
 import './Footer.css';
 
 export default function Footer() {
@@ -35,6 +36,11 @@ export default function Footer() {
           <Link to="/contact" className="footer__link">
             ติดต่อเรา
           </Link>
+          {STORE_POLICIES.map((policy) => (
+            <Link key={policy.key} to={policy.path} className="footer__link">
+              {policy.title}
+            </Link>
+          ))}
         </nav>
 
         <p className="footer__copy">

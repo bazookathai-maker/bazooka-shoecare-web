@@ -33,9 +33,19 @@ let faqItems;
 let googleReviews;
 let contact;
 let hiddenIds;
+let policies;
 try {
-  [seo, woo, homeCatalog, { careGuides }, { faqItems }, { googleReviews }, contact, { LISTING_HIDDEN_PRODUCT_IDS: hiddenIds }] =
-    await Promise.all(
+  [
+    seo,
+    woo,
+    homeCatalog,
+    { careGuides },
+    { faqItems },
+    { googleReviews },
+    contact,
+    { LISTING_HIDDEN_PRODUCT_IDS: hiddenIds },
+    policies,
+  ] = await Promise.all(
       [
         '/src/utils/seo.js',
         '/src/api/woocommerce.js',
@@ -45,6 +55,7 @@ try {
         '/src/data/googleReviews.js',
         '/src/data/contact.js',
         '/src/data/hiddenProducts.js',
+        '/src/data/storePolicies.js',
       ].map((id) => vite.ssrLoadModule(id)),
     );
 } finally {
@@ -86,7 +97,10 @@ const MANAGED_HEAD = [
   /<meta\s+name="twitter:(title|description)"[\s\S]*?\/>\s*/g,
 ];
 
-function renderPage({ seo: page, body }) {
+const jsonLdScript = (data) =>
+  `<script type="application/ld+json" id="seo-json-ld">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>`;
+
+function renderPage({ seo: page, body, jsonLd }) {
   const title = seo.formatTitle(page);
   const description = page.description || seo.DEFAULT_DESCRIPTION;
   const canonical = seo.absoluteUrl(page.path);
@@ -102,15 +116,19 @@ function renderPage({ seo: page, body }) {
     `<meta property="og:image" content="${esc(image)}" />`,
     `<meta name="twitter:title" content="${esc(title)}" />`,
     `<meta name="twitter:description" content="${esc(description)}" />`,
+    jsonLd ? jsonLdScript(jsonLd) : '',
     PRERENDER_STYLE,
-  ].join('\n    ');
+  ]
+    .filter(Boolean)
+    .join('\n    ');
 
   let html = template;
   for (const pattern of MANAGED_HEAD) html = html.replace(pattern, '');
   html = html.replace(/\s*<\/head>/, `\n    ${head}\n  </head>`);
 
   const nav = `<nav aria-label="เมนูหลัก">${NAV.map(([href, label]) => link(href, label)).join('')}</nav>`;
-  const snapshot = `<div class="seo-prerender">${nav}<main>${body}</main></div>`;
+  const footer = `<footer>${policies.STORE_POLICIES.map((policy) => link(policy.path, policy.title)).join(' · ')}</footer>`;
+  const snapshot = `<div class="seo-prerender">${nav}<main>${body}</main>${footer}</div>`;
   if (!html.includes('<div id="root"></div>')) throw new Error('#root not found in dist/index.html');
   return html.replace('<div id="root"></div>', `<div id="root">${snapshot}</div>`);
 }
@@ -259,6 +277,22 @@ rendered.push(
     ].join(''),
   }),
 );
+
+for (const policy of policies.STORE_POLICIES) {
+  rendered.push(
+    writePage(policy.path, {
+      seo: seo.PAGE_SEO[policy.key],
+      jsonLd: seo.buildStorePoliciesJsonLd(),
+      body: [
+        `<h1>${esc(policy.title)}</h1>`,
+        policy.sections.map((section) => `<h2>${esc(section.heading)}</h2>${list(section.items.map(esc))}`).join(''),
+        policy.contacts
+          ? `<h2>ช่องทางติดต่อ</h2>${list(policy.contacts.map((item) => `${esc(item.label)} ${link(item.href, item.value)}`))}`
+          : '',
+      ].join(''),
+    }),
+  );
+}
 
 console.log(`[seo] pre-rendered ${rendered.length} pages (${products.length} products)`);
 
