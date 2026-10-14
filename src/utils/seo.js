@@ -168,7 +168,9 @@ export function buildOfferShippingDetails() {
 /**
  * Store-level policies for the policy pages. Returns are only accepted for transit damage or quality
  * problems, which MerchantReturnPolicy's return-window fields can't express without implying
- * change-of-mind returns, so the return policy is given as a link to the policy page only.
+ * change-of-mind returns, so the return policy is given as a link to the policy page only. Offers don't
+ * reference it: an offer-level policy needs applicableCountry and returnPolicyCategory, and Google
+ * prefers an offer-level policy over the store-level one.
  */
 export function buildStorePoliciesJsonLd() {
   const s = SHIPPING_POLICY.structured;
@@ -228,7 +230,6 @@ export function buildProductJsonLd(product) {
       availability:
         SCHEMA_AVAILABILITY[product.stockStatus] || SCHEMA_AVAILABILITY.outofstock,
       shippingDetails: buildOfferShippingDetails(),
-      hasMerchantReturnPolicy: { '@id': RETURN_POLICY_ID },
     },
   };
 }
