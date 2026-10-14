@@ -8,6 +8,9 @@ import {
   fetchStoreProductById,
   fetchStoreProducts,
 } from '../api/woocommerce';
+import { LISTING_HIDDEN_PRODUCT_IDS } from '../data/hiddenProducts';
+import { buildProductJsonLd, productPath, productSeo } from '../utils/seo';
+import useSeo from '../hooks/useSeo';
 import './ProductDetail.css';
 
 const PRODUCT_IDS_WITHOUT_RECOMMENDED = new Set(['881', '143', '134']);
@@ -96,6 +99,21 @@ export default function ProductDetail() {
       cancelled = true;
     };
   }, [productId]);
+
+  const isListed = Boolean(detail) && !LISTING_HIDDEN_PRODUCT_IDS.has(String(detail.id));
+  useSeo(
+    detail
+      ? {
+          ...productSeo(detail),
+          noindex: !isListed,
+          jsonLd: isListed ? buildProductJsonLd(detail) : null,
+        }
+      : {
+          title: 'สินค้า',
+          path: productPath(productId),
+          noindex: notFound,
+        },
+  );
 
   if (loading) {
     return <DetailStatus>กำลังโหลดสินค้า...</DetailStatus>;

@@ -3,11 +3,14 @@ import { fetchStoreProducts } from '../api/woocommerce';
 import { buildHomeTopPicks } from '../utils/homeCatalog';
 import ShowcaseProductCard from '../components/ShowcaseProductCard';
 import '../components/FeaturedProductsSection.css';
+import useSeo from '../hooks/useSeo';
+import { PAGE_SEO } from '../utils/seo';
 import './Recommended.css';
 
 export default function Recommended() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  useSeo(PAGE_SEO.recommended);
 
   useEffect(() => {
     let cancelled = false;

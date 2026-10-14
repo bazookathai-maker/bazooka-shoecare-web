@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
 import ScrollReveal from '../components/ScrollReveal';
 import { REVIEW_FILTERS, googleReviews } from '../data/googleReviews';
+import useSeo from '../hooks/useSeo';
+import { PAGE_SEO } from '../utils/seo';
 import './Reviews.css';
 
 function ReviewStars({ count = 5 }) {
@@ -58,6 +60,7 @@ function ReviewCard({ review }) {
 }
 
 export default function Reviews() {
+  useSeo(PAGE_SEO.reviews);
   const [activeFilter, setActiveFilter] = useState('all');
 
   const filteredReviews = useMemo(() => {

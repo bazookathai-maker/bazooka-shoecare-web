@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { fetchOrderPaymentStatus } from '../api/customerAuth';
 import { loginPath } from '../utils/authRedirect';
+import useSeo from '../hooks/useSeo';
 import './OrderPages.css';
 
 const POLL_INTERVAL_MS = 4000;
@@ -201,6 +202,7 @@ function PaymentStatus({ orderId, orderNumber }) {
 }
 
 export default function OrderSuccess() {
+  useSeo({ title: 'คำสั่งซื้อ', noindex: true });
   const location = useLocation();
   const search = new URLSearchParams(location.search);
   const orderNumber =

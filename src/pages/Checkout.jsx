@@ -21,6 +21,7 @@ import {
   validateCheckoutCustomerForm,
 } from '../api/woocommerce';
 import { CHECKOUT_PATH, loginPath } from '../utils/authRedirect';
+import useSeo from '../hooks/useSeo';
 import './Checkout.css';
 
 const SYNC_DEBOUNCE_MS = 700;
@@ -86,6 +87,7 @@ function buildSelectedRatesMap(packages, previousSelected = {}) {
 
 /** Members only: the order APIs enforce this too; the guard just routes shoppers to login. */
 export default function Checkout() {
+  useSeo({ title: 'ชำระเงิน', noindex: true });
   const { ready, isLoggedIn } = useAuth();
 
   if (!ready) {

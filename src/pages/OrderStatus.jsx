@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import OrderStatusTimeline from '../components/OrderStatusTimeline';
+import useSeo from '../hooks/useSeo';
 import './OrderPages.css';
 
 const TRACK_ORDER_API_URL = '/api/track-order';
@@ -47,6 +48,7 @@ async function verifyOrderWithPhone(orderId, phone) {
 }
 
 export default function OrderStatus() {
+  useSeo({ title: 'สถานะคำสั่งซื้อ', noindex: true });
   const { orderId } = useParams();
   const location = useLocation();
   const [order, setOrder] = useState(null);

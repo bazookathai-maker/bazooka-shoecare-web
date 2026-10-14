@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import ScrollReveal from '../components/ScrollReveal';
 import { fetchStoreProducts } from '../api/woocommerce';
 import { getRecommendedProducts } from '../utils/siteSearch';
+import useSeo from '../hooks/useSeo';
 import './NotFound.css';
 
 function formatPrice(price) {
@@ -10,6 +11,7 @@ function formatPrice(price) {
 }
 
 export default function NotFound() {
+  useSeo({ title: 'ไม่พบหน้าที่คุณกำลังค้นหา', noindex: true });
   const [recommended, setRecommended] = useState([]);
 
   useEffect(() => {

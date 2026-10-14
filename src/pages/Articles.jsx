@@ -1,8 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import JournalArticleCard from '../components/JournalArticleCard';
 import ScrollReveal from '../components/ScrollReveal';
-import { fetchWpCategories, fetchWpPosts } from '../api/wordpress';
+import {
+  WP_ARTICLES_ENABLED,
+  fetchWpCategories,
+  fetchWpPosts,
+} from '../api/wordpress';
 import { ARTICLE_CATEGORIES, careGuides } from '../data/careGuides';
+import useSeo from '../hooks/useSeo';
+import { PAGE_SEO } from '../utils/seo';
 import './Articles.css';
 
 const PAGE_SIZE = 6;
@@ -19,21 +25,22 @@ function buildFallbackPosts() {
 }
 
 export default function Articles() {
-  const [posts, setPosts] = useState([]);
+  useSeo(PAGE_SEO.articles);
+  const [posts, setPosts] = useState(() =>
+    WP_ARTICLES_ENABLED ? [] : buildFallbackPosts(),
+  );
   const [categories, setCategories] = useState(buildFallbackCategories);
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(WP_ARTICLES_ENABLED);
+  const [notice, setNotice] = useState('');
 
   useEffect(() => {
+    if (!WP_ARTICLES_ENABLED) return undefined;
     let cancelled = false;
 
     async function load() {
-      setLoading(true);
-      setError('');
-
       try {
         const [{ posts: wpPosts }, wpCategories] = await Promise.all([
           fetchWpPosts({ perPage: 50 }),
@@ -61,15 +68,11 @@ export default function Articles() {
           setPosts(buildFallbackPosts());
           setCategories(buildFallbackCategories());
         }
-      } catch (err) {
+      } catch {
         if (cancelled) return;
         setPosts(buildFallbackPosts());
         setCategories(buildFallbackCategories());
-        setError(
-          err instanceof Error
-            ? err.message
-            : 'ไม่สามารถโหลดบทความจาก WordPress ได้ กำลังแสดงข้อมูลตัวอย่าง',
-        );
+        setNotice('ขณะนี้แสดงบทความแนะนำจากทีม BAZOOKA บทความใหม่จะตามมาเร็ว ๆ นี้');
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -176,9 +179,9 @@ export default function Articles() {
             </p>
           ) : null}
 
-          {error ? (
+          {notice ? (
             <p className="articles-page__empty" role="status">
-              {error}
+              {notice}
             </p>
           ) : null}
 

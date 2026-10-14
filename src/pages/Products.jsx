@@ -3,10 +3,10 @@ import { fetchStoreProducts } from '../api/woocommerce';
 import { PRODUCT_FILTER_TABS, matchesProductFilter } from '../data/products';
 import ProductCard from '../components/ProductCard';
 import ScrollReveal from '../components/ScrollReveal';
+import { LISTING_HIDDEN_PRODUCT_IDS } from '../data/hiddenProducts';
+import useSeo from '../hooks/useSeo';
+import { PAGE_SEO } from '../utils/seo';
 import './Products.css';
-
-/** Hidden from the /products listing only; still in WooCommerce. 147 = *SET COMPLETE* ฿715. */
-const PRODUCTS_PAGE_HIDDEN_IDS = new Set(['147']);
 
 /**
  * Pairs of product IDs whose positions are swapped on /products.
@@ -35,6 +35,7 @@ export default function Products() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  useSeo(PAGE_SEO.products);
 
   useEffect(() => {
     let cancelled = false;
@@ -49,7 +50,7 @@ export default function Products() {
           setProducts(
             applyProductSwaps(
               data.filter(
-                (product) => !PRODUCTS_PAGE_HIDDEN_IDS.has(String(product.id)),
+                (product) => !LISTING_HIDDEN_PRODUCT_IDS.has(String(product.id)),
               ),
             ),
           );

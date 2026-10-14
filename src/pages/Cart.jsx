@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { CHECKOUT_PATH, loginPath } from '../utils/authRedirect';
+import useSeo from '../hooks/useSeo';
 import './Cart.css';
 
 function formatPrice(value) {
@@ -14,6 +15,7 @@ function lineAmount(item) {
 }
 
 export default function Cart() {
+  useSeo({ title: 'ตะกร้าสินค้า', noindex: true });
   const { ready: authReady, isLoggedIn } = useAuth();
   const checkoutHref =
     authReady && !isLoggedIn ? loginPath(CHECKOUT_PATH) : CHECKOUT_PATH;

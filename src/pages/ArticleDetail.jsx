@@ -3,8 +3,10 @@ import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom';
 import ArticleCard from '../components/ArticleCard';
 import { ArticleTopicRelated } from '../components/HubRelatedContent';
 import ScrollReveal from '../components/ScrollReveal';
-import { fetchWpPostBySlug } from '../api/wordpress';
+import { WP_ARTICLES_ENABLED, fetchWpPostBySlug } from '../api/wordpress';
 import { getCareGuideBySlug } from '../data/careGuides';
+import { articlePath, articleSeo } from '../utils/seo';
+import useSeo from '../hooks/useSeo';
 import './Articles.css';
 
 function formatArticleDate(isoDate) {
@@ -57,10 +59,11 @@ export default function ArticleDetail() {
 
   const fallbackGuide = getCareGuideBySlug(slug);
   const [post, setPost] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(WP_ARTICLES_ENABLED);
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
+    if (!WP_ARTICLES_ENABLED) return undefined;
     let cancelled = false;
     const localGuide = getCareGuideBySlug(slug);
 
@@ -94,7 +97,15 @@ export default function ArticleDetail() {
     };
   }, [slug]);
 
-  if (!loading && notFound) {
+  const seoSource = post || fallbackGuide;
+  useSeo(
+    seoSource
+      ? articleSeo(seoSource)
+      : { title: 'บทความ', path: articlePath(slug), noindex: !loading },
+  );
+
+  const isNotFound = WP_ARTICLES_ENABLED ? notFound : !fallbackGuide;
+  if (!loading && isNotFound) {
     return <Navigate to="/articles" replace />;
   }
 

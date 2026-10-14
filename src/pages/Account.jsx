@@ -9,6 +9,7 @@ import {
 } from '../api/woocommerce';
 import { formFromCustomerProfile } from '../utils/customerAddressForm';
 import { formatThaiProvince } from '../data/thaiWooStates';
+import useSeo from '../hooks/useSeo';
 import './Checkout.css';
 import './Account.css';
 
@@ -213,6 +214,7 @@ function ProfileEditor({ customer, onSave, onCancel, canCancel }) {
 }
 
 export default function Account() {
+  useSeo({ title: 'บัญชีของฉัน', noindex: true });
   const { ready, isLoggedIn, customer, logout, saveProfile } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const setupRequested = searchParams.get('setup') === '1';

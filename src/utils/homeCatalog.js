@@ -1,5 +1,5 @@
 import { fetchStoreProducts } from '../api/woocommerce';
-import { fetchWpPosts } from '../api/wordpress';
+import { WP_ARTICLES_ENABLED, fetchWpPosts } from '../api/wordpress';
 import { articleSlides, homeOurProducts, homeTopPicks } from '../data/homeStory';
 import { formatListingName } from './productListingCopy';
 
@@ -45,6 +45,7 @@ export function clearStoreProductsCache() {
 
 /** Shared WordPress posts fetch for Home article slides. */
 export function getCachedWpPosts() {
+  if (!WP_ARTICLES_ENABLED) return Promise.resolve([]);
   if (!wpPostsPromise) {
     wpPostsPromise = fetchWpPosts({ perPage: 12 })
       .then((result) => result.posts || [])
@@ -191,6 +192,9 @@ export function buildHomeGroupSlide(liveProducts = []) {
 
 /** Hidden from Home TOP PRODUCT only; still listed in the shop. 147 = *SET COMPLETE* ฿715. */
 const HOME_TOP_PICKS_HIDDEN_IDS = new Set(['147']);
+
+/** Added after the bestseller picks on Home only. 128 = Protector Spray single bottle. */
+export const HOME_TOP_PICKS_APPEND_IDS = ['128'];
 
 /**
  * TOP PRODUCT / สินค้าแนะนำ — live Woo catalog only.
