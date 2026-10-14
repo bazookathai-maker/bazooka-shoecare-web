@@ -1,3 +1,10 @@
+import {
+  RETURN_CONTACT_SUMMARY,
+  RETURN_POLICY,
+  RETURN_POLICY_SUMMARY,
+  SHIPPING_POLICY_SUMMARY,
+} from './storePolicies';
+
 export const FAQ_CATEGORIES = [
   { id: 'all', label: 'ทั้งหมด' },
   { id: 'product-usage', label: 'การใช้งานผลิตภัณฑ์' },
@@ -90,8 +97,7 @@ export const faqItems = [
     id: 'shipping-time',
     category: 'shipping',
     question: 'ใช้เวลาจัดส่งนานแค่ไหน?',
-    answer:
-      'โดยทั่วไปจัดส่งภายใน 1–3 วันทำการหลังยืนยันคำสั่งซื้อ ระยะเวลาอาจต่างกันตามพื้นที่ปลายทาง',
+    answer: SHIPPING_POLICY_SUMMARY,
   },
   {
     id: 'shipping-track',
@@ -104,14 +110,12 @@ export const faqItems = [
     id: 'return-policy',
     category: 'returns',
     question: 'สามารถคืนสินค้าได้ในกรณีใดบ้าง?',
-    answer:
-      'หากได้รับสินค้าผิดรุ่น ชำรุดจากการขนส่ง หรือไม่ตรงตามที่สั่ง สามารถแจ้งคืนภายในระยะเวลาที่กำหนด',
+    answer: RETURN_POLICY_SUMMARY,
   },
   {
     id: 'return-process',
     category: 'returns',
     question: 'ขั้นตอนการคืนสินค้าเป็นอย่างไร?',
-    answer:
-      'ติดต่อทีมงานพร้อมเลขออเดอร์และรายละเอียดปัญหา จากนั้นส่งสินค้ากลับตามคำแนะนำเพื่อตรวจสอบและดำเนินการต่อ',
+    answer: `${RETURN_POLICY.sections[0].items[0]} ${RETURN_CONTACT_SUMMARY}`,
   },
 ];

@@ -1,0 +1,76 @@
+.policy-page {
+  padding-top: 5rem;
+  background: var(--white-pure);
+}
+
+.policy-page__hero {
+  padding: clamp(3rem, 8vh, 4.5rem) 0 clamp(1.25rem, 3vw, 2rem);
+  text-align: center;
+}
+
+.policy-page__hero-inner {
+  max-width: 40rem;
+  margin: 0 auto;
+}
+
+.policy-page__title {
+  margin: 0;
+  font-family: var(--font-family);
+  font-size: clamp(1.75rem, 5vw, 2.75rem);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.2;
+  letter-spacing: var(--letter-spacing-tight);
+  color: var(--navy);
+}
+
+.policy-page__content {
+  padding: 0 1.25rem clamp(4rem, 8vw, 6rem);
+}
+
+.policy-page__shell {
+  max-width: 44rem;
+  margin: 0 auto;
+}
+
+.policy-page__section {
+  padding: 1.5rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.policy-page__heading {
+  margin: 0 0 0.75rem;
+  font-family: var(--font-family);
+  font-size: 1.0625rem;
+  font-weight: var(--font-weight-medium);
+  color: var(--navy);
+}
+
+.policy-page__list {
+  margin: 0;
+  padding-left: 1.25rem;
+  font-family: var(--font-family);
+  font-size: 0.9375rem;
+  line-height: var(--line-height-thai);
+  color: var(--text-secondary);
+}
+
+.policy-page__list li + li {
+  margin-top: 0.4rem;
+}
+
+.policy-page__link {
+  color: var(--navy);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  word-break: break-word;
+}
+
+.policy-page__link:hover {
+  color: var(--muted-green-dark);
+}
+
+.policy-page__related {
+  margin: 1.5rem 0 0;
+  font-family: var(--font-family);
+  font-size: 0.9375rem;
+}

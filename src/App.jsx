@@ -23,6 +23,8 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Account from './pages/Account';
 import NotFound from './pages/NotFound';
+import StorePolicy from './pages/StorePolicy';
+import { RETURN_POLICY, SHIPPING_POLICY } from './data/storePolicies';
 
 export default function App() {
   return (
@@ -43,6 +45,14 @@ export default function App() {
           <Route path="/reviews" element={<Reviews />} />
           <Route path="/faq" element={<Faq />} />
           <Route path="/contact" element={<Contact />} />
+          <Route
+            path={SHIPPING_POLICY.path}
+            element={<StorePolicy key={SHIPPING_POLICY.key} policy={SHIPPING_POLICY} />}
+          />
+          <Route
+            path={RETURN_POLICY.path}
+            element={<StorePolicy key={RETURN_POLICY.key} policy={RETURN_POLICY} />}
+          />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/account" element={<Account />} />
