@@ -161,9 +161,11 @@ export default function ProductDetail() {
 
       <section className="pdp__hero container">
         <div className="pdp__layout">
-          {detail.gallery?.length > 0 ? (
-            <ProductGallery images={detail.gallery} />
-          ) : null}
+          <ProductGallery
+            key={detail.id}
+            images={detail.gallery}
+            name={detail.name}
+          />
 
           <div className="pdp__info">
             <h1 className="pdp__name">{detail.name}</h1>
