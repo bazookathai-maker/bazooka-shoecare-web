@@ -31,7 +31,7 @@
   height: 100%;
   margin: auto;
   object-fit: cover;
-  object-position: 72% center;
+  object-position: center bottom;
   animation: heroBgIn 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
@@ -157,7 +157,8 @@
   color: var(--navy);
 }
 
-/* Small desktop — keep the headline clear of the shoe on the left of the photo */
+/* Small desktop — keep the headline clear of the shoe on the left of the photo.
+   Nudge the banner right so the care button clears the brush. */
 @media (min-width: 1024px) and (max-width: 1279px) {
   .hero__headline {
     font-size: clamp(2.5rem, 4.4vw, 3.5rem);
@@ -165,6 +166,10 @@
 
   .hero__copy {
     max-width: 30rem;
+  }
+
+  .hero__bg {
+    object-position: 90% center;
   }
 }
 
@@ -187,6 +192,14 @@
   }
 }
 
+/* Desktop banner is 3840×1280. Anchor the products on the right
+   so a shorter frame crops the empty left side first. */
+@media (min-width: 1280px) {
+  .hero__bg {
+    object-position: right center;
+  }
+}
+
 /* Tablet */
 @media (max-width: 1023px) and (min-width: 769px) {
   .hero--cinematic {
@@ -203,7 +216,7 @@
   }
 
   .hero__bg {
-    object-position: 68% center;
+    object-position: center bottom;
   }
 }
 
@@ -233,7 +246,7 @@
   }
 
   .hero__bg {
-    object-position: var(--hero-img-pos) 100%;
+    object-position: center bottom;
     animation: none;
   }
 

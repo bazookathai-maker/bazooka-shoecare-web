@@ -7,13 +7,20 @@ export default function Hero() {
       <div className="hero__overlay" aria-hidden="true" />
 
       <div className="hero__media" aria-hidden="true">
-        <img
-          className="hero__bg"
-          src="/hero.jpg"
-          alt=""
-          fetchPriority="high"
-          decoding="async"
-        />
+        <picture>
+          <source
+            media="(min-width: 1024px)"
+            srcSet="/hero-desktop.jpg"
+            type="image/jpeg"
+          />
+          <img
+            className="hero__bg"
+            src="/1.JPG"
+            alt=""
+            fetchPriority="high"
+            decoding="async"
+          />
+        </picture>
       </div>
 
       <div className="hero__content container">
