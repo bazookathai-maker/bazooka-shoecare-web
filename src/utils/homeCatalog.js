@@ -232,8 +232,12 @@ export function buildHomeTopPicks(liveProducts = [], limit = 6, appendIds = []) 
       price: product.price,
       regularPrice: product.regularPrice,
       isOnSale: product.isOnSale,
+      isBestseller: Boolean(product.isBestseller),
+      rating: Number(product.averageRating || product.rating) || 0,
+      reviewCount: Number(product.reviewCount || product.ratingCount) || 0,
       badge: product.isBestseller ? 'BEST SELLER' : product.category,
       image: wooImage,
+      imageFrame: product.imageFrame || '',
       // No local fallback when Woo already provided a primary image
       fallback: '',
       href: productHref(product),

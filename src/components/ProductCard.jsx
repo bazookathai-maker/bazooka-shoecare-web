@@ -62,7 +62,7 @@ export default function ProductCard({
     <article
       className={`product-card product-card--${variant}${
         detailPath ? ' product-card--linked' : ''
-      }`}
+      }${product.imageFrame === 'fill' ? ' product-card--square-fill' : ''}`}
     >
       {detailPath && (
         <Link
@@ -121,7 +121,7 @@ export default function ProductCard({
 
       {isRecommendCard && detailPath ? (
         <Link to={detailPath} className="product-card__view-btn">
-          ดูสินค้า
+          ซื้อสินค้า
         </Link>
       ) : null}
 

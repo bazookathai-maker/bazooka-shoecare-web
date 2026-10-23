@@ -84,7 +84,7 @@ export default function NotFound() {
                       </p>
                     </Link>
                     <Link to={product.href} className="not-found-card__btn">
-                      ดูสินค้า
+                      ซื้อสินค้า
                     </Link>
                   </article>
                 </li>

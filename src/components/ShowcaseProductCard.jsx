@@ -5,7 +5,11 @@ export default function ShowcaseProductCard({ product, titleTag: TitleTag = 'h3'
   const mediaRef = useRef(null);
 
   return (
-    <article className="featured-products__card">
+    <article
+      className={`featured-products__card${
+        product.imageFrame === 'fill' ? ' featured-products__card--fill' : ''
+      }`}
+    >
       <div className="featured-products__media" ref={mediaRef}>
         {product.image ? (
           <img

@@ -1,64 +1,105 @@
-﻿/* Top Picks — after Our Products */
+﻿/* Top Picks — single-row carousel after Our Products */
 .home-top-picks {
+  --top-gap: 0.875rem;
+  --top-peek: 2.75rem;
+  --top-visible: 1;
   padding: clamp(4.5rem, 9vw, 7rem) 0;
   background: transparent;
   overflow-x: clip;
 }
 
 .home-top-picks__header {
-  text-align: center;
-  max-width: 40rem;
-  margin: 0 auto clamp(2rem, 4.5vw, 3rem);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0 0 clamp(1.25rem, 3vw, 2rem);
+  text-align: left;
 }
 
 .home-top-picks__title {
+  margin: 0;
   font-family: var(--font-family-display);
-  font-size: clamp(2.25rem, 6vw, 3.75rem);
+  font-size: clamp(1.65rem, 3.4vw, 3.25rem);
   font-weight: var(--font-weight-display);
   line-height: 1.06;
   letter-spacing: var(--letter-spacing-tight);
   color: var(--navy);
 }
 
-.home-top-picks__subtitle {
-  margin-top: 1.15rem;
-  font-size: var(--text-lead);
-  font-weight: var(--font-weight-regular);
-  line-height: var(--line-height-thai);
-  color: var(--text-secondary);
+.home-top-picks__arrows {
+  display: flex;
+  flex-shrink: 0;
+  gap: 0.5rem;
 }
 
-/* Mobile: 1 · Tablet: 2 · Desktop: 3 */
+.home-top-picks__arrow {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  color: var(--navy);
+  background: rgba(250, 250, 250, 0.92);
+  border: 1px solid rgba(28, 45, 69, 0.12);
+  border-radius: 999px;
+  box-shadow: 0 8px 22px rgba(28, 45, 69, 0.06);
+  cursor: pointer;
+}
+
+.home-top-picks__arrow:hover:not(:disabled) {
+  border-color: rgba(28, 45, 69, 0.32);
+  background: #fff;
+}
+
+.home-top-picks__arrow:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.home-top-picks__arrow:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.home-top-picks__viewport {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  container-type: inline-size;
+  -webkit-overflow-scrolling: touch;
+}
+
+.home-top-picks__viewport::-webkit-scrollbar {
+  display: none;
+}
+
 .home-top-picks__grid {
   list-style: none;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 2rem clamp(1rem, 3vw, 1.25rem);
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0;
+  display: flex;
   align-items: stretch;
-}
-
-@media (min-width: 768px) {
-  .home-top-picks__grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 2.25rem clamp(1.25rem, 2.5vw, 1.75rem);
-  }
-}
-
-@media (min-width: 1024px) {
-  .home-top-picks__grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 2.5rem clamp(1.25rem, 2vw, 1.5rem);
-  }
+  gap: var(--top-gap);
+  width: max-content;
+  min-width: 100%;
+  margin: 0;
+  padding: 0 0 0.25rem;
 }
 
 .home-top-picks__item {
   display: flex;
+  flex: 0 0 calc(
+    (100cqw - (var(--top-visible) * var(--top-gap)) - var(--top-peek)) /
+      var(--top-visible)
+  );
   min-width: 0;
-  height: 100%;
+  scroll-snap-align: start;
+}
+
+.home-top-picks__item:last-child {
+  scroll-snap-align: end;
 }
 
 .home-top-picks__card {
@@ -67,21 +108,24 @@
   width: 100%;
   height: 100%;
   min-width: 0;
+  padding: 0.85rem 0.85rem 1rem;
   color: inherit;
-  background: none;
+  background: #f3f2ef;
   border: 0;
-  border-radius: 0;
+  border-radius: 18px;
   box-shadow: none;
 }
 
 .home-top-picks__card-media-link {
-  display: block;
-  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
   color: inherit;
   text-decoration: none;
 }
 
-/* Fixed image area — equal size, contain, centered, no crop */
 .home-top-picks__media {
   position: relative;
   display: flex;
@@ -89,14 +133,11 @@
   justify-content: center;
   box-sizing: border-box;
   width: 100%;
-  height: 11.5rem; /* 184px — shared across all cards */
-  max-height: 11.5rem;
-  min-height: 11.5rem;
+  aspect-ratio: 1 / 1;
   margin: 0;
-  padding: 1.15rem 1.25rem;
+  padding: 0.65rem;
   overflow: hidden;
   background: transparent;
-  border-radius: 0;
 }
 
 .home-top-picks__media img {
@@ -110,6 +151,25 @@
   transform: none;
 }
 
+.home-top-picks__media--fill {
+  padding: 0;
+}
+
+.home-top-picks__media--fill .home-top-picks__card-media-link {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+.home-top-picks__media--fill img {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  object-fit: contain;
+  object-position: center center;
+}
+
 .home-top-picks__media-empty {
   display: block;
   width: 100%;
@@ -117,7 +177,6 @@
   background: transparent;
 }
 
-/* Disable global hover-zoom crop inside this section */
 .home-top-picks .hover-zoom,
 .home-top-picks .hover-zoom img,
 .home-top-picks .hover-zoom:hover img,
@@ -127,19 +186,19 @@
 
 .home-top-picks__badge {
   position: absolute;
-  top: 0.75rem;
-  left: 0.75rem;
+  top: 0.35rem;
+  left: 0.35rem;
   z-index: 2;
-  padding: 0.25rem 0.625rem;
+  padding: 0.2rem 0.6rem;
+  font-family: var(--font-family);
   font-size: var(--text-meta);
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-semibold);
   line-height: 1.5;
-  letter-spacing: var(--letter-spacing-meta);
-  text-transform: uppercase;
-  color: var(--navy);
-  background: rgba(250, 250, 250, 0.92);
-  border: 1px solid rgba(28, 45, 69, 0.08);
-  backdrop-filter: blur(8px);
+  letter-spacing: 0.02em;
+  color: var(--white-pure);
+  background: #d63b3b;
+  border-radius: 3px;
+  pointer-events: none;
 }
 
 .home-top-picks__body {
@@ -148,15 +207,14 @@
   flex: 1 1 auto;
   gap: 0;
   min-width: 0;
-  min-height: 0;
-  padding: 0.875rem 0 0;
+  padding: 0.75rem 0.15rem 0;
 }
 
 .home-top-picks__name-link {
   display: block;
+  flex-shrink: 0;
   color: inherit;
   text-decoration: none;
-  flex-shrink: 0;
 }
 
 .home-top-picks__name-link:hover .home-top-picks__name {
@@ -165,86 +223,74 @@
 
 .home-top-picks__name {
   margin: 0;
+  min-height: calc(1.45em * 2);
+  max-height: calc(1.45em * 2);
+  overflow: hidden;
   font-size: var(--text-body);
   font-weight: var(--font-weight-medium);
+  line-height: 1.45;
   letter-spacing: 0.01em;
   color: var(--navy);
-  line-height: 1.5;
-  white-space: normal;
-  overflow-wrap: anywhere;
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   line-clamp: 2;
-  overflow: hidden;
-  min-height: calc(1.5em * 2);
-  max-height: calc(1.5em * 2);
 }
 
-.home-top-picks__desc {
-  font-size: var(--text-body-sm);
-  font-weight: var(--font-weight-light);
-  line-height: 1.65;
-  color: var(--text-secondary);
-  white-space: pre-line;
+.home-top-picks__rating {
+  display: flex;
+  align-items: center;
+  min-height: 1.25rem;
+  margin: 0.35rem 0 0;
+  color: var(--navy);
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  line-height: 1;
+}
+
+.home-top-picks__rating--empty {
+  visibility: hidden;
 }
 
 .home-top-picks__price {
-  margin: 0.5rem 0 0;
-  min-height: 1.4em;
+  flex-shrink: 0;
+  min-height: 1.45em;
+  margin: 0.45rem 0 0.85rem;
   font-size: var(--text-body);
   font-weight: var(--font-weight-semibold);
+  line-height: 1.4;
   letter-spacing: 0.02em;
-  line-height: 1.4;
   color: var(--navy);
-  flex-shrink: 0;
 }
 
-.home-top-picks__view-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  min-height: 3rem;
+.home-top-picks__card .add-to-cart-wrap {
   margin-top: auto;
-  padding: 0.625rem 0.9rem;
-  box-sizing: border-box;
-  font-family: var(--font-family);
-  font-size: var(--text-ui);
-  font-weight: var(--font-weight-medium);
-  line-height: 1.4;
-  letter-spacing: var(--letter-spacing-ui);
-  text-transform: uppercase;
-  color: var(--blue-gray-dark);
-  border: 1px solid rgba(90, 107, 125, 0.28);
-  border-radius: var(--radius-button, 0);
-  text-decoration: none;
-  flex-shrink: 0;
-  transition:
-    border-color 0.35s cubic-bezier(0.22, 1, 0.36, 1),
-    color 0.35s cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow var(--transition-fast, 0.35s ease);
 }
 
-.home-top-picks__view-btn:hover {
-  color: var(--navy);
-  border-color: var(--navy);
+.home-top-picks__card .add-to-cart {
+  width: 100%;
+  color: var(--white-pure);
+  background: var(--blue-gray-dark);
+  border: 1px solid var(--blue-gray-dark);
+  border-radius: var(--radius-button);
+  text-transform: none;
 }
 
-.home-top-picks__view-btn:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring, 0 0 0 3px rgba(28, 45, 69, 0.28));
+.home-top-picks__card .add-to-cart:hover:not(:disabled) {
+  color: var(--white-pure);
+  background: var(--muted-green-dark);
+  border-color: var(--muted-green-dark);
 }
 
 .home-top-picks__status {
-  margin: 0 auto 1.25rem;
-  text-align: center;
+  margin: 0 0 1.25rem;
+  text-align: left;
   font-size: var(--text-body-sm);
   color: var(--text-secondary);
 }
 
 .home-top-picks__footer {
-  margin-top: clamp(2.5rem, 5vw, 3.5rem);
+  margin-top: clamp(2rem, 4vw, 3rem);
   text-align: center;
 }
 
@@ -255,37 +301,26 @@
 }
 
 @media (min-width: 768px) {
-  .home-top-picks__media {
-    height: 12.5rem; /* 200px */
-    max-height: 12.5rem;
-    min-height: 12.5rem;
-    padding: 1.25rem 1.35rem;
+  .home-top-picks {
+    --top-gap: 1rem;
+    --top-peek: 3rem;
+    --top-visible: 2;
   }
 }
 
-@media (min-width: 1024px) {
-  .home-top-picks__media {
-    height: 13rem; /* 208px — fits 3-col cards without dominating */
-    max-height: 13rem;
-    min-height: 13rem;
-    padding: 1.35rem 1.5rem;
-  }
-}
-
-@media (max-width: 767px) {
-  .home-top-picks__media {
-    height: 10.5rem; /* 168px */
-    max-height: 10.5rem;
-    min-height: 10.5rem;
-    padding: 1rem 1.1rem;
-  }
-
-  .home-top-picks__body {
-    padding-top: 0.75rem;
+@media (min-width: 1100px) {
+  .home-top-picks {
+    --top-gap: 1.125rem;
+    --top-peek: 3.25rem;
+    --top-visible: 4;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .home-top-picks__viewport {
+    scroll-behavior: auto;
+  }
+
   .home-top-picks .hover-zoom img,
   .home-top-picks .hover-zoom:hover img,
   .home-top-picks__card-media-link:hover .home-top-picks__media img {

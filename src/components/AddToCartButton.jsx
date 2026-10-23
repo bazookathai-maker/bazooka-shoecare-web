@@ -49,9 +49,9 @@ export default function AddToCartButton({ product, mediaRef: externalMediaRef })
         className="add-to-cart"
         onClick={handleClick}
         disabled={!canAdd || busy || pending}
-        aria-label={`เพิ่ม ${product?.name || 'สินค้า'} ลงตะกร้า`}
+        aria-label={`สั่งซื้อสินค้า ${product?.name || ''}`.trim()}
       >
-        {busy ? 'กำลังเพิ่ม...' : 'เพิ่มลงตะกร้า'}
+        {busy ? 'กำลังเพิ่ม...' : 'สั่งซื้อสินค้า'}
       </button>
       {localError ? (
         <p className="add-to-cart__error" role="alert">

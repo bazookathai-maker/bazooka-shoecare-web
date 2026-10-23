@@ -9,13 +9,28 @@ export default function Hero() {
       <div className="hero__media" aria-hidden="true">
         <picture>
           <source
+            media="(min-width: 1600px)"
+            srcSet="/hero-large-1920.jpg"
+            type="image/jpeg"
+          />
+          <source
+            media="(min-width: 1280px)"
+            srcSet="/hero-large-1440.jpg"
+            type="image/jpeg"
+          />
+          <source
             media="(min-width: 1024px)"
-            srcSet="/hero-desktop.jpg"
+            srcSet="/hero-large-1024.jpg"
+            type="image/jpeg"
+          />
+          <source
+            media="(max-width: 768px)"
+            srcSet="/hero-mobile-fill.jpg"
             type="image/jpeg"
           />
           <img
             className="hero__bg"
-            src="/1.JPG"
+            src="/hero-large-mobile.jpg"
             alt=""
             fetchPriority="high"
             decoding="async"

@@ -157,8 +157,7 @@
   color: var(--navy);
 }
 
-/* Small desktop — keep the headline clear of the shoe on the left of the photo.
-   Nudge the banner right so the care button clears the brush. */
+/* Small desktop — headline size only. Cover position is set with the other desktops. */
 @media (min-width: 1024px) and (max-width: 1279px) {
   .hero__headline {
     font-size: clamp(2.5rem, 4.4vw, 3.5rem);
@@ -166,10 +165,6 @@
 
   .hero__copy {
     max-width: 30rem;
-  }
-
-  .hero__bg {
-    object-position: 90% center;
   }
 }
 
@@ -192,11 +187,10 @@
   }
 }
 
-/* Desktop banner is 3840×1280. Anchor the products on the right
-   so a shorter frame crops the empty left side first. */
-@media (min-width: 1280px) {
+/* Precomposed full-bleed stills. Center keeps every product inside the frame. */
+@media (min-width: 1024px) {
   .hero__bg {
-    object-position: right center;
+    object-position: center center;
   }
 }
 
@@ -216,7 +210,7 @@
   }
 
   .hero__bg {
-    object-position: center bottom;
+    object-position: center center;
   }
 }
 
@@ -246,7 +240,7 @@
   }
 
   .hero__bg {
-    object-position: center bottom;
+    object-position: center center;
     animation: none;
   }
 

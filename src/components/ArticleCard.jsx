@@ -99,10 +99,10 @@ function ProductRow({ label, image }) {
         disabled={!canAdd}
         aria-label={
           added
-            ? `เพิ่ม ${label} ลงตะกร้าแล้ว`
-            : `เพิ่ม ${label} ลงตะกร้า`
+            ? `สั่งซื้อสินค้า ${label} แล้ว`
+            : `สั่งซื้อสินค้า ${label}`
         }
-        title={added ? 'เพิ่มลงตะกร้าแล้ว' : undefined}
+        title={added ? 'สั่งซื้อสินค้าแล้ว' : undefined}
       >
         {added ? <ArticleCartAddedIcon /> : <ArticleCartIcon />}
       </button>

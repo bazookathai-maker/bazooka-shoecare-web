@@ -1,7 +1,12 @@
 import { allProducts } from '../data/products';
 import { careGuides } from '../data/careGuides';
+import { LISTING_HIDDEN_PRODUCT_IDS } from '../data/hiddenProducts';
 import { isDisplayOnlyProduct } from '../data/productDetails';
 import { formatListingName } from './productListingCopy';
+
+function isVisibleCatalogProduct(product) {
+  return !LISTING_HIDDEN_PRODUCT_IDS.has(String(product?.id));
+}
 
 function normalize(value) {
   return String(value || '')
@@ -46,6 +51,7 @@ export function searchSiteContent(
       : allProducts;
 
   const products = catalog
+    .filter(isVisibleCatalogProduct)
     .filter((product) => {
       const haystack = normalize(
         [product.name, product.category, product.description, product.sku]
@@ -95,8 +101,9 @@ export function getRecommendedProducts(limit = 4, productsCatalog = null) {
       ? productsCatalog
       : allProducts;
 
-  const bestsellers = catalog.filter((product) => product.isBestseller);
-  const source = bestsellers.length ? bestsellers : catalog;
+  const visible = catalog.filter(isVisibleCatalogProduct);
+  const bestsellers = visible.filter((product) => product.isBestseller);
+  const source = bestsellers.length ? bestsellers : visible;
 
   return source.slice(0, limit).map((product) => ({
     id: product.id,
