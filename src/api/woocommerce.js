@@ -631,6 +631,38 @@ function mapWooCategoryToFilter(category) {
  * Uncategorized Woo products whose names were rewritten for display; the name heuristics
  * below would otherwise move them to a different filter tab.
  */
+/** Local studio stills. Each entry replaces only that product's primary image. */
+const PRIMARY_IMAGE_OVERRIDES = {
+  881: '/images/complete-sneaker-care.jpg',
+  145: '/images/duo-set-1.jpg',
+  143: '/images/pro3-1.jpg',
+  136: '/images/pro2.jpg',
+  134: '/images/refresh-spray.jpg',
+  128: '/images/protector-spray.jpg',
+  68: '/images/pro1.jpg',
+  140: '/images/pro4.jpg',
+  130: '/images/suede-brush.jpg',
+  126: '/images/cleaner-2.jpg',
+};
+
+/**
+ * Extra product-page stills after the card cover.
+ * 881 opens on CP.png, then 5.JPG through the last attached still. No duplicates.
+ */
+const DETAIL_GALLERY_OVERRIDES = {
+  881: [
+    '/images/complete-gallery/01.jpg',
+    '/images/complete-gallery/02.jpg',
+    '/images/complete-gallery/03.jpg',
+    '/images/complete-gallery/04.jpg',
+    '/images/complete-gallery/05.jpg',
+    '/images/complete-gallery/06.jpg',
+    '/images/complete-gallery/07.jpg',
+    '/images/complete-gallery/08.jpg',
+    '/images/complete-gallery/09.jpg',
+  ],
+};
+
 const FILTER_CATEGORY_BY_PRODUCT_ID = {
   881: 'kits',
   145: 'kits',
@@ -688,6 +720,45 @@ function mapWooGallery(wooProduct, alt = '') {
       alt: image.alt || alt || wooProduct.name || '',
     }))
     .filter((image) => isUsableWooImageSrc(image.src));
+}
+
+function applyPrimaryImageOverride(id, name, gallery) {
+  const override = PRIMARY_IMAGE_OVERRIDES[Number(id)];
+  const detailGallery = DETAIL_GALLERY_OVERRIDES[Number(id)];
+
+  if (detailGallery?.length) {
+    const sources = override ? [override, ...detailGallery] : detailGallery;
+    const seen = new Set();
+    const nextGallery = [];
+    for (const src of sources) {
+      if (!src || seen.has(src)) continue;
+      seen.add(src);
+      nextGallery.push({ src, alt: name });
+    }
+    return {
+      image: override || nextGallery[0]?.src || gallery[0]?.src || '',
+      gallery: nextGallery.length ? nextGallery : gallery,
+      imageFrame: override ? 'fill' : '',
+    };
+  }
+
+  if (!override) {
+    return { image: gallery[0]?.src || '', gallery, imageFrame: '' };
+  }
+
+  const nextGallery = gallery.length
+    ? gallery.map((image, index) =>
+        index === 0
+          ? { ...image, src: override, alt: image.alt || name }
+          : image,
+      )
+    : [{ src: override, alt: name }];
+
+  return {
+    image: override,
+    gallery: nextGallery,
+    imageFrame: 'fill',
+  };
 }
 
 function cleanDescriptionLines(html) {
@@ -784,6 +855,7 @@ function resolveCategoryLabel(wooProduct, filterCategory) {
 export function mapStoreProduct(wooProduct) {
   const name = stripHtml(wooProduct.name) || 'สินค้า BAZOOKA';
   const gallery = mapWooGallery(wooProduct, name);
+  const primaryImage = applyPrimaryImageOverride(wooProduct.id, name, gallery);
   const filterCategory = resolveFilterCategory(wooProduct);
   const shortDescription = stripHtml(wooProduct.short_description);
   const description = stripHtml(wooProduct.description);
@@ -813,8 +885,9 @@ export function mapStoreProduct(wooProduct) {
     regularPrice: mapPrice(wooProduct.prices, 'regular_price'),
     currency: wooProduct.prices?.currency_code || 'THB',
     isOnSale: Boolean(wooProduct.on_sale),
-    image: gallery[0]?.src || '',
+    image: primaryImage.image,
     imageFit: 'contain',
+    imageFrame: primaryImage.imageFrame,
     category: resolveCategoryLabel(wooProduct, filterCategory),
     categories,
     filterCategory,
@@ -824,7 +897,7 @@ export function mapStoreProduct(wooProduct) {
     stockLabel:
       wooProduct.stock_availability?.text ||
       (wooProduct.is_in_stock ? 'มีสินค้า' : 'สินค้าหมด'),
-    gallery,
+    gallery: primaryImage.gallery,
   };
 }
 

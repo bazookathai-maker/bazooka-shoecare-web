@@ -97,6 +97,15 @@
   transform: scale(1.04);
 }
 
+.featured-products__card--fill .featured-products__image {
+  padding: 0;
+  object-fit: contain;
+}
+
+.featured-products__card--fill:hover .featured-products__image {
+  transform: none;
+}
+
 .featured-products__info {
   display: flex;
   flex-direction: column;

@@ -31,7 +31,7 @@
   height: 100%;
   margin: auto;
   object-fit: cover;
-  object-position: 72% center;
+  object-position: center bottom;
   animation: heroBgIn 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
@@ -157,7 +157,7 @@
   color: var(--navy);
 }
 
-/* Small desktop — keep the headline clear of the shoe on the left of the photo */
+/* Small desktop — headline size only. Cover position is set with the other desktops. */
 @media (min-width: 1024px) and (max-width: 1279px) {
   .hero__headline {
     font-size: clamp(2.5rem, 4.4vw, 3.5rem);
@@ -187,6 +187,13 @@
   }
 }
 
+/* Precomposed full-bleed stills. Center keeps every product inside the frame. */
+@media (min-width: 1024px) {
+  .hero__bg {
+    object-position: center center;
+  }
+}
+
 /* Tablet */
 @media (max-width: 1023px) and (min-width: 769px) {
   .hero--cinematic {
@@ -203,7 +210,7 @@
   }
 
   .hero__bg {
-    object-position: 68% center;
+    object-position: center center;
   }
 }
 
@@ -233,7 +240,7 @@
   }
 
   .hero__bg {
-    object-position: var(--hero-img-pos) 100%;
+    object-position: center center;
     animation: none;
   }
 

@@ -10,6 +10,24 @@
   gap: 0;
 }
 
+.product-gallery--fill .product-gallery__main {
+  max-height: none;
+  aspect-ratio: 1 / 1;
+}
+
+.product-gallery--fill .product-gallery__main-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  animation: none;
+  transform: none;
+}
+
+.product-gallery--fill .product-gallery__main:hover .product-gallery__main-img {
+  transform: none;
+}
+
 .product-gallery__main {
   position: relative;
   width: 100%;
@@ -20,15 +38,97 @@
   overflow: hidden;
 }
 
+.product-gallery__track {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+  touch-action: pan-x pan-y;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.product-gallery__track::-webkit-scrollbar {
+  display: none;
+}
+
+.product-gallery__track:focus-visible {
+  outline: 2px solid var(--navy);
+  outline-offset: -2px;
+}
+
+.product-gallery__slide {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
 .product-gallery__main-img {
   width: 100%;
   height: 100%;
   object-fit: contain;
   object-position: center;
+  user-select: none;
+  -webkit-user-drag: none;
   transition:
     opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
     transform 0.75s cubic-bezier(0.22, 1, 0.36, 1);
   animation: galleryImageIn 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.product-gallery__arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  border: 1px solid rgba(17, 24, 39, 0.08);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--navy);
+  box-shadow: 0 2px 8px rgba(17, 24, 39, 0.12);
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.product-gallery__arrow svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.product-gallery__arrow:focus-visible {
+  outline: 2px solid var(--navy);
+  outline-offset: 2px;
+}
+
+.product-gallery__arrow:disabled {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.product-gallery__arrow--prev {
+  left: 0.75rem;
+}
+
+.product-gallery__arrow--next {
+  right: 0.75rem;
 }
 
 .product-gallery__main:hover .product-gallery__main-img {

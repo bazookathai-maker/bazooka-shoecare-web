@@ -67,7 +67,11 @@ export default function ProductDetail() {
             const allProducts = await fetchStoreProducts();
             if (!cancelled) {
               recommended = allProducts
-                .filter((item) => item.id !== product.id)
+                .filter(
+                  (item) =>
+                    item.id !== product.id &&
+                    !LISTING_HIDDEN_PRODUCT_IDS.has(String(item.id)),
+                )
                 .slice(0, 4);
             }
           } catch {
@@ -162,7 +166,10 @@ export default function ProductDetail() {
       <section className="pdp__hero container">
         <div className="pdp__layout">
           {detail.gallery?.length > 0 ? (
-            <ProductGallery images={detail.gallery} />
+            <ProductGallery
+              images={detail.gallery}
+              fillFrame={detail.imageFrame === 'fill'}
+            />
           ) : null}
 
           <div className="pdp__info">
