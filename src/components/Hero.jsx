@@ -40,7 +40,6 @@ export default function Hero() {
 
       <div className="hero__content container">
         <div className="hero__copy">
-          <p className="hero__eyebrow">สูตรจากญี่ปุ่น</p>
           <h1 className="hero__headline">
             <span>ดูแลรองเท้าคู่โปรด</span>
             <span>ได้ครบในเซตเดียว</span>

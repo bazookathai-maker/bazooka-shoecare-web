@@ -101,15 +101,6 @@
   }
 }
 
-.hero__eyebrow {
-  font-size: var(--text-meta);
-  font-weight: var(--font-weight-medium);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--navy-muted);
-  margin-bottom: clamp(0.75rem, 2vw, 1.15rem);
-}
-
 .hero__headline {
   display: flex;
   flex-direction: column;
@@ -267,10 +258,6 @@
     animation: none;
   }
 
-  .hero__eyebrow {
-    margin-bottom: 0.375rem;
-  }
-
   .hero__headline {
     gap: 0;
     font-size: 1.5rem;
@@ -305,7 +292,7 @@
 
 /*
  * Phones — the photo has no free wall left of the shoe for buttons, so the
- * buttons move to a band under the photo. The photo only holds eyebrow and
+ * buttons move to a band under the photo. The photo only holds the
  * headline; its height is set so the product group clears the headline.
  */
 @media (max-width: 480px) {
@@ -334,7 +321,6 @@
     padding-bottom: 1rem;
   }
 
-  .hero__eyebrow,
   .hero__headline {
     position: relative;
     z-index: 2;
@@ -409,11 +395,23 @@
   }
 }
 
+/* Eyebrow line removed. Centering keeps half of that line as a gap and also
+   absorbs half of a negative margin, so shift by the full line. */
+@media (min-width: 769px) {
+  .hero__copy {
+    margin-top: calc(-1 * (1.75 * var(--text-meta) + clamp(0.75rem, 2vw, 1.15rem)));
+  }
+}
+
 @media (min-width: 481px) and (max-width: 768px) {
   .hero.hero--cinematic {
     --hero-header-h: 4.75rem;
     --hero-copy-w: 50%;
     --hero-img-pos: 92%;
+  }
+
+  .hero__copy {
+    margin-top: calc(-1 * (1.75 * var(--text-meta) + 0.375rem));
   }
 
   /* Wide enough that the photo is width-bound: match its 2770×1312 ratio. */
