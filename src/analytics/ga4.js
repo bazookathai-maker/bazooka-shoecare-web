@@ -1,6 +1,7 @@
 import { readAnalyticsConsent } from './consent';
 import {
   isMeasurementId,
+  resolveAuthAnalyticsEvent,
   safePageLocation,
   sanitizeAnalyticsParams,
   toAnalyticsItem,
@@ -109,6 +110,13 @@ export function trackBeginCheckout({ value, currency = 'THB', items = [] }) {
     value: Number.isFinite(amount) ? amount : safeItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
     items: safeItems,
   });
+}
+
+/** Fired only by a successful register/login call, never by session restore. */
+export function trackAuthResult(action, detail) {
+  const event = resolveAuthAnalyticsEvent(action, detail);
+  if (!event || isDuplicate(`${event.name}:${event.method}`)) return false;
+  return send(event.name, { method: event.method });
 }
 
 export function trackPurchase({ transactionId, value, currency = 'THB' }) {
