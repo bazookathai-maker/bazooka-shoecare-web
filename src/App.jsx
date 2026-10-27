@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import ScrollToTop from './components/ScrollToTop';
+import AnalyticsListener from './components/AnalyticsListener';
+import CookieNotice from './components/CookieNotice';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Home from './pages/Home';
@@ -64,6 +66,8 @@ export default function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
         <Footer />
+        <AnalyticsListener />
+        <CookieNotice />
         </CartProvider>
       </AuthProvider>
     </BrowserRouter>

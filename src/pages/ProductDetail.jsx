@@ -10,6 +10,8 @@ import {
 } from '../api/woocommerce';
 import { LISTING_HIDDEN_PRODUCT_IDS } from '../data/hiddenProducts';
 import { buildProductJsonLd, productPath, productSeo } from '../utils/seo';
+import { trackViewItem } from '../analytics/ga4';
+import { useAnalyticsConsent } from '../components/AnalyticsListener';
 import useSeo from '../hooks/useSeo';
 import './ProductDetail.css';
 
@@ -103,6 +105,18 @@ export default function ProductDetail() {
       cancelled = true;
     };
   }, [productId]);
+
+  const consent = useAnalyticsConsent();
+
+  useEffect(() => {
+    if (consent !== 'granted' || !detail?.id) return;
+    trackViewItem({
+      id: detail.id,
+      name: detail.name,
+      price: detail.price,
+      currency: detail.currency || 'THB',
+    });
+  }, [consent, detail?.id, detail?.name, detail?.price, detail?.currency]);
 
   const isListed = Boolean(detail) && !LISTING_HIDDEN_PRODUCT_IDS.has(String(detail.id));
   useSeo(

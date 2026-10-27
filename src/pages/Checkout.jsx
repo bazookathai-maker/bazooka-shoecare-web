@@ -21,6 +21,8 @@ import {
   validateCheckoutCustomerForm,
 } from '../api/woocommerce';
 import { CHECKOUT_PATH, loginPath } from '../utils/authRedirect';
+import { trackBeginCheckout } from '../analytics/ga4';
+import { useAnalyticsConsent } from '../components/AnalyticsListener';
 import useSeo from '../hooks/useSeo';
 import './Checkout.css';
 
@@ -129,6 +131,21 @@ function CheckoutForm() {
   const [loading, setLoading] = useState(false);
   const [shippingLoading, setShippingLoading] = useState(false);
   const [placingOrder, setPlacingOrder] = useState(false);
+  const consent = useAnalyticsConsent();
+  const beganCheckout = useRef(false);
+
+  useEffect(() => {
+    if (consent !== 'granted' || beganCheckout.current || hydrating || items.length === 0) return;
+    beganCheckout.current = true;
+    trackBeginCheckout({
+      value: items.reduce(
+        (sum, item) => sum + Number(item.price || 0) * Number(item.quantity || 1),
+        0,
+      ),
+      currency: 'THB',
+      items,
+    });
+  }, [consent, hydrating, items]);
   const [error, setError] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
   const [addressSynced, setAddressSynced] = useState(false);
