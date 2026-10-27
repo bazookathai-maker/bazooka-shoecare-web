@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { fetchOrderPaymentStatus } from '../api/customerAuth';
+import { trackPurchase } from '../analytics/ga4';
+import { useAnalyticsConsent } from '../components/AnalyticsListener';
 import { loginPath } from '../utils/authRedirect';
 import useSeo from '../hooks/useSeo';
 import './OrderPages.css';
@@ -108,6 +110,17 @@ function PaymentStatus({ orderId, orderNumber }) {
       if (timer) clearTimeout(timer);
     };
   }, [ready, isLoggedIn, orderId, attempt]);
+
+  const consent = useAnalyticsConsent();
+
+  useEffect(() => {
+    if (consent !== 'granted' || phase !== 'paid' || !order?.id) return;
+    trackPurchase({
+      transactionId: order.number || order.id,
+      value: order.total,
+      currency: order.currency || 'THB',
+    });
+  }, [consent, phase, order]);
 
   const retry = useCallback(() => {
     setPhase('checking');

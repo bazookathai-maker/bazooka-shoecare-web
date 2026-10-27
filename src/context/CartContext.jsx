@@ -17,6 +17,7 @@ import {
   updateCartItem,
 } from '../api/woocommerce';
 import { flyToCart } from '../utils/flyToCart';
+import { trackAddToCart } from '../analytics/ga4';
 
 const CartContext = createContext(null);
 
@@ -167,6 +168,12 @@ export function CartProvider({ children }) {
         const cart = await addCartItem(productId, 1);
         applyCart(cart);
         triggerBounce();
+        trackAddToCart({
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          currency: product.currency || 'THB',
+        });
         return cart;
       } catch (err) {
         const message =
