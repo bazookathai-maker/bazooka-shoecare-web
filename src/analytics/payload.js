@@ -63,3 +63,19 @@ export function sanitizeAnalyticsParams(params) {
   const cleaned = stripPii(params);
   return cleaned && typeof cleaned === 'object' && !Array.isArray(cleaned) ? cleaned : {};
 }
+
+/**
+ * Decide sign_up vs login from a completed auth call.
+ * Google uses the server's isNew flag only. A missing flag sends nothing.
+ */
+export function resolveAuthAnalyticsEvent(action, detail = {}) {
+  if (action === 'register') return { name: 'sign_up', method: 'email' };
+  if (action === 'login') {
+    return { name: 'login', method: detail.googleLink ? 'google' : 'email' };
+  }
+  if (action === 'google') {
+    if (detail.isNew === true) return { name: 'sign_up', method: 'google' };
+    if (detail.isNew === false) return { name: 'login', method: 'google' };
+  }
+  return null;
+}

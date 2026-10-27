@@ -9,6 +9,7 @@ import {
   setCustomerToken,
   updateCustomerProfile,
 } from '../api/customerAuth';
+import { trackAuthResult } from '../analytics/ga4';
 
 const AuthContext = createContext(null);
 
@@ -69,7 +70,9 @@ export function AuthProvider({ children }) {
         firstName,
         lastName,
       });
-      return applyAuth(result);
+      const customer = applyAuth(result);
+      trackAuthResult('register');
+      return customer;
     },
     [applyAuth],
   );
@@ -81,7 +84,9 @@ export function AuthProvider({ children }) {
         password,
         googleLinkTicket,
       });
-      return applyAuth(result);
+      const customer = applyAuth(result);
+      trackAuthResult('login', { googleLink: Boolean(googleLinkTicket) });
+      return customer;
     },
     [applyAuth],
   );
@@ -91,7 +96,8 @@ export function AuthProvider({ children }) {
     async (credential) => {
       const result = await loginWithGoogleCredential(credential);
       const nextCustomer = applyAuth(result);
-      return { customer: nextCustomer, isNew: Boolean(result?.isNew) };
+      trackAuthResult('google', { isNew: result?.isNew });
+      return { customer: nextCustomer, isNew: result?.isNew === true };
     },
     [applyAuth],
   );
