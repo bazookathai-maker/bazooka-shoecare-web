@@ -103,8 +103,8 @@ export const homeTopPicks = [
 
 /** Article slider — HOW TO CARE section */
 export const articleSlides = [
-  { image: '/images/how-to/article-cover-1.jpg' },
-  { image: '/images/how-to/article-cover-2.jpg' },
+  { image: '/images/how-to/article-cover-1.jpg', width: 2048, height: 679 },
+  { image: '/images/how-to/article-cover-2.jpg', width: 2048, height: 686 },
 ];
 
 /** How To Care — editorial category cards */
@@ -336,11 +336,31 @@ const HOME_REVIEW_VIDEO_ALLOWLIST = new Set([
 ]);
 
 const allHomeReviewVideos = [
-  { src: '/videos/reviews/review-1.mp4', handle: '@bazookashoecare' },
-  { src: '/videos/reviews/review-2.mp4', handle: '@bazookashoecare' },
-  { src: '/videos/reviews/review-3.mp4', handle: '@bazookashoecare' },
-  { src: '/videos/reviews/review-4.mp4', handle: '@bazookashoecare' },
-  { src: '/videos/reviews/review-6.mp4', handle: '@bazookashoecare' },
+  {
+    src: '/videos/reviews/review-1.mp4',
+    poster: '/images/reviews/review-1-poster.jpg',
+    handle: '@bazookashoecare',
+  },
+  {
+    src: '/videos/reviews/review-2.mp4',
+    poster: '/images/reviews/review-2-poster.jpg',
+    handle: '@bazookashoecare',
+  },
+  {
+    src: '/videos/reviews/review-3.mp4',
+    poster: '/images/reviews/review-3-poster.jpg',
+    handle: '@bazookashoecare',
+  },
+  {
+    src: '/videos/reviews/review-4.mp4',
+    poster: '/images/reviews/review-4-poster.jpg',
+    handle: '@bazookashoecare',
+  },
+  {
+    src: '/videos/reviews/review-6.mp4',
+    poster: '/images/reviews/review-6-poster.jpg',
+    handle: '@bazookashoecare',
+  },
 ];
 
 export const homeReviewVideos = allHomeReviewVideos.filter((item) =>

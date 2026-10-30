@@ -8,9 +8,9 @@ import {
 } from '../../utils/homeCatalog';
 import './HomeHowToCareSection.css';
 
-function CareImageSlider({ images, slideLabel }) {
+function CareImageSlider({ slides, slideLabel }) {
   const [activeIndex, setActiveIndex] = useState(0);
-  const lastIndex = images.length - 1;
+  const lastIndex = slides.length - 1;
 
   const goPrev = () => {
     setActiveIndex((index) => Math.max(0, index - 1));
@@ -23,17 +23,19 @@ function CareImageSlider({ images, slideLabel }) {
   return (
     <div className="home-how-to-care__slider">
       <div className="home-how-to-care__slider-stage" aria-live="polite">
-        {images.map((src, index) => (
+        {slides.map((slide, index) => (
           <img
-            key={`${src}-${index}`}
-            src={src}
+            key={`${slide.image}-${index}`}
+            src={slide.image}
             alt={`${slideLabel} ${index + 1}`}
             className={
               index === activeIndex
                 ? 'home-how-to-care__slider-image--active'
                 : undefined
             }
-            loading={index === 0 ? 'eager' : 'lazy'}
+            width={slide.width || undefined}
+            height={slide.height || undefined}
+            loading="lazy"
             decoding="async"
             hidden={index !== activeIndex}
           />
@@ -44,9 +46,9 @@ function CareImageSlider({ images, slideLabel }) {
         className="home-how-to-care__slider-pagination"
         aria-label={`${slideLabel} pagination`}
       >
-        {images.map((src, index) => (
+        {slides.map((slide, index) => (
           <button
-            key={`${src}-${index}`}
+            key={`${slide.image}-${index}`}
             type="button"
             className={`home-how-to-care__slider-dot${
               index === activeIndex ? ' home-how-to-care__slider-dot--active' : ''
@@ -98,10 +100,7 @@ function ArticleBlock({ card }) {
   return (
     <div className="home-how-to-care__block home-how-to-care__block--articles">
       <CareBlockIntro card={card} />
-      <CareImageSlider
-        images={card.slides.map((slide) => slide.image)}
-        slideLabel="บทความ"
-      />
+      <CareImageSlider slides={card.slides} slideLabel="บทความ" />
       <div className="home-how-to-care__articles-cta">
         <Link to={card.href} className="btn-outline home-how-to-care__articles-link">
           {card.cta}
@@ -134,7 +133,9 @@ function HowToBlock({ card, guideCard }) {
         <img
           src={card.image}
           alt="วิธีการใช้ผลิตภัณฑ์ BAZOOKA"
-          loading="eager"
+          width={2048}
+          height={912}
+          loading="lazy"
           decoding="async"
         />
       </div>

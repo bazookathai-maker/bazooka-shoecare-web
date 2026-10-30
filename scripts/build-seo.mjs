@@ -34,6 +34,7 @@ let googleReviews;
 let contact;
 let hiddenIds;
 let policies;
+let heroPicture;
 try {
   [
     seo,
@@ -45,6 +46,7 @@ try {
     contact,
     { LISTING_HIDDEN_PRODUCT_IDS: hiddenIds },
     policies,
+    heroPicture,
   ] = await Promise.all(
       [
         '/src/utils/seo.js',
@@ -56,6 +58,7 @@ try {
         '/src/data/contact.js',
         '/src/data/hiddenProducts.js',
         '/src/data/storePolicies.js',
+        '/src/components/heroPicture.js',
       ].map((id) => vite.ssrLoadModule(id)),
     );
 } finally {
@@ -100,7 +103,7 @@ const MANAGED_HEAD = [
 const jsonLdScript = (data) =>
   `<script type="application/ld+json" id="seo-json-ld">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>`;
 
-function renderPage({ seo: page, body, jsonLd }) {
+function renderPage({ seo: page, body, jsonLd, extraHead = '', beforeRoot = '' }) {
   const title = seo.formatTitle(page);
   const description = page.description || seo.DEFAULT_DESCRIPTION;
   const canonical = seo.absoluteUrl(page.path);
@@ -117,6 +120,7 @@ function renderPage({ seo: page, body, jsonLd }) {
     `<meta name="twitter:title" content="${esc(title)}" />`,
     `<meta name="twitter:description" content="${esc(description)}" />`,
     jsonLd ? jsonLdScript(jsonLd) : '',
+    extraHead,
     PRERENDER_STYLE,
   ]
     .filter(Boolean)
@@ -130,7 +134,7 @@ function renderPage({ seo: page, body, jsonLd }) {
   const footer = `<footer>${policies.STORE_POLICIES.map((policy) => link(policy.path, policy.title)).join(' · ')}</footer>`;
   const snapshot = `<div class="seo-prerender">${nav}<main>${body}</main>${footer}</div>`;
   if (!html.includes('<div id="root"></div>')) throw new Error('#root not found in dist/index.html');
-  return html.replace('<div id="root"></div>', `<div id="root">${snapshot}</div>`);
+  return html.replace('<div id="root"></div>', `${beforeRoot}<div id="root">${snapshot}</div>`);
 }
 
 function writePage(route, page) {
@@ -156,6 +160,9 @@ const rendered = [];
 rendered.push(
   writePage('/', {
     seo: seo.PAGE_SEO.home,
+    extraHead:
+      '<link rel="preload" as="image" href="/hero-mobile.webp" type="image/webp" media="(max-width: 768px)" fetchpriority="high" />',
+    beforeRoot: heroPicture.renderHeroLcpShell(),
     body: [
       '<h1>ดูแลรองเท้าคู่โปรด ได้ครบในเซตเดียว</h1>',
       `<p>${text(seo.DEFAULT_DESCRIPTION)}</p>`,

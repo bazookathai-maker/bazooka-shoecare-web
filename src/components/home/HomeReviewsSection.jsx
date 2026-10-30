@@ -94,6 +94,7 @@ export default function HomeReviewsSection() {
                       <HomeReviewVideo
                         src={item.src}
                         fallback={item.fallback}
+                        poster={item.poster}
                         classes={reviewVideoClasses}
                         ariaLabel={`วิดีโอรีวิว ${index + 1}`}
                         isActive={isActive}

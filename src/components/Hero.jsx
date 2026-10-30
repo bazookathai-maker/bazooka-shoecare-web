@@ -1,41 +1,49 @@
+import { useLayoutEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import './Hero.css';
+import { heroPictureFallback, heroPictureSources } from './heroPicture';
+
+function HeroPicture() {
+  return (
+    <picture>
+      {heroPictureSources.map((source) => (
+        <source
+          key={source.srcSet}
+          media={source.media}
+          srcSet={source.srcSet}
+          type={source.type}
+        />
+      ))}
+      <img
+        className="hero__bg"
+        src={heroPictureFallback}
+        alt=""
+        fetchPriority="high"
+      />
+    </picture>
+  );
+}
 
 export default function Hero() {
+  const [useShell] = useState(
+    () => typeof document !== 'undefined' && Boolean(document.getElementById('hero-lcp-slot')),
+  );
+
+  useLayoutEffect(() => {
+    const slot = document.getElementById('hero-lcp-slot');
+    if (!slot) return undefined;
+    slot.hidden = false;
+    return () => {
+      slot.hidden = true;
+    };
+  }, []);
+
   return (
-    <section className="hero hero--cinematic">
-      <div className="hero__overlay" aria-hidden="true" />
+    <section className={useShell ? 'hero hero--cinematic hero--shell' : 'hero hero--cinematic'}>
+      {useShell ? null : <div className="hero__overlay" aria-hidden="true" />}
 
       <div className="hero__media" aria-hidden="true">
-        <picture>
-          <source
-            media="(min-width: 1600px)"
-            srcSet="/hero-large-1920.jpg"
-            type="image/jpeg"
-          />
-          <source
-            media="(min-width: 1280px)"
-            srcSet="/hero-large-1440.jpg"
-            type="image/jpeg"
-          />
-          <source
-            media="(min-width: 1024px)"
-            srcSet="/hero-large-1024.jpg"
-            type="image/jpeg"
-          />
-          <source
-            media="(max-width: 768px)"
-            srcSet="/hero-mobile-fill.jpg"
-            type="image/jpeg"
-          />
-          <img
-            className="hero__bg"
-            src="/hero-large-mobile.jpg"
-            alt=""
-            fetchPriority="high"
-            decoding="async"
-          />
-        </picture>
+        {useShell ? null : <HeroPicture />}
       </div>
 
       <div className="hero__content container">

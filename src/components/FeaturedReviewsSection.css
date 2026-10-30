@@ -69,6 +69,20 @@
   opacity: 1;
 }
 
+.reviews-featured__video.reviews-featured__video--poster {
+  opacity: 1;
+}
+
+.reviews-featured__video-wrap:has(img.reviews-featured__video--poster) > img.reviews-featured__video--poster {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  opacity: 1;
+}
+
 @media (min-width: 900px) {
   .reviews-featured__video {
     aspect-ratio: 3 / 4;

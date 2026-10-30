@@ -432,3 +432,26 @@
     animation: none;
   }
 }
+
+/* Homepage first paint. The picture stays here so LCP does not wait for React. */
+#hero-lcp-slot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+#hero-lcp-slot[hidden] {
+  display: none !important;
+}
+
+.hero.hero--cinematic.hero--shell {
+  z-index: 1;
+  background: transparent;
+}
+
+.hero.hero--cinematic.hero--shell .hero__media {
+  background: transparent;
+}

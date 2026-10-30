@@ -19,16 +19,32 @@ export default function HomeReviewVideo({
 }) {
   const wrapRef = useRef(null);
   const videoRef = useRef(null);
-  const [ready, setReady] = useState(false);
-  const [activeSrc, setActiveSrc] = useState(src);
+  const [readyFor, setReadyFor] = useState(null);
+  const [fallbackFor, setFallbackFor] = useState(null);
+  const [attached, setAttached] = useState(null);
+  const activeSrc = fallbackFor?.from === src ? fallbackFor.to : src;
+  const attachedSrc = attached?.forSrc === activeSrc ? attached.value : null;
+  const ready = readyFor === activeSrc;
 
   useEffect(() => {
-    setActiveSrc(src);
-    setReady(false);
-  }, [src]);
+    const wrap = wrapRef.current;
+    if (!wrap || !activeSrc) return undefined;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        setAttached({ forSrc: activeSrc, value: activeSrc });
+        observer.disconnect();
+      },
+      { rootMargin: '480px 0px', threshold: 0.01 },
+    );
+
+    observer.observe(wrap);
+    return () => observer.disconnect();
+  }, [activeSrc]);
 
   useEffect(() => {
-    if (managedPlayback) return undefined;
+    if (managedPlayback || !attachedSrc) return undefined;
 
     const wrap = wrapRef.current;
     const video = videoRef.current;
@@ -56,10 +72,10 @@ export default function HomeReviewVideo({
 
     observer.observe(wrap);
     return () => observer.disconnect();
-  }, [activeSrc, managedPlayback]);
+  }, [activeSrc, attachedSrc, managedPlayback]);
 
   useEffect(() => {
-    if (!managedPlayback) return undefined;
+    if (!managedPlayback || !attachedSrc) return undefined;
 
     const video = videoRef.current;
     if (!video) return undefined;
@@ -99,11 +115,12 @@ export default function HomeReviewVideo({
     }
 
     return undefined;
-  }, [isActive, managedPlayback, activeSrc]);
+  }, [isActive, managedPlayback, activeSrc, attachedSrc]);
 
   const handleError = () => {
     if (fallback && activeSrc !== fallback) {
-      setActiveSrc(fallback);
+      setFallbackFor({ from: src, to: fallback });
+      setAttached({ forSrc: fallback, value: fallback });
       return;
     }
 
@@ -112,18 +129,29 @@ export default function HomeReviewVideo({
 
   return (
     <div ref={wrapRef} className={classes.wrap}>
+      {poster ? (
+        <img
+          className={`${classes.video} ${classes.video}--poster`}
+          src={poster}
+          alt=""
+          width={720}
+          height={1280}
+          loading="lazy"
+          decoding="async"
+        />
+      ) : null}
       <video
         ref={videoRef}
         className={`${classes.video}${ready ? ` ${classes.ready}` : ''}`}
-        src={activeSrc}
-        poster={poster}
+        src={attachedSrc || undefined}
+        poster={poster || undefined}
         autoPlay={managedPlayback ? false : autoPlay}
         muted
         loop={managedPlayback ? isActive : true}
         playsInline
-        preload="metadata"
+        preload="none"
         aria-label={ariaLabel}
-        onCanPlay={() => setReady(true)}
+        onCanPlay={() => setReadyFor(activeSrc)}
         onError={handleError}
       />
     </div>

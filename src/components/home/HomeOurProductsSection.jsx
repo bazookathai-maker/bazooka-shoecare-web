@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import ScrollReveal from '../ScrollReveal';
 import {
@@ -13,19 +13,60 @@ const productGifById = {
   refresh: '/images/refresh-card.gif',
 };
 
-function ClipMedia({ src, fallback, alt }) {
+const productStillById = {
+  cleaner: '/images/cleaner-card-still.jpg',
+  protector: '/images/protector-card-still.jpg',
+  refresh: '/images/refresh-card-still.jpg',
+};
+
+function ClipMedia({ src, still, fallback, alt }) {
+  const mediaRef = useRef(null);
   const [clipFailed, setClipFailed] = useState(false);
-  const displaySrc = clipFailed || !src ? fallback : src;
+  const [playGif, setPlayGif] = useState(false);
+
+  useEffect(() => {
+    const el = mediaRef.current;
+    if (!el || !src || !still) return undefined;
+
+    let cancelled = false;
+    const start = () => {
+      if (!cancelled) setPlayGif(true);
+    };
+    const arm = () => {
+      if (cancelled) return;
+      const idle = window.requestIdleCallback;
+      if (idle) idle(start, { timeout: 1200 });
+      else window.setTimeout(start, 300);
+    };
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        observer.disconnect();
+        if (document.readyState === 'complete') arm();
+        else window.addEventListener('load', arm, { once: true });
+      },
+      { rootMargin: '240px 0px', threshold: 0.01 },
+    );
+
+    observer.observe(el);
+    return () => {
+      cancelled = true;
+      observer.disconnect();
+    };
+  }, [src, still]);
+
+  const displaySrc = clipFailed || !src ? fallback : playGif ? src : still || src;
 
   return (
-    <div className="home-our-products__media">
+    <div className="home-our-products__media" ref={mediaRef}>
       {displaySrc ? (
         <img
           src={displaySrc}
           alt={alt}
           decoding="async"
+          fetchPriority="low"
           onError={() => {
-            if (fallback) setClipFailed(true);
+            if (playGif && fallback) setClipFailed(true);
           }}
         />
       ) : null}
@@ -80,6 +121,7 @@ export default function HomeOurProductsSection() {
                 >
                   <ClipMedia
                     src={productGifById[product.id]}
+                    still={productStillById[product.id]}
                     fallback={product.image}
                     alt=""
                   />
