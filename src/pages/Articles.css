@@ -748,6 +748,10 @@
   font-size: 1.25rem;
 }
 
+.suede-article h2 + h3 {
+  margin-top: 0.35rem;
+}
+
 .suede-article p {
   margin: 0 0 1.35rem;
   font-family: var(--font-family);
@@ -764,7 +768,9 @@
 }
 
 .suede-article figure {
-  margin: 2rem 0 2.25rem;
+  width: 100%;
+  max-width: 520px;
+  margin: 2rem auto 2.25rem;
 }
 
 .suede-article img {
