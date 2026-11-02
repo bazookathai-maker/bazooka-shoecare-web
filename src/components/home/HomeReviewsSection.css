@@ -211,6 +211,10 @@
   opacity: 1;
 }
 
+.home-reviews__video-wrap:has(video.home-reviews__video--ready) > img.home-reviews__video--poster {
+  opacity: 0;
+}
+
 .home-reviews__video {
   display: block;
   width: 100%;

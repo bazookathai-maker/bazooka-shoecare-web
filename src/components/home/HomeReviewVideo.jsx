@@ -90,14 +90,10 @@ export default function HomeReviewVideo({
       return undefined;
     }
 
-    if (isActive) {
-      video.loop = true;
-      video.play().catch(() => {});
-      return undefined;
-    }
+    const wrap = wrapRef.current;
+    if (!wrap) return undefined;
 
-    video.loop = false;
-    video.pause();
+    let inView = false;
 
     const resetFrame = () => {
       try {
@@ -107,14 +103,35 @@ export default function HomeReviewVideo({
       }
     };
 
-    if (video.readyState >= 1) {
-      resetFrame();
-    } else {
-      video.addEventListener('loadeddata', resetFrame, { once: true });
-      return () => video.removeEventListener('loadeddata', resetFrame);
-    }
+    const sync = () => {
+      if (!isActive || !inView) {
+        video.loop = false;
+        video.pause();
+        if (!isActive) {
+          if (video.readyState >= 1) resetFrame();
+          else video.addEventListener('loadeddata', resetFrame, { once: true });
+        }
+        return;
+      }
 
-    return undefined;
+      video.loop = true;
+      video.muted = true;
+      video.play().catch(() => {});
+    };
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        inView = entry.isIntersecting;
+        sync();
+      },
+      { threshold: 0.2, rootMargin: '0px 0px -6% 0px' },
+    );
+
+    observer.observe(wrap);
+    return () => {
+      observer.disconnect();
+      video.removeEventListener('loadeddata', resetFrame);
+    };
   }, [isActive, managedPlayback, activeSrc, attachedSrc]);
 
   const handleError = () => {
