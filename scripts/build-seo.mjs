@@ -29,6 +29,7 @@ let seo;
 let woo;
 let homeCatalog;
 let careGuides;
+let renderSuedeArticleHtml;
 let faqItems;
 let googleReviews;
 let contact;
@@ -39,7 +40,7 @@ try {
     seo,
     woo,
     homeCatalog,
-    { careGuides },
+    { careGuides, renderSuedeArticleHtml },
     { faqItems },
     { googleReviews },
     contact,
@@ -219,18 +220,22 @@ rendered.push(
 );
 
 for (const guide of careGuides) {
+  const longform = guide.longform === true;
   rendered.push(
     writePage(seo.articlePath(guide.slug), {
       seo: seo.articleSeo(guide),
-      body: [
-        `<p>${link('/articles', '← กลับไปดูบทความทั้งหมด')}</p>`,
-        '<h1>เรื่องราวการดูแลรองเท้า</h1>',
-        `<h2>${text(guide.title)}</h2>`,
-        `<p>${text(guide.summary)}</p>`,
-        guide.products?.length
-          ? `<h3>สินค้าแนะนำ</h3>${list(guide.products.map((item) => esc(item.label)))}`
-          : '',
-      ].join(''),
+      jsonLd: longform ? seo.buildArticleJsonLd(guide) : undefined,
+      body: longform
+        ? `<p>${link('/articles', '← กลับไปดูบทความทั้งหมด')}</p>${renderSuedeArticleHtml()}`
+        : [
+            `<p>${link('/articles', '← กลับไปดูบทความทั้งหมด')}</p>`,
+            '<h1>เรื่องราวการดูแลรองเท้า</h1>',
+            `<h2>${text(guide.title)}</h2>`,
+            `<p>${text(guide.summary)}</p>`,
+            guide.products?.length
+              ? `<h3>สินค้าแนะนำ</h3>${list(guide.products.map((item) => esc(item.label)))}`
+              : '',
+          ].join(''),
     }),
   );
 }

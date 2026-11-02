@@ -110,10 +110,37 @@ export function productSeo(product) {
 export function articleSeo(article) {
   return {
     title: article.title.replace(/\s+/g, ' ').trim(),
-    description: shortenText(article.summary),
+    description: article.description || shortenText(article.summary),
     path: articlePath(article.slug),
     image: toAbsoluteAssetUrl(article.cover),
     type: 'article',
+  };
+}
+
+/** Article JSON-LD for a guide whose visible title, description and image are already set. No dates, prices or reviews. */
+export function buildArticleJsonLd(article) {
+  const page = articleSeo(article);
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: page.title,
+    description: page.description,
+    inLanguage: 'th',
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': absoluteUrl(page.path),
+    },
+    ...(page.image ? { image: page.image } : {}),
+    author: {
+      '@type': 'Organization',
+      name: SITE_NAME,
+      url: `${SITE_URL}/`,
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: SITE_NAME,
+      url: `${SITE_URL}/`,
+    },
   };
 }
 

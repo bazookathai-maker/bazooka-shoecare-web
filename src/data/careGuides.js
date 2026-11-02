@@ -1,3 +1,11 @@
+import {
+  SUEDE_CLEAN_COVER,
+  SUEDE_CLEAN_DESCRIPTION,
+  SUEDE_CLEAN_TITLE,
+} from './suedeCleanArticle';
+
+export { renderSuedeArticleHtml } from './suedeCleanArticle';
+
 export const ARTICLE_CATEGORIES = [
   { id: 'all', label: 'ทั้งหมด' },
   { id: 'white-sneaker', label: 'รองเท้าสีขาว' },
@@ -45,10 +53,11 @@ export const careGuides = [
     topic: 'suede-care',
     category: TOPIC_LABELS['suede-care'],
     publishedAt: '2025-10-28',
-    cover: '/products/product-23.jpg.PNG',
-    title: 'วิธีทำความสะอาดรองเท้าหนังกลับ',
-    summary:
-      'รองเท้าหนังกลับ (Suede) เป็นวัสดุพรีเมียมที่ต้องการการดูแลเป็นพิเศษ เพราะเกิดคราบได้ง่ายและทำความสะอาดไม่เหมือนรองเท้าทั่วไป',
+    cover: SUEDE_CLEAN_COVER,
+    title: SUEDE_CLEAN_TITLE,
+    description: SUEDE_CLEAN_DESCRIPTION,
+    summary: SUEDE_CLEAN_DESCRIPTION,
+    longform: true,
     video: '/videos/articles/suede-care-guide.mp4',
     products: [
       { label: 'BAZOOKA โปรจับคู่', image: '/products/product-2.jpg.png' },
