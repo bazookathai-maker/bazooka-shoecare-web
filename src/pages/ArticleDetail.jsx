@@ -3,9 +3,10 @@ import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom';
 import ArticleCard from '../components/ArticleCard';
 import { ArticleTopicRelated } from '../components/HubRelatedContent';
 import ScrollReveal from '../components/ScrollReveal';
+import SuedeCleanArticle from '../components/SuedeCleanArticle';
 import { WP_ARTICLES_ENABLED, fetchWpPostBySlug } from '../api/wordpress';
 import { getCareGuideBySlug } from '../data/careGuides';
-import { articlePath, articleSeo } from '../utils/seo';
+import { articlePath, articleSeo, buildArticleJsonLd } from '../utils/seo';
 import useSeo from '../hooks/useSeo';
 import './Articles.css';
 
@@ -98,9 +99,13 @@ export default function ArticleDetail() {
   }, [slug]);
 
   const seoSource = post || fallbackGuide;
+  const isLongform = Boolean(fallbackGuide?.longform) && !post;
   useSeo(
     seoSource
-      ? articleSeo(seoSource)
+      ? {
+          ...articleSeo(seoSource),
+          jsonLd: isLongform ? buildArticleJsonLd(fallbackGuide) : null,
+        }
       : { title: 'บทความ', path: articlePath(slug), noindex: !loading },
   );
 
@@ -122,7 +127,7 @@ export default function ArticleDetail() {
                 ← กลับไปดูบทความทั้งหมด
               </Link>
             </p>
-            {!isWordpress ? (
+            {!isWordpress && !fallbackGuide?.longform ? (
               <>
                 <h1 className="articles-page__title">เรื่องราวการดูแลรองเท้า</h1>
                 <p className="articles-page__subtitle">
@@ -142,7 +147,9 @@ export default function ArticleDetail() {
           className={
             isWordpress
               ? 'article-detail-page__layout article-detail-page__layout--wp'
-              : 'article-detail-page__layout'
+              : fallbackGuide?.longform
+                ? 'article-detail-page__layout article-detail-page__layout--longform'
+                : 'article-detail-page__layout'
           }
         >
           {loading ? (
@@ -157,13 +164,16 @@ export default function ArticleDetail() {
             </ScrollReveal>
           ) : null}
 
+          {!loading && guide?.longform ? <SuedeCleanArticle /> : null}
+
+          {!loading && guide && !guide.longform ? (
+            <ScrollReveal>
+              <ArticleCard guide={guide} isActive variant="standalone" />
+            </ScrollReveal>
+          ) : null}
+
           {!loading && guide ? (
-            <>
-              <ScrollReveal>
-                <ArticleCard guide={guide} isActive variant="standalone" />
-              </ScrollReveal>
-              <ArticleTopicRelated slug={guide.slug} faqId={faqId} />
-            </>
+            <ArticleTopicRelated slug={guide.slug} faqId={faqId} />
           ) : null}
         </div>
       </section>
