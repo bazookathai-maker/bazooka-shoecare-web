@@ -15,7 +15,6 @@ import { createServer } from 'vite';
 import { fetchAllWooProducts } from '../server/wooProducts.js';
 
 const DIST = path.resolve('dist');
-const PUBLIC = path.resolve('public');
 
 const vite = await createServer({
   configFile: false,
@@ -29,7 +28,7 @@ let seo;
 let woo;
 let homeCatalog;
 let careGuides;
-let renderSuedeArticleHtml;
+let renderArticleHtml;
 let faqItems;
 let googleReviews;
 let contact;
@@ -40,7 +39,7 @@ try {
     seo,
     woo,
     homeCatalog,
-    { careGuides, renderSuedeArticleHtml },
+    { careGuides, renderArticleHtml },
     { faqItems },
     { googleReviews },
     contact,
@@ -151,7 +150,6 @@ try {
 }
 
 const productLinks = (items) => list(items.map((product) => link(seo.productPath(product.id), product.name)));
-const guideHasVideo = (guide) => Boolean(guide.video) && fs.existsSync(path.join(PUBLIC, guide.video));
 const rendered = [];
 
 rendered.push(
@@ -220,13 +218,17 @@ rendered.push(
 );
 
 for (const guide of careGuides) {
-  const longform = guide.longform === true;
+  const longform = guide.longform === true && Array.isArray(guide.blocks);
   rendered.push(
     writePage(seo.articlePath(guide.slug), {
       seo: seo.articleSeo(guide),
       jsonLd: longform ? seo.buildArticleJsonLd(guide) : undefined,
       body: longform
-        ? `<p>${link('/articles', '← กลับไปดูบทความทั้งหมด')}</p>${renderSuedeArticleHtml()}`
+        ? `<p>${link('/articles', '← กลับไปดูบทความทั้งหมด')}</p>${renderArticleHtml({
+            title: guide.title,
+            blocks: guide.blocks,
+            className: guide.articleClass || 'longform-article',
+          })}`
         : [
             `<p>${link('/articles', '← กลับไปดูบทความทั้งหมด')}</p>`,
             '<h1>เรื่องราวการดูแลรองเท้า</h1>',
@@ -307,7 +309,7 @@ if (products.length === 0) {
   const sitemapPaths = [
     ...Object.values(seo.PAGE_SEO).map((page) => page.path),
     ...products.map((product) => seo.productPath(product.id)),
-    ...careGuides.filter(guideHasVideo).map((guide) => seo.articlePath(guide.slug)),
+    ...careGuides.map((guide) => seo.articlePath(guide.slug)),
   ];
   const xml = [
     '<?xml version="1.0" encoding="UTF-8"?>',

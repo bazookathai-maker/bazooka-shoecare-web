@@ -1,8 +1,4 @@
 import { Link } from 'react-router-dom';
-import {
-  SUEDE_CLEAN_TITLE,
-  suedeCleanBlocks,
-} from '../data/suedeCleanArticle';
 
 function ArticleParts({ parts }) {
   return parts.map((part, index) =>
@@ -42,11 +38,11 @@ function ArticleBlock({ block }) {
   return null;
 }
 
-export default function SuedeCleanArticle() {
+export default function LongformArticle({ title, blocks, className }) {
   return (
-    <article className="suede-article">
-      <h1>{SUEDE_CLEAN_TITLE}</h1>
-      {suedeCleanBlocks.map((block, index) => (
+    <article className={className}>
+      <h1>{title}</h1>
+      {blocks.map((block, index) => (
         <ArticleBlock key={index} block={block} />
       ))}
     </article>
