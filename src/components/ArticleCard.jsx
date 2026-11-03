@@ -127,7 +127,7 @@ function ArticleCardVideoPlaceholder({ title }) {
   );
 }
 
-function ArticleCardVideo({ src, title, isActive }) {
+export function ArticleCardVideo({ src, title, isActive }) {
   const videoRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
 

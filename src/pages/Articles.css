@@ -719,7 +719,8 @@
   padding-inline: clamp(1.25rem, 3vw, 1.5rem);
 }
 
-.suede-article h1 {
+.suede-article h1,
+.longform-article h1 {
   margin: 0 0 1.75rem;
   font-family: var(--font-family);
   font-size: clamp(2rem, 4vw, 2.75rem);
@@ -731,28 +732,34 @@
 }
 
 .suede-article h2,
-.suede-article h3 {
+.suede-article h3,
+.longform-article h2,
+.longform-article h3 {
   font-family: var(--font-family);
   font-weight: var(--font-weight-medium);
   line-height: 1.4;
   color: var(--navy);
 }
 
-.suede-article h2 {
+.suede-article h2,
+.longform-article h2 {
   margin: 3rem 0 1rem;
   font-size: clamp(1.375rem, 2.2vw, 1.625rem);
 }
 
-.suede-article h3 {
+.suede-article h3,
+.longform-article h3 {
   margin: 2rem 0 0.75rem;
   font-size: 1.25rem;
 }
 
-.suede-article h2 + h3 {
+.suede-article h2 + h3,
+.longform-article h2 + h3 {
   margin-top: 0.35rem;
 }
 
-.suede-article p {
+.suede-article p,
+.longform-article p {
   margin: 0 0 1.35rem;
   font-family: var(--font-family);
   font-size: 1.125rem;
@@ -761,19 +768,22 @@
   color: var(--text-primary);
 }
 
-.suede-article a {
+.suede-article a,
+.longform-article a {
   color: var(--navy);
   text-decoration-line: underline;
   text-underline-offset: 0.18em;
 }
 
-.suede-article figure {
+.suede-article figure,
+.longform-article figure {
   width: 100%;
   max-width: 520px;
   margin: 2rem auto 2.25rem;
 }
 
-.suede-article img {
+.suede-article img,
+.longform-article img {
   display: block;
   width: 100%;
   max-width: 100%;
@@ -782,12 +792,29 @@
   background: #f4f4f2;
 }
 
-.suede-article figcaption {
+.suede-article figcaption,
+.longform-article figcaption {
   margin-top: 0.75rem;
   font-family: var(--font-family);
   font-size: 0.875rem;
   line-height: 1.6;
   color: var(--text-secondary);
+}
+
+.longform-article__video {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin: 0 0 2.25rem;
+}
+
+.longform-article__video video {
+  width: 100%;
+  max-width: 240px;
+  aspect-ratio: 9 / 16;
+  object-fit: cover;
+  border-radius: 14px;
+  background: #101820;
 }
 
 .wp-article {

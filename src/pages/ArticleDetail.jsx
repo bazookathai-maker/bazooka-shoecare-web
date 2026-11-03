@@ -3,7 +3,7 @@ import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom';
 import ArticleCard from '../components/ArticleCard';
 import { ArticleTopicRelated } from '../components/HubRelatedContent';
 import ScrollReveal from '../components/ScrollReveal';
-import SuedeCleanArticle from '../components/SuedeCleanArticle';
+import LongformArticle from '../components/LongformArticle';
 import { WP_ARTICLES_ENABLED, fetchWpPostBySlug } from '../api/wordpress';
 import { getCareGuideBySlug } from '../data/careGuides';
 import { articlePath, articleSeo, buildArticleJsonLd } from '../utils/seo';
@@ -164,7 +164,14 @@ export default function ArticleDetail() {
             </ScrollReveal>
           ) : null}
 
-          {!loading && guide?.longform ? <SuedeCleanArticle /> : null}
+          {!loading && guide?.longform && guide.blocks ? (
+            <LongformArticle
+              title={guide.title}
+              blocks={guide.blocks}
+              className={guide.articleClass || 'longform-article'}
+              videoSrc={guide.embedVideo ? guide.video : undefined}
+            />
+          ) : null}
 
           {!loading && guide && !guide.longform ? (
             <ScrollReveal>

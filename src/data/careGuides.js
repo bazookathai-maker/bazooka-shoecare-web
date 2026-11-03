@@ -1,14 +1,41 @@
+import { renderArticleHtml } from './articleHtml';
+import {
+  PROTECT_REFRESH_COVER,
+  PROTECT_REFRESH_DESCRIPTION,
+  PROTECT_REFRESH_TITLE,
+  protectRefreshBlocks,
+} from './protectRefreshArticle';
+import {
+  SHOE_CLEANER_COVER,
+  SHOE_CLEANER_DESCRIPTION,
+  SHOE_CLEANER_TITLE,
+  shoeCleanerBlocks,
+} from './shoeCleanerArticle';
+import {
+  SHOE_DEODORIZE_COVER,
+  SHOE_DEODORIZE_DESCRIPTION,
+  SHOE_DEODORIZE_TITLE,
+  shoeDeodorizeBlocks,
+} from './shoeDeodorizeArticle';
 import {
   SUEDE_CLEAN_COVER,
   SUEDE_CLEAN_DESCRIPTION,
   SUEDE_CLEAN_TITLE,
+  suedeCleanBlocks,
 } from './suedeCleanArticle';
+import {
+  WHITE_CANVAS_COVER,
+  WHITE_CANVAS_DESCRIPTION,
+  WHITE_CANVAS_TITLE,
+  whiteCanvasBlocks,
+} from './whiteCanvasArticle';
 
-export { renderSuedeArticleHtml } from './suedeCleanArticle';
+export { renderArticleHtml };
 
 export const ARTICLE_CATEGORIES = [
   { id: 'all', label: 'ทั้งหมด' },
   { id: 'white-sneaker', label: 'รองเท้าสีขาว' },
+  { id: 'shoe-cleaner', label: 'น้ำยาทำความสะอาด' },
   { id: 'suede-care', label: 'หนังกลับ' },
   { id: 'protector-spray', label: 'การปกป้อง' },
   { id: 'running-shoes', label: 'รองเท้าวิ่ง' },
@@ -30,10 +57,14 @@ export const careGuides = [
     topic: 'white-sneaker',
     category: TOPIC_LABELS['white-sneaker'],
     publishedAt: '2025-11-12',
-    cover: '/products/cleaner-howto-1.jpg',
-    title: 'ทำความสะอาดรองเท้าสีขาว\nใน 3 ขั้นตอน',
-    summary:
-      'รองเท้าสีขาวสวยตอนแรกซื้อ แต่พอใส่ไปสักพักก็เริ่มเหลือง เป็นรอยดำ แค่ทำความสะอาดให้ถูกวิธีก็กลับมาขาวสะอาดได้ใน 3 ขั้นตอนง่ายๆ',
+    cover: WHITE_CANVAS_COVER,
+    title: WHITE_CANVAS_TITLE,
+    description: WHITE_CANVAS_DESCRIPTION,
+    summary: WHITE_CANVAS_DESCRIPTION,
+    longform: true,
+    blocks: whiteCanvasBlocks,
+    articleClass: 'longform-article',
+    embedVideo: true,
     video: '/videos/articles/white-sneaker-cleaning-guide.mp4',
     products: [
       {
@@ -58,6 +89,8 @@ export const careGuides = [
     description: SUEDE_CLEAN_DESCRIPTION,
     summary: SUEDE_CLEAN_DESCRIPTION,
     longform: true,
+    blocks: suedeCleanBlocks,
+    articleClass: 'suede-article',
     video: '/videos/articles/suede-care-guide.mp4',
     products: [
       { label: 'BAZOOKA โปรจับคู่', image: '/products/product-2.jpg.png' },
@@ -74,10 +107,13 @@ export const careGuides = [
     topic: 'protector-spray',
     category: TOPIC_LABELS['protector-spray'],
     publishedAt: '2025-10-08',
-    cover: '/products/product-11.jpg.png',
-    title: 'สเปรย์กันน้ำรองเท้า',
-    summary:
-      'สเปรย์กันน้ำรองเท้าช่วยเคลือบผิววัสดุ เพื่อป้องกันน้ำ คราบฝุ่น และของเหลวไม่ให้ซึมเข้าสู่เนื้อรองเท้า ช่วยลดการเกิดคราบ',
+    cover: PROTECT_REFRESH_COVER,
+    title: PROTECT_REFRESH_TITLE,
+    description: PROTECT_REFRESH_DESCRIPTION,
+    summary: PROTECT_REFRESH_DESCRIPTION,
+    longform: true,
+    blocks: protectRefreshBlocks,
+    articleClass: 'longform-article',
     video: '/videos/articles/protect-and-refresh-guide.mp4',
     products: [
       { label: 'BAZOOKA โปรจับคู่', image: '/products/product-2.jpg.png' },
@@ -168,10 +204,14 @@ export const careGuides = [
     topic: 'deodorizer',
     category: TOPIC_LABELS['deodorizer'],
     publishedAt: '2025-07-15',
-    cover: '/products/product-25.jpg.jpg',
-    title: 'วิธีดับกลิ่นรองเท้าอย่างถูกวิธี',
-    summary:
-      'สเปรย์ดับกลิ่นรองเท้าช่วยลดกลิ่นอับและความชื้นสะสมภายในรองเท้า ทำให้รองเท้าสดชื่น พร้อมใช้งานทุกวัน',
+    cover: SHOE_DEODORIZE_COVER,
+    title: SHOE_DEODORIZE_TITLE,
+    description: SHOE_DEODORIZE_DESCRIPTION,
+    summary: SHOE_DEODORIZE_DESCRIPTION,
+    longform: true,
+    blocks: shoeDeodorizeBlocks,
+    articleClass: 'longform-article',
+    embedVideo: true,
     video: '/videos/articles/refresh-spray.mp4',
     products: [
       { label: 'สเปรย์รีเฟรช', image: '/products/product-16.jpg.jpg' },
@@ -197,6 +237,25 @@ export const careGuides = [
       { label: 'BAZOOKA คลีนเนอร์', image: '/products/product-5.jpg.jpg' },
       { label: 'สเปรย์รีเฟรช', image: '/products/product-16.jpg.jpg' },
       { label: 'ชุดครบเซ็ต BAZOOKA', image: '/products/product-27.jpg.jpg' },
+    ],
+  },
+  {
+    id: 'shoe-cleaner',
+    slug: 'shoe-cleaner',
+    topic: 'shoe-cleaner',
+    category: TOPIC_LABELS['shoe-cleaner'],
+    publishedAt: '2026-11-03',
+    cover: SHOE_CLEANER_COVER,
+    title: SHOE_CLEANER_TITLE,
+    description: SHOE_CLEANER_DESCRIPTION,
+    summary: SHOE_CLEANER_DESCRIPTION,
+    longform: true,
+    blocks: shoeCleanerBlocks,
+    articleClass: 'longform-article',
+    video: null,
+    products: [
+      { label: 'โฟมทำความสะอาดรองเท้า BAZOOKA', image: '/images/cleaner-2.jpg' },
+      { label: 'ชุดโฟมทำความสะอาดรองเท้า BAZOOKA', image: '/images/cleaner-2.jpg' },
     ],
   },
 ];

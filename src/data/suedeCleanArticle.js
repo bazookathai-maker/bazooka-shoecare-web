@@ -1,4 +1,6 @@
 /** Approved suede-care article. React and the build-time pre-render both read this. */
+import { renderArticleHtml } from './articleHtml';
+
 export const SUEDE_CLEAN_TITLE = 'รองเท้าหนังกลับทำความสะอาดยังไง';
 
 export const SUEDE_CLEAN_DESCRIPTION =
@@ -111,38 +113,10 @@ export const suedeCleanBlocks = [
   },
 ];
 
-function esc(value) {
-  return String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
-
-function renderParts(parts) {
-  return parts
-    .map((part) =>
-      part.href
-        ? `<a href="${esc(part.href)}">${esc(part.text)}</a>`
-        : esc(part.text),
-    )
-    .join('');
-}
-
-function renderBlock(block) {
-  if (block.type === 'h2') return `<h2>${esc(block.text)}</h2>`;
-  if (block.type === 'h3') return `<h3>${esc(block.text)}</h3>`;
-  if (block.type === 'p') {
-    const inner = block.parts ? renderParts(block.parts) : esc(block.text);
-    return `<p>${inner}</p>`;
-  }
-  if (block.type === 'figure') {
-    const loading = block.eager ? 'eager' : 'lazy';
-    return `<figure><img src="${esc(block.src)}" alt="${esc(block.alt)}" width="1024" height="1024" loading="${loading}" decoding="async"><figcaption>${esc(block.caption)}</figcaption></figure>`;
-  }
-  return '';
-}
-
 export function renderSuedeArticleHtml() {
-  return `<article class="suede-article"><h1>${esc(SUEDE_CLEAN_TITLE)}</h1>${suedeCleanBlocks.map(renderBlock).join('')}</article>`;
+  return renderArticleHtml({
+    title: SUEDE_CLEAN_TITLE,
+    blocks: suedeCleanBlocks,
+    className: 'suede-article',
+  });
 }

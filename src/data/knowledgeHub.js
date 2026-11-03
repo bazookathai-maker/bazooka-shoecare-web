@@ -17,18 +17,23 @@ const articleRelations = {
     products: ['suede-brush-2in1', 'promo-pair-bundle', 'bazooka-spray-twin-pack'],
   },
   'white-canvas': {
-    faqs: ['shoe-types', 'water-needed'],
-    articles: ['white-sneaker-restore', 'lazy-sneaker-care'],
+    faqs: ['water-needed'],
+    articles: ['shoe-cleaner', 'protect-refresh'],
+    products: ['bazooka-cleaner-cloth-brush', 'set-complete-bazooka'],
+  },
+  'shoe-cleaner': {
+    faqs: ['water-needed'],
+    articles: ['white-canvas', 'suede-clean'],
     products: ['bazooka-cleaner-cloth-brush', 'set-complete-bazooka'],
   },
   'protect-refresh': {
-    faqs: ['protector-benefits', 'protector-frequency'],
-    articles: ['suede-clean', 'white-canvas'],
+    faqs: ['protector-benefits'],
+    articles: ['suede-clean', 'white-canvas', 'shoe-cleaner'],
     products: ['bazooka-spray-twin-pack', 'bazooka-spray'],
   },
   'shoe-deodorize': {
-    faqs: ['deodorizer-effect', 'water-needed'],
-    articles: ['white-sneaker-restore', 'lazy-sneaker-care'],
+    faqs: [],
+    articles: ['shoe-cleaner', 'white-canvas'],
     products: ['refresh-spray-portable', 'refresh-spray-2plus1'],
   },
   'white-sneaker-restore': {
