@@ -64,6 +64,7 @@ export const careGuides = [
     longform: true,
     blocks: whiteCanvasBlocks,
     articleClass: 'longform-article',
+    embedVideo: true,
     video: '/videos/articles/white-sneaker-cleaning-guide.mp4',
     products: [
       {
@@ -113,6 +114,7 @@ export const careGuides = [
     longform: true,
     blocks: protectRefreshBlocks,
     articleClass: 'longform-article',
+    embedVideo: true,
     video: '/videos/articles/protect-and-refresh-guide.mp4',
     products: [
       { label: 'BAZOOKA โปรจับคู่', image: '/products/product-2.jpg.png' },
@@ -210,6 +212,7 @@ export const careGuides = [
     longform: true,
     blocks: shoeDeodorizeBlocks,
     articleClass: 'longform-article',
+    embedVideo: true,
     video: '/videos/articles/refresh-spray.mp4',
     products: [
       { label: 'สเปรย์รีเฟรช', image: '/products/product-16.jpg.jpg' },

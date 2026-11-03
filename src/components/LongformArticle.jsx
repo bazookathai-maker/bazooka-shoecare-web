@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { ArticleCardVideo } from './ArticleCard';
 
 function ArticleParts({ parts }) {
   return parts.map((part, index) =>
@@ -38,12 +39,24 @@ function ArticleBlock({ block }) {
   return null;
 }
 
-export default function LongformArticle({ title, blocks, className }) {
+export default function LongformArticle({ title, blocks, className, videoSrc }) {
+  const videoAfterFirstParagraph = Boolean(videoSrc) && blocks[0]?.type === 'p';
+  const head = videoAfterFirstParagraph ? blocks.slice(0, 1) : [];
+  const tail = videoAfterFirstParagraph ? blocks.slice(1) : blocks;
+
   return (
     <article className={className}>
       <h1>{title}</h1>
-      {blocks.map((block, index) => (
+      {head.map((block, index) => (
         <ArticleBlock key={index} block={block} />
+      ))}
+      {videoSrc ? (
+        <div className="longform-article__video">
+          <ArticleCardVideo src={videoSrc} title={title} isActive />
+        </div>
+      ) : null}
+      {tail.map((block, index) => (
+        <ArticleBlock key={head.length + index} block={block} />
       ))}
     </article>
   );

@@ -169,6 +169,7 @@ export default function ArticleDetail() {
               title={guide.title}
               blocks={guide.blocks}
               className={guide.articleClass || 'longform-article'}
+              videoSrc={guide.embedVideo ? guide.video : undefined}
             />
           ) : null}
 
