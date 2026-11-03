@@ -34,6 +34,7 @@ let googleReviews;
 let contact;
 let hiddenIds;
 let policies;
+let productCareLinks;
 try {
   [
     seo,
@@ -45,6 +46,7 @@ try {
     contact,
     { LISTING_HIDDEN_PRODUCT_IDS: hiddenIds },
     policies,
+    productCareLinks,
   ] = await Promise.all(
       [
         '/src/utils/seo.js',
@@ -56,6 +58,7 @@ try {
         '/src/data/contact.js',
         '/src/data/hiddenProducts.js',
         '/src/data/storePolicies.js',
+        '/src/data/productCareLinks.js',
       ].map((id) => vite.ssrLoadModule(id)),
     );
 } finally {
@@ -73,6 +76,10 @@ function esc(value) {
 
 const text = (value) => esc(value).replace(/\n+/g, '<br>');
 const link = (href, label) => `<a href="${esc(href)}">${esc(label)}</a>`;
+const careLinkHtml = (productId) => {
+  const careLink = productCareLinks.getProductCareLink(productId);
+  return careLink ? `<p>${link(careLink.href, careLink.label)}</p>` : '';
+};
 const list = (items) => (items.length ? `<ul>${items.map((item) => `<li>${item}</li>`).join('')}</ul>` : '');
 
 const NAV = [
@@ -191,9 +198,14 @@ for (const product of products) {
         `<nav aria-label="เส้นทางนำทาง">${link('/', 'หน้าแรก')} / ${link('/products', 'สินค้า')} / ${esc(product.name)}</nav>`,
         `<h1>${esc(product.name)}</h1>`,
         product.heroDescription ? `<p>${text(product.heroDescription)}</p>` : '',
-        product.aboutDescription ? `<h2>เกี่ยวกับสินค้า</h2><p>${text(product.aboutDescription)}</p>` : '',
+        product.aboutDescription
+          ? `<h2>เกี่ยวกับสินค้า</h2><p>${text(product.aboutDescription)}</p>${product.howToText ? '' : careLinkHtml(product.id)}`
+          : '',
         product.benefits?.length ? `<h2>จุดเด่น</h2>${list(product.benefits.slice(0, 6).map(esc))}` : '',
-        product.howToText ? `<h2>วิธีใช้</h2><p>${text(product.howToText)}</p>` : '',
+        product.howToText
+          ? `<h2>วิธีใช้</h2><p>${text(product.howToText)}</p>${careLinkHtml(product.id)}`
+          : '',
+        !product.howToText && !product.aboutDescription ? careLinkHtml(product.id) : '',
         product.sku ? `<p>SKU: ${esc(product.sku)}</p>` : '',
         `<p>${link('/products', 'กลับไปที่สินค้า')}</p>`,
       ].join(''),
