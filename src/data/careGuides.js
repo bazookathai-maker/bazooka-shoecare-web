@@ -114,7 +114,6 @@ export const careGuides = [
     longform: true,
     blocks: protectRefreshBlocks,
     articleClass: 'longform-article',
-    embedVideo: true,
     video: '/videos/articles/protect-and-refresh-guide.mp4',
     products: [
       { label: 'BAZOOKA โปรจับคู่', image: '/products/product-2.jpg.png' },
