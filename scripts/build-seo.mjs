@@ -111,7 +111,7 @@ function renderPage({ seo: page, body, jsonLd }) {
   const title = seo.formatTitle(page);
   const description = page.description || seo.DEFAULT_DESCRIPTION;
   const canonical = seo.absoluteUrl(page.path);
-  const image = page.image || seo.DEFAULT_OG_IMAGE;
+  const image = page.image || (page.type === 'product' ? '' : seo.DEFAULT_OG_IMAGE);
   const head = [
     `<title>${esc(title)}</title>`,
     `<meta name="description" content="${esc(description)}" />`,
@@ -120,7 +120,7 @@ function renderPage({ seo: page, body, jsonLd }) {
     `<meta property="og:title" content="${esc(title)}" />`,
     `<meta property="og:description" content="${esc(description)}" />`,
     `<meta property="og:url" content="${esc(canonical)}" />`,
-    `<meta property="og:image" content="${esc(image)}" />`,
+    image ? `<meta property="og:image" content="${esc(image)}" />` : '',
     `<meta name="twitter:title" content="${esc(title)}" />`,
     `<meta name="twitter:description" content="${esc(description)}" />`,
     jsonLd ? jsonLdScript(jsonLd) : '',
@@ -199,6 +199,9 @@ for (const product of products) {
       body: [
         `<nav aria-label="เส้นทางนำทาง">${link('/', 'หน้าแรก')} / ${link('/products', 'สินค้า')} / ${esc(product.name)}</nav>`,
         `<h1>${esc(product.name)}</h1>`,
+        seo.productPrimaryImage(product)
+          ? `<img src="${esc(seo.productPrimaryImage(product))}" alt="${esc(product.name)}">`
+          : '',
         product.heroDescription ? `<p>${text(product.heroDescription)}</p>` : '',
         product.aboutDescription
           ? `<h2>เกี่ยวกับสินค้า</h2><p>${text(product.aboutDescription)}</p>${product.howToText ? '' : careLinkHtml(product.id)}`

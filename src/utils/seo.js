@@ -91,6 +91,18 @@ export function toAbsoluteAssetUrl(src) {
   return src.startsWith('/') ? absoluteUrl(src) : src;
 }
 
+/**
+ * The primary image is the first picture the product page shows.
+ * Only a file hosted on this site is used. WooCommerce gallery URLs are left out
+ * until each one has been checked against the live page.
+ */
+export function productPrimaryImage(product) {
+  const src = product?.gallery?.[0]?.src || product?.image || '';
+  const absolute = toAbsoluteAssetUrl(src);
+  if (!absolute.startsWith(`${SITE_URL}/images/`)) return '';
+  return absolute;
+}
+
 /** title/description/path/image for a product detail (output of mapStoreProductDetail). */
 export function productSeo(product) {
   return {
@@ -101,7 +113,7 @@ export function productSeo(product) {
         .join(' – '),
     ),
     path: productPath(product.id),
-    image: product.gallery?.[0]?.src || product.image,
+    image: productPrimaryImage(product),
     type: 'product',
   };
 }
@@ -258,9 +270,7 @@ export function buildOrganizationJsonLd() {
  */
 export function buildProductJsonLd(product) {
   const url = absoluteUrl(productPath(product.id));
-  const images = (product.gallery || [])
-    .map((image) => toAbsoluteAssetUrl(image.src))
-    .filter(Boolean);
+  const image = productPrimaryImage(product);
   const description = product.aboutDescription || product.heroDescription || '';
   const sku = typeof product.sku === 'string' ? product.sku : '';
   const price = Number(product.price);
@@ -275,7 +285,7 @@ export function buildProductJsonLd(product) {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: product.name,
-    ...(images.length > 0 ? { image: images } : {}),
+    ...(image ? { image } : {}),
     ...(description ? { description } : {}),
     ...(sku.trim() ? { sku } : {}),
     brand: { '@type': 'Brand', name: BRAND_NAME },
