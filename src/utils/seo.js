@@ -1,4 +1,4 @@
-import { CONTACT_EMAIL } from '../data/contact';
+import { CONTACT_EMAIL, contactInfo, socialLinks } from '../data/contact';
 import { RETURN_POLICY, SHIPPING_POLICY } from '../data/storePolicies';
 
 export const SITE_URL = 'https://www.bazookashoecare.com';
@@ -91,6 +91,18 @@ export function toAbsoluteAssetUrl(src) {
   return src.startsWith('/') ? absoluteUrl(src) : src;
 }
 
+/**
+ * The primary image is the first picture the product page shows.
+ * Only a file hosted on this site is used. WooCommerce gallery URLs are left out
+ * until each one has been checked against the live page.
+ */
+export function productPrimaryImage(product) {
+  const src = product?.gallery?.[0]?.src || product?.image || '';
+  const absolute = toAbsoluteAssetUrl(src);
+  if (!absolute.startsWith(`${SITE_URL}/images/`)) return '';
+  return absolute;
+}
+
 /** title/description/path/image for a product detail (output of mapStoreProductDetail). */
 export function productSeo(product) {
   return {
@@ -101,7 +113,7 @@ export function productSeo(product) {
         .join(' – '),
     ),
     path: productPath(product.id),
-    image: product.gallery?.[0]?.src || product.image,
+    image: productPrimaryImage(product),
     type: 'product',
   };
 }
@@ -171,11 +183,6 @@ const dayRange = ({ min, max }) => ({
   unitCode: 'DAY',
 });
 
-/** Google requires SKUs without whitespace; such WooCommerce SKUs are left out of structured data. */
-export function isValidSku(sku) {
-  return typeof sku === 'string' && sku.length > 0 && !/\s/u.test(sku);
-}
-
 /** Offer-level shipping details (free shipping within Thailand). */
 export function buildOfferShippingDetails() {
   const s = SHIPPING_POLICY.structured;
@@ -210,10 +217,7 @@ export function buildStorePoliciesJsonLd() {
   return {
     '@context': 'https://schema.org',
     '@type': 'OnlineStore',
-    '@id': ORGANIZATION_ID,
-    name: SITE_NAME,
-    url: `${SITE_URL}/`,
-    email: CONTACT_EMAIL,
+    ...organizationProfile(),
     hasMerchantReturnPolicy: {
       '@type': 'MerchantReturnPolicy',
       '@id': RETURN_POLICY_ID,
@@ -234,29 +238,69 @@ export function buildStorePoliciesJsonLd() {
   };
 }
 
-/** Product JSON-LD built only from the fields the product page renders. */
+/** Public profile shared by the homepage Organization and the policy-page OnlineStore. */
+function organizationProfile() {
+  const sameAs = [...contactInfo, ...socialLinks]
+    .map((item) => item.href)
+    .filter((href) => typeof href === 'string' && href.startsWith('https://'));
+
+  return {
+    '@id': ORGANIZATION_ID,
+    name: SITE_NAME,
+    url: `${SITE_URL}/`,
+    logo: toAbsoluteAssetUrl('/bazooka-logo-black.png'),
+    email: CONTACT_EMAIL,
+    sameAs,
+  };
+}
+
+/** Organization JSON-LD for the homepage. No address or unverified profiles. */
+export function buildOrganizationJsonLd() {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    ...organizationProfile(),
+  };
+}
+
+/**
+ * Product JSON-LD from the same mapped product the page renders.
+ * A missing or non-positive price omits the offer instead of inventing one.
+ * Stock follows the buy button: in stock, or out of stock.
+ */
 export function buildProductJsonLd(product) {
   const url = absoluteUrl(productPath(product.id));
-  const images = (product.gallery || []).map((image) => image.src).filter(Boolean);
+  const image = productPrimaryImage(product);
   const description = product.aboutDescription || product.heroDescription || '';
+  const sku = typeof product.sku === 'string' ? product.sku : '';
+  const price = Number(product.price);
+  const availability =
+    product.isInStock === true
+      ? SCHEMA_AVAILABILITY.instock
+      : product.isInStock === false
+        ? SCHEMA_AVAILABILITY.outofstock
+        : '';
 
   return {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: product.name,
-    ...(images.length > 0 ? { image: images } : {}),
+    ...(image ? { image } : {}),
     ...(description ? { description } : {}),
-    ...(isValidSku(product.sku) ? { sku: product.sku } : {}),
+    ...(sku.trim() ? { sku } : {}),
     brand: { '@type': 'Brand', name: BRAND_NAME },
     url,
-    offers: {
-      '@type': 'Offer',
-      url,
-      price: String(product.price),
-      priceCurrency: product.currency || 'THB',
-      availability:
-        SCHEMA_AVAILABILITY[product.stockStatus] || SCHEMA_AVAILABILITY.outofstock,
-      shippingDetails: buildOfferShippingDetails(),
-    },
+    ...(Number.isFinite(price) && price > 0
+      ? {
+          offers: {
+            '@type': 'Offer',
+            url,
+            price: String(price),
+            priceCurrency: product.currency || 'THB',
+            ...(availability ? { availability } : {}),
+            shippingDetails: buildOfferShippingDetails(),
+          },
+        }
+      : {}),
   };
 }
