@@ -3,7 +3,7 @@
  * - pre-renders public pages to dist/<path>/index.html with that page's title, description, canonical
  *   and Open Graph tags, plus a plain-HTML copy of its main content and links. The React app replaces
  *   that copy on load (createRoot clears #root), so price and stock still come from live data and are
- *   deliberately left out of the pre-rendered HTML;
+ *   deliberately left out of the visible pre-rendered text. Product and organization JSON-LD in the head is a catalog snapshot from this build; useSeo then replaces that single seo-json-ld script with the live product or the same organization profile. A WooCommerce price or stock change stays unseen by no-JS crawlers until the next production build. The store, cart, and checkout are not changed by this step.
  * - keeps the untouched SPA shell as dist/app.html, which vercel.json serves for every other route;
  * - writes dist/sitemap.xml.
  * If products can't be fetched, product pages fall back to the SPA shell and the sitemap copied from
@@ -162,6 +162,7 @@ const rendered = [];
 rendered.push(
   writePage('/', {
     seo: seo.PAGE_SEO.home,
+    jsonLd: seo.buildOrganizationJsonLd(),
     body: [
       '<h1>ดูแลรองเท้าคู่โปรด ได้ครบในเซตเดียว</h1>',
       `<p>${text(seo.DEFAULT_DESCRIPTION)}</p>`,
@@ -194,6 +195,7 @@ for (const product of products) {
   rendered.push(
     writePage(seo.productPath(product.id), {
       seo: seo.productSeo(product),
+      jsonLd: seo.buildProductJsonLd(product),
       body: [
         `<nav aria-label="เส้นทางนำทาง">${link('/', 'หน้าแรก')} / ${link('/products', 'สินค้า')} / ${esc(product.name)}</nav>`,
         `<h1>${esc(product.name)}</h1>`,

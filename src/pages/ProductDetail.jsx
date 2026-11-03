@@ -141,6 +141,7 @@ export default function ProductDetail() {
           title: 'สินค้า',
           path: productPath(productId),
           noindex: notFound,
+          preserveJsonLd: !notFound,
         },
   );
 

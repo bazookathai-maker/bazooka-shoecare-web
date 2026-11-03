@@ -65,6 +65,7 @@ export default function useSeo({
   image,
   type = 'website',
   jsonLd = null,
+  preserveJsonLd = false,
 }) {
   const resolvedTitle = formatTitle({ title, fullTitle });
   const resolvedDescription = description || DEFAULT_DESCRIPTION;
@@ -83,8 +84,8 @@ export default function useSeo({
     setMeta('property', 'og:image', image || DEFAULT_OG_IMAGE);
     setMeta('name', 'twitter:title', resolvedTitle);
     setMeta('name', 'twitter:description', resolvedDescription);
-    setJsonLd(jsonLdText);
-  }, [resolvedTitle, resolvedDescription, noindex, canonical, type, image, jsonLdText]);
+    if (!preserveJsonLd) setJsonLd(jsonLdText);
+  }, [resolvedTitle, resolvedDescription, noindex, canonical, type, image, jsonLdText, preserveJsonLd]);
 
   useEffect(
     () => () => {

@@ -7,12 +7,12 @@ import HomeHowToCareSection from '../components/home/HomeHowToCareSection';
 import HomeReviewsSection from '../components/home/HomeReviewsSection';
 import HomeFaqSection from '../components/home/HomeFaqSection';
 import useSeo from '../hooks/useSeo';
-import { PAGE_SEO } from '../utils/seo';
+import { PAGE_SEO, buildOrganizationJsonLd } from '../utils/seo';
 
 
 
 export default function Home() {
-  useSeo(PAGE_SEO.home);
+  useSeo({ ...PAGE_SEO.home, jsonLd: buildOrganizationJsonLd() });
 
   return (
 
