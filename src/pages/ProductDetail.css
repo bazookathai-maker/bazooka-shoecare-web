@@ -190,6 +190,21 @@
   white-space: pre-line;
 }
 
+.pdp__care-link {
+  max-width: 40rem;
+  margin: 1.25rem 0 0;
+  font-size: var(--text-body);
+  font-weight: var(--font-weight-light);
+  line-height: 1.7;
+}
+
+.pdp__care-link a {
+  color: var(--navy);
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+}
+
 .pdp__highlights {
   background: var(--gray-soft);
 }

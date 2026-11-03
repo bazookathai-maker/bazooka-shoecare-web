@@ -9,6 +9,7 @@ import {
   fetchStoreProducts,
 } from '../api/woocommerce';
 import { LISTING_HIDDEN_PRODUCT_IDS } from '../data/hiddenProducts';
+import { getProductCareLink } from '../data/productCareLinks';
 import { buildProductJsonLd, productPath, productSeo } from '../utils/seo';
 import { trackViewItem } from '../analytics/ga4';
 import { useAnalyticsConsent } from '../components/AnalyticsListener';
@@ -16,6 +17,16 @@ import useSeo from '../hooks/useSeo';
 import './ProductDetail.css';
 
 const PRODUCT_IDS_WITHOUT_RECOMMENDED = new Set(['881', '143', '134']);
+
+function ProductCareLink({ productId }) {
+  const careLink = getProductCareLink(productId);
+  if (!careLink) return null;
+  return (
+    <p className="pdp__care-link">
+      <Link to={careLink.href}>{careLink.label}</Link>
+    </p>
+  );
+}
 
 function DetailStatus({ children, error = false }) {
   return (
@@ -232,6 +243,7 @@ export default function ProductDetail() {
               <h2 className="pdp__section-title">เกี่ยวกับสินค้า</h2>
             </header>
             <p className="pdp__prose">{detail.aboutDescription}</p>
+            {hasHowTo ? null : <ProductCareLink productId={productId} />}
           </div>
         </section>
       ) : null}
@@ -260,6 +272,15 @@ export default function ProductDetail() {
               <h2 className="pdp__section-title">วิธีใช้</h2>
             </header>
             <p className="pdp__prose">{detail.howToText}</p>
+            <ProductCareLink productId={productId} />
+          </div>
+        </section>
+      ) : null}
+
+      {!hasHowTo && !hasAbout && getProductCareLink(productId) ? (
+        <section className="pdp__section" aria-label="บทความที่เกี่ยวข้อง">
+          <div className="container pdp__section-inner">
+            <ProductCareLink productId={productId} />
           </div>
         </section>
       ) : null}
