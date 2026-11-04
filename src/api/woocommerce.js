@@ -839,6 +839,45 @@ function shortenHeroText(text, maxLen = 140) {
   return `${(cut > maxLen * 0.5 ? sliced.slice(0, cut) : sliced).trim()}…`;
 }
 
+/**
+ * Corrects two audited phrases in WooCommerce copy without replacing the product,
+ * its price, or its stock. Other products and unknown wording pass through.
+ */
+const PRODUCT_COPY_CLARIFICATIONS = {
+  130: [
+    [
+      'ฟื้นฟูหนังกลับให้กลับมาดูดีได้ในขั้นตอนเดียว',
+      'ปัดฝุ่นด้วยด้านขนก่อน แล้วใช้ด้านยางกับคราบที่ฝัง คราบบางชนิดอาจยังเหลือ',
+    ],
+    ['ฝังในเนื้อผ้า', 'ฝังบนผิวหนังกลับ'],
+  ],
+  145: [
+    [
+      'ฟื้นฟูหนังกลับให้กลับมาดูดีได้ในขั้นตอนเดียว',
+      'ปัดฝุ่นด้วยด้านขนก่อน แล้วใช้ด้านยางกับคราบที่ฝัง คราบบางชนิดอาจยังเหลือ',
+    ],
+    ['ฝังในเนื้อผ้า', 'ฝังบนผิวหนังกลับ'],
+  ],
+  128: [
+    [
+      'เพราะเวลาเปียกจะขึ้นรอยด่าง และไม่สามารถทำความสะอาดได้',
+      'เพราะถ้าเปียกน้ำจะเสี่ยงขึ้นรอยด่าง',
+    ],
+  ],
+  881: [
+    [
+      'เพราะเวลาเปียกจะขึ้นรอยด่าง และไม่สามารถทำความสะอาดได้',
+      'เพราะถ้าเปียกน้ำจะเสี่ยงขึ้นรอยด่าง',
+    ],
+  ],
+};
+
+export function clarifyProductCopy(productId, text) {
+  const rules = PRODUCT_COPY_CLARIFICATIONS[Number(productId)];
+  if (!rules || !text) return text;
+  return rules.reduce((value, [from, to]) => value.split(from).join(to), String(text));
+}
+
 function shortenStockLabel(wooProduct) {
   if (!wooProduct.is_in_stock) return 'สินค้าหมด';
   return 'มีสินค้า';
@@ -858,7 +897,7 @@ export function mapStoreProduct(wooProduct) {
   const primaryImage = applyPrimaryImageOverride(wooProduct.id, name, gallery);
   const filterCategory = resolveFilterCategory(wooProduct);
   const shortDescription = stripHtml(wooProduct.short_description);
-  const description = stripHtml(wooProduct.description);
+  const description = clarifyProductCopy(wooProduct.id, stripHtml(wooProduct.description));
   const cardDescription = shortDescription || description;
   const categories = Array.isArray(wooProduct.categories)
     ? wooProduct.categories.map((item) => ({
@@ -903,7 +942,7 @@ export function mapStoreProduct(wooProduct) {
 
 export function mapStoreProductDetail(wooProduct) {
   const product = mapStoreProduct(wooProduct);
-  const descLines = cleanDescriptionLines(wooProduct.description);
+  const descLines = cleanDescriptionLines(clarifyProductCopy(wooProduct.id, wooProduct.description));
   const shortLines = cleanDescriptionLines(wooProduct.short_description);
   const aboutDescription = extractAboutText(descLines);
   const howToText = extractHowToText(descLines);
