@@ -30,18 +30,21 @@ function renderBlock(block) {
   return '';
 }
 
-function renderVideo(src) {
-  return `<figure class="longform-article__video"><video src="${esc(src)}" muted playsinline preload="metadata"></video></figure>`;
+function renderVideo(src, caption) {
+  const captionHtml = caption
+    ? `<figcaption class="longform-article__video-caption">${esc(caption)}</figcaption>`
+    : '';
+  return `<figure class="longform-article__video"><video src="${esc(src)}" muted playsinline preload="metadata"></video>${captionHtml}</figure>`;
 }
 
 /** Shared by React's matching component and the HTML pre-render. */
-export function renderArticleHtml({ title, blocks, className, videoSrc }) {
+export function renderArticleHtml({ title, blocks, className, videoSrc, videoCaption }) {
   const parts = [];
   let placed = false;
   blocks.forEach((block) => {
     parts.push(renderBlock(block));
     if (!placed && videoSrc && block.type === 'p') {
-      parts.push(renderVideo(videoSrc));
+      parts.push(renderVideo(videoSrc, videoCaption));
       placed = true;
     }
   });

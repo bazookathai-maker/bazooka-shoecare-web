@@ -202,6 +202,7 @@ export default function ArticleDetail() {
               blocks={guide.blocks}
               className={guide.articleClass || 'longform-article'}
               videoSrc={guide.embedVideo ? guide.video : undefined}
+              videoCaption={guide.embedVideo ? guide.videoCaption : undefined}
             />
           ) : null}
 
