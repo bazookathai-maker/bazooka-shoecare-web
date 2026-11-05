@@ -282,7 +282,12 @@ rendered.push(
     body: [
       '<h1>FAQ</h1>',
       '<p>คำตอบสั้น ๆ เกี่ยวกับสินค้า การสั่งซื้อ และการจัดส่ง</p>',
-      faqItems.map((item) => `<h2>${esc(item.question)}</h2><p>${text(item.answer)}</p>`).join(''),
+      faqItems
+        .map((item) => {
+          const related = (item.links || []).map((entry) => link(entry.href, entry.label)).join(' · ');
+          return `<h2>${esc(item.question)}</h2><p>${text(item.answer)}${related ? ` ${related}` : ''}</p>`;
+        })
+        .join(''),
     ].join(''),
   }),
 );

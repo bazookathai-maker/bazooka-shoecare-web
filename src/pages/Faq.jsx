@@ -1,5 +1,5 @@
 import { useEffect, useId, useMemo, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import ScrollReveal from '../components/ScrollReveal';
 import { FAQ_CATEGORIES, faqItems } from '../data/faqPage';
 import useSeo from '../hooks/useSeo';
@@ -43,7 +43,20 @@ function FaqAccordionItem({ faq, isOpen, onToggle }) {
         aria-labelledby={buttonId}
         hidden={!isOpen}
       >
-        <p className="faq-page__answer">{faq.answer}</p>
+        <p className="faq-page__answer">
+          {faq.answer}
+          {faq.links?.length ? (
+            <>
+              {' '}
+              {faq.links.map((item, index) => (
+                <span key={item.href}>
+                  {index > 0 ? ' · ' : ''}
+                  <Link to={item.href}>{item.label}</Link>
+                </span>
+              ))}
+            </>
+          ) : null}
+        </p>
       </div>
     </article>
   );
@@ -66,7 +79,7 @@ export default function Faq() {
       if (!matchesCategory) return false;
       if (!query) return true;
 
-      const haystack = `${faq.question} ${faq.answer}`.toLowerCase();
+      const haystack = `${faq.question} ${faq.answer} ${(faq.links || []).map((item) => item.label).join(' ')}`.toLowerCase();
       return haystack.includes(query);
     });
   }, [activeCategory, searchQuery]);
