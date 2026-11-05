@@ -72,7 +72,12 @@ function storeProductsHtml(articleId) {
   const products = getArticleStoreProducts(articleId);
   if (!products.length) return '';
   return `<aside aria-label="สินค้าที่เกี่ยวข้อง"><h2>สินค้าที่เกี่ยวข้อง</h2><ul>${products
-    .map((item) => `<li>${link(item.href, item.label)}</li>`)
+    .map((item) => {
+      const image = item.image
+        ? `<img src="${esc(item.image)}" alt="" width="72" height="72">`
+        : '';
+      return `<li><a href="${esc(item.href)}">${image}${esc(item.label)}</a></li>`;
+    })
     .join('')}</ul></aside>`;
 }
 

@@ -1,3 +1,4 @@
+import { CATALOG_PRIMARY_IMAGES } from '../data/catalogPrimaryImages';
 import { resolveThaiWooStateCode } from '../data/thaiWooStates';
 import { getCustomerToken } from './customerAuth';
 
@@ -631,19 +632,8 @@ function mapWooCategoryToFilter(category) {
  * Uncategorized Woo products whose names were rewritten for display; the name heuristics
  * below would otherwise move them to a different filter tab.
  */
-/** Local studio stills. Each entry replaces only that product's primary image. */
-const PRIMARY_IMAGE_OVERRIDES = {
-  881: '/images/complete-sneaker-care.jpg',
-  145: '/images/duo-set-1.jpg',
-  143: '/images/pro3-1.jpg',
-  136: '/images/pro2.jpg',
-  134: '/images/refresh-spray.jpg',
-  128: '/images/protector-spray.jpg',
-  68: '/images/pro1.jpg',
-  140: '/images/pro4.jpg',
-  130: '/images/suede-brush.jpg',
-  126: '/images/cleaner-2.jpg',
-};
+/** Same studio stills the product page shows. Woo package graphics are not used. */
+const PRIMARY_IMAGE_OVERRIDES = CATALOG_PRIMARY_IMAGES;
 
 /**
  * Extra product-page stills after the card cover.

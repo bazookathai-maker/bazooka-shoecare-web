@@ -22,7 +22,16 @@ function ArticleStoreProducts({ articleId }) {
       <ul className="hub-links__list">
         {products.map((item) => (
           <li key={item.href}>
-            <Link to={item.href} className="hub-links__card">
+            <Link to={item.href} className="hub-links__card hub-links__card--with-thumb">
+              {item.image ? (
+                <img
+                  className="hub-links__thumb"
+                  src={item.image}
+                  alt=""
+                  width="72"
+                  height="72"
+                />
+              ) : null}
               <span className="hub-links__card-text">{item.label}</span>
               <span className="hub-links__card-arrow" aria-hidden="true">›</span>
             </Link>

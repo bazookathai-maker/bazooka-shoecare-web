@@ -1,3 +1,4 @@
+import { getCatalogPrimaryImage } from './catalogPrimaryImages';
 import { careGuides, getTopicRelatedGuides } from './careGuides';
 import { homeFaqs } from './homeFaq';
 import { findProductBySlug } from './products';
@@ -161,10 +162,17 @@ function toHubLink(type, id, label) {
   return { href: '#', label };
 }
 
-/** Shop links for an article. Only confirmed product ids are returned. */
+/** Shop links for an article. Images come from the product page's primary image. */
 export function getArticleStoreProducts(articleId) {
   const ids = articleRelations[articleId]?.products ?? [];
-  return ids.map((id) => STORE_PRODUCT_LINKS[id]).filter(Boolean);
+  return ids
+    .map((id) => {
+      const link = STORE_PRODUCT_LINKS[id];
+      if (!link) return null;
+      const image = getCatalogPrimaryImage(id);
+      return image ? { ...link, image } : { ...link };
+    })
+    .filter(Boolean);
 }
 
 function mapIds(type, ids, labelFn) {
