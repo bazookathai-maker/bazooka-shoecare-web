@@ -10,11 +10,21 @@ export const hubRoutes = {
   product: (slug) => `/products/${slug}`,
 };
 
+/**
+ * Real shop URLs for products already named in the suede article.
+ * Labels match the article text. No prices or stock are stored here.
+ */
+const STORE_PRODUCT_LINKS = {
+  130: { href: '/products/130', label: 'แปรงทำความสะอาดหนังกลับ 2 in 1' },
+  128: { href: '/products/128', label: 'สเปรย์กันน้ำรองเท้า' },
+  145: { href: '/products/145', label: 'ชุดสเปรย์กันน้ำรองเท้าและแปรงหนังกลับ' },
+};
+
 const articleRelations = {
   'suede-clean': {
     faqs: ['suede-cleaning', 'protector-benefits', 'water-needed'],
     articles: ['protect-refresh', 'lazy-sneaker-care'],
-    products: ['suede-brush-2in1', 'promo-pair-bundle', 'bazooka-spray-twin-pack'],
+    products: ['130', '128', '145'],
   },
   'white-canvas': {
     faqs: ['water-needed'],
@@ -146,9 +156,15 @@ function toHubLink(type, id, label) {
     return { href: hubRoutes.faq(id), label };
   }
   if (type === 'product') {
-    return { href: hubRoutes.product(id), label };
+    return STORE_PRODUCT_LINKS[id] ?? { href: hubRoutes.product(id), label };
   }
   return { href: '#', label };
+}
+
+/** Shop links for an article. Only confirmed product ids are returned. */
+export function getArticleStoreProducts(articleId) {
+  const ids = articleRelations[articleId]?.products ?? [];
+  return ids.map((id) => STORE_PRODUCT_LINKS[id]).filter(Boolean);
 }
 
 function mapIds(type, ids, labelFn) {
@@ -168,7 +184,11 @@ export function getArticleRelatedContent(articleId) {
   return {
     faqs: mapIds('faq', relations.faqs, getFaqQuestion),
     articles: mapIds('article', relations.articles, getArticleTitle),
-    products: mapIds('product', relations.products.filter(isProductLinkable), getProductLabel),
+    products: relations.products.flatMap((id) => {
+      if (STORE_PRODUCT_LINKS[id]) return [STORE_PRODUCT_LINKS[id]];
+      if (!isProductLinkable(id)) return [];
+      return [toHubLink('product', id, getProductLabel(id))];
+    }),
   };
 }
 

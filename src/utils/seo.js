@@ -1,4 +1,5 @@
 import { CONTACT_EMAIL, contactInfo, socialLinks } from '../data/contact';
+import { getArticleStoreProducts } from '../data/knowledgeHub';
 import { RETURN_POLICY, SHIPPING_POLICY } from '../data/storePolicies';
 
 export const SITE_URL = 'https://www.bazookashoecare.com';
@@ -130,8 +131,21 @@ export function articleSeo(article) {
 }
 
 /** Article JSON-LD for a guide whose visible title, description and image are already set. No dates, prices or reviews. */
+function organizationReference(includeId) {
+  return {
+    '@type': 'Organization',
+    ...(includeId ? { '@id': ORGANIZATION_ID } : {}),
+    name: SITE_NAME,
+    url: `${SITE_URL}/`,
+  };
+}
+
 export function buildArticleJsonLd(article) {
   const page = articleSeo(article);
+  const isSuedeArticle = article?.id === 'suede-clean' || article?.slug === 'suede-clean';
+  const mentionedProducts = isSuedeArticle ? getArticleStoreProducts('suede-clean') : [];
+  const organization = organizationReference(isSuedeArticle);
+
   return {
     '@context': 'https://schema.org',
     '@type': 'Article',
@@ -143,16 +157,18 @@ export function buildArticleJsonLd(article) {
       '@id': absoluteUrl(page.path),
     },
     ...(page.image ? { image: page.image } : {}),
-    author: {
-      '@type': 'Organization',
-      name: SITE_NAME,
-      url: `${SITE_URL}/`,
-    },
-    publisher: {
-      '@type': 'Organization',
-      name: SITE_NAME,
-      url: `${SITE_URL}/`,
-    },
+    ...(mentionedProducts.length
+      ? {
+          mentions: mentionedProducts.map((item) => ({
+            '@type': 'Product',
+            '@id': `${absoluteUrl(item.href)}#product`,
+            name: item.label,
+            url: absoluteUrl(item.href),
+          })),
+        }
+      : {}),
+    author: organization,
+    publisher: organization,
   };
 }
 
@@ -284,6 +300,7 @@ export function buildProductJsonLd(product) {
   return {
     '@context': 'https://schema.org',
     '@type': 'Product',
+    '@id': `${url}#product`,
     name: product.name,
     ...(image ? { image } : {}),
     ...(description ? { description } : {}),
