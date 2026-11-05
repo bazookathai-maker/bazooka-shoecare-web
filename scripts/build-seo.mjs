@@ -35,6 +35,7 @@ let contact;
 let hiddenIds;
 let policies;
 let productCareLinks;
+let getArticleStoreProducts;
 try {
   [
     seo,
@@ -47,6 +48,7 @@ try {
     { LISTING_HIDDEN_PRODUCT_IDS: hiddenIds },
     policies,
     productCareLinks,
+    { getArticleStoreProducts },
   ] = await Promise.all(
       [
         '/src/utils/seo.js',
@@ -59,10 +61,24 @@ try {
         '/src/data/hiddenProducts.js',
         '/src/data/storePolicies.js',
         '/src/data/productCareLinks.js',
+        '/src/data/knowledgeHub.js',
       ].map((id) => vite.ssrLoadModule(id)),
     );
 } finally {
   await vite.close();
+}
+
+function storeProductsHtml(articleId) {
+  const products = getArticleStoreProducts(articleId);
+  if (!products.length) return '';
+  return `<aside aria-label="สินค้าที่เกี่ยวข้อง"><h2>สินค้าที่เกี่ยวข้อง</h2><ul>${products
+    .map((item) => {
+      const image = item.image
+        ? `<img src="${esc(item.image)}" alt="" width="72" height="72">`
+        : '';
+      return `<li><a href="${esc(item.href)}">${image}${esc(item.label)}</a></li>`;
+    })
+    .join('')}</ul></aside>`;
 }
 
 function esc(value) {
@@ -246,7 +262,7 @@ for (const guide of careGuides) {
             blocks: guide.blocks,
             className: guide.articleClass || 'longform-article',
             videoSrc: guide.embedVideo ? guide.video : undefined,
-          })}`
+          })}${storeProductsHtml(guide.id)}`
         : [
             `<p>${link('/articles', '← กลับไปดูบทความทั้งหมด')}</p>`,
             '<h1>เรื่องราวการดูแลรองเท้า</h1>',

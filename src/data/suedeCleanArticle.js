@@ -1,12 +1,13 @@
 /** Approved suede-care article. React and the build-time pre-render both read this. */
 import { renderArticleHtml } from './articleHtml';
+import { getCatalogPrimaryImage } from './catalogPrimaryImages';
 
 export const SUEDE_CLEAN_TITLE = 'รองเท้าหนังกลับทำความสะอาดยังไง';
 
 export const SUEDE_CLEAN_DESCRIPTION =
   'วิธีทำความสะอาดรองเท้าหนังกลับคือปัดฝุ่นด้วยด้านขนของแปรงหนังกลับ 2 in 1 ในทิศทางเดียวกัน ใช้ด้านยางเบา ๆ กับคราบที่ฝัง และเลี่ยงน้ำปริมาณมาก เมื่อแห้งแล้วค่อยพ่นสเปรย์ปกป้อง';
 
-export const SUEDE_CLEAN_COVER = '/images/suede-brush.jpg';
+export const SUEDE_CLEAN_COVER = getCatalogPrimaryImage(130);
 
 export const suedeCleanBlocks = [
   {
@@ -21,7 +22,7 @@ export const suedeCleanBlocks = [
   },
   {
     type: 'figure',
-    src: '/images/suede-brush.jpg',
+    src: getCatalogPrimaryImage(130),
     alt: 'แปรงทำความสะอาดหนังกลับ BAZOOKA แสดงด้านขนและด้านยาง',
     caption: 'รูปสินค้าในสตูดิโอ แสดงด้านขนและด้านยางของแปรง ไม่ใช่ภาพสาธิตบนรองเท้า',
     eager: true,
@@ -59,7 +60,7 @@ export const suedeCleanBlocks = [
   { type: 'h2', text: 'ดูแลหลังทำความสะอาด' },
   {
     type: 'figure',
-    src: '/images/protector-spray.jpg',
+    src: getCatalogPrimaryImage(128),
     alt: 'สเปรย์กันน้ำรองเท้า BAZOOKA',
     caption: 'รูปสินค้าในสตูดิโอของสเปรย์กันน้ำรองเท้า ไม่ใช่ภาพสาธิตบนรองเท้า',
   },
@@ -87,7 +88,7 @@ export const suedeCleanBlocks = [
   },
   {
     type: 'figure',
-    src: '/images/duo-set-1.jpg',
+    src: getCatalogPrimaryImage(145),
     alt: 'ชุดสเปรย์กันน้ำและแปรงหนังกลับ BAZOOKA',
     caption: 'รูปสินค้าในสตูดิโอของชุดสเปรย์กันน้ำและแปรงหนังกลับ ไม่ใช่ภาพสาธิตบนรองเท้า',
   },

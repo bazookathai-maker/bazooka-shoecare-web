@@ -6,9 +6,41 @@ import ScrollReveal from '../components/ScrollReveal';
 import LongformArticle from '../components/LongformArticle';
 import { WP_ARTICLES_ENABLED, fetchWpPostBySlug } from '../api/wordpress';
 import { getCareGuideBySlug } from '../data/careGuides';
+import { getArticleStoreProducts } from '../data/knowledgeHub';
 import { articlePath, articleSeo, buildArticleJsonLd } from '../utils/seo';
 import useSeo from '../hooks/useSeo';
+import '../components/HubRelatedContent.css';
 import './Articles.css';
+
+function ArticleStoreProducts({ articleId }) {
+  const products = getArticleStoreProducts(articleId);
+  if (!products.length) return null;
+
+  return (
+    <aside className="hub-links-group hub-links-group--article" aria-label="สินค้าที่เกี่ยวข้อง">
+      <h2 className="hub-links-group__title">สินค้าที่เกี่ยวข้อง</h2>
+      <ul className="hub-links__list">
+        {products.map((item) => (
+          <li key={item.href}>
+            <Link to={item.href} className="hub-links__card hub-links__card--with-thumb">
+              {item.image ? (
+                <img
+                  className="hub-links__thumb"
+                  src={item.image}
+                  alt=""
+                  width="72"
+                  height="72"
+                />
+              ) : null}
+              <span className="hub-links__card-text">{item.label}</span>
+              <span className="hub-links__card-arrow" aria-hidden="true">›</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </aside>
+  );
+}
 
 function formatArticleDate(isoDate) {
   if (!isoDate) return '';
@@ -172,6 +204,8 @@ export default function ArticleDetail() {
               videoSrc={guide.embedVideo ? guide.video : undefined}
             />
           ) : null}
+
+          {!loading && guide ? <ArticleStoreProducts articleId={guide.id} /> : null}
 
           {!loading && guide && !guide.longform ? (
             <ScrollReveal>

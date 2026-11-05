@@ -82,6 +82,23 @@
   }
 }
 
+.hub-links__card--with-thumb {
+  justify-content: flex-start;
+}
+
+.hub-links__card--with-thumb .hub-links__card-arrow {
+  margin-left: auto;
+}
+
+.hub-links__thumb {
+  width: 72px;
+  height: 72px;
+  flex: 0 0 72px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: #f3f5f7;
+}
+
 .hub-links__card-text {
   font-size: 0.875rem;
   font-weight: var(--font-weight-medium);
