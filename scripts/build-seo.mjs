@@ -262,6 +262,7 @@ for (const guide of careGuides) {
             blocks: guide.blocks,
             className: guide.articleClass || 'longform-article',
             videoSrc: guide.embedVideo ? guide.video : undefined,
+            videoCaption: guide.embedVideo ? guide.videoCaption : undefined,
           })}${storeProductsHtml(guide.id)}`
         : [
             `<p>${link('/articles', '← กลับไปดูบทความทั้งหมด')}</p>`,

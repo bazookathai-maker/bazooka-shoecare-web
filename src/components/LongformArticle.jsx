@@ -39,7 +39,13 @@ function ArticleBlock({ block }) {
   return null;
 }
 
-export default function LongformArticle({ title, blocks, className, videoSrc }) {
+export default function LongformArticle({
+  title,
+  blocks,
+  className,
+  videoSrc,
+  videoCaption,
+}) {
   const videoAfterFirstParagraph = Boolean(videoSrc) && blocks[0]?.type === 'p';
   const head = videoAfterFirstParagraph ? blocks.slice(0, 1) : [];
   const tail = videoAfterFirstParagraph ? blocks.slice(1) : blocks;
@@ -53,6 +59,9 @@ export default function LongformArticle({ title, blocks, className, videoSrc }) 
       {videoSrc ? (
         <div className="longform-article__video">
           <ArticleCardVideo src={videoSrc} title={title} isActive />
+          {videoCaption ? (
+            <p className="longform-article__video-caption">{videoCaption}</p>
+          ) : null}
         </div>
       ) : null}
       {tail.map((block, index) => (

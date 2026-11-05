@@ -803,9 +803,20 @@
 
 .longform-article__video {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
   width: 100%;
   margin: 0 0 2.25rem;
+}
+
+.longform-article__video-caption {
+  width: min(100%, 36rem);
+  margin: 0.75rem 0 0;
+  text-align: center;
+  font-family: var(--font-family);
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
 }
 
 .longform-article__video video {

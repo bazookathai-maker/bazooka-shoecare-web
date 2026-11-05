@@ -91,7 +91,10 @@ export const careGuides = [
     longform: true,
     blocks: suedeCleanBlocks,
     articleClass: 'suede-article',
+    embedVideo: true,
     video: '/videos/articles/suede-care-guide.mp4',
+    videoCaption:
+      'วิดีโอสาธิตการใช้ด้านขนของแปรงหนังกลับ 2 in 1 และการพ่น Protector Spray ของ BAZOOKA บนรองเท้าหนังกลับ',
     products: [
       { label: 'BAZOOKA โปรจับคู่', image: '/products/product-2.jpg.png' },
       { label: 'BAZOOKA สเปรย์ x 2', image: '/products/product-11.jpg.png' },
