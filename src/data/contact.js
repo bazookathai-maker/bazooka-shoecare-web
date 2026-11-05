@@ -35,4 +35,5 @@ export const socialLinks = [
   { id: 'instagram', label: 'Instagram', href: 'https://www.instagram.com/bazookashoecare/' },
   { id: 'tiktok', label: 'TikTok', href: 'https://www.tiktok.com/@bazookashoecare' },
   { id: 'youtube', label: 'YouTube', href: 'https://www.youtube.com/@bazookathailand' },
+  { id: 'shopee', label: 'Shopee', href: 'https://shopee.co.th/bazookath' },
 ];
