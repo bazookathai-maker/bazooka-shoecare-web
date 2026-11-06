@@ -24,6 +24,12 @@ import {
   onCloudBlocks,
 } from './onCloudArticle';
 import {
+  STUDS_COVER,
+  STUDS_DESCRIPTION,
+  STUDS_TITLE,
+  studsBlocks,
+} from './studsArticle';
+import {
   RUNNING_SHOE_COVER,
   RUNNING_SHOE_DESCRIPTION,
   RUNNING_SHOE_TITLE,
@@ -52,6 +58,7 @@ export const ARTICLE_CATEGORIES = [
   { id: 'suede-care', label: 'หนังกลับ' },
   { id: 'protector-spray', label: 'การปกป้อง' },
   { id: 'running-shoes', label: 'รองเท้าวิ่ง' },
+  { id: 'football-boots', label: 'รองเท้าสตั๊ด' },
   { id: 'deodorizer', label: 'ดับกลิ่น' },
   { id: 'crocs-care', label: 'CROCS' },
 ];
@@ -197,22 +204,18 @@ export const careGuides = [
   {
     id: 'storage-odor-prevent',
     slug: 'storage-odor-prevent',
-    topic: 'running-shoes',
-    category: TOPIC_LABELS['running-shoes'],
+    topic: 'football-boots',
+    category: TOPIC_LABELS['football-boots'],
     publishedAt: '2025-08-02',
-    cover: '/products/product-16.jpg.jpg',
-    title: 'ทําความสะอาดรองเท้าสตั๊ด',
-    summary:
-      'รองเท้าสตั๊ดต้องเจอกับดิน โคลน และหญ้าอยู่เป็นประจำ การทำความสะอาดอย่างถูกวิธีจะช่วยรักษาสภาพรองเท้า ลดกลิ่นอับ และยืดอายุการใช้งานได้ยาวนานขึ้น',
+    cover: STUDS_COVER,
+    title: STUDS_TITLE,
+    description: STUDS_DESCRIPTION,
+    summary: STUDS_DESCRIPTION,
+    longform: true,
+    blocks: studsBlocks,
+    articleClass: 'longform-article',
     video: null,
-    products: [
-      { label: 'สเปรย์รีเฟรช', image: '/products/product-16.jpg.jpg' },
-      {
-        label: 'ซื้อ 2 แถม 1 สเปรย์รีเฟรช',
-        image: '/products/product-25.jpg.jpg',
-      },
-      { label: 'BAZOOKA คลีนเนอร์', image: '/products/product-5.jpg.jpg' },
-    ],
+    products: [],
   },
   {
     id: 'shoe-deodorize',

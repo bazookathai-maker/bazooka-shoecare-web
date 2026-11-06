@@ -61,9 +61,9 @@ const articleRelations = {
     products: ['126', '68', '134'],
   },
   'storage-odor-prevent': {
-    faqs: ['shoe-types', 'water-needed'],
-    articles: ['white-sneaker-restore', 'rain-wet-clean'],
-    products: ['bazooka-cleaner-cloth-brush', 'refresh-spray-portable'],
+    faqs: [],
+    articles: ['shoe-deodorize'],
+    products: ['126', '68', '134'],
   },
   'lazy-sneaker-care': {
     faqs: ['water-needed', 'shoe-types'],
