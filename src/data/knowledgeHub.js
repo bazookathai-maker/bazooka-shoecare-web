@@ -56,9 +56,9 @@ const articleRelations = {
     products: ['126', '68', '134'],
   },
   'rain-wet-clean': {
-    faqs: ['shoe-types', 'water-needed', 'protector-benefits'],
-    articles: ['white-sneaker-restore', 'protect-refresh'],
-    products: ['bazooka-cleaner-cloth-brush', 'bazooka-spray-twin-pack'],
+    faqs: [],
+    articles: ['white-sneaker-restore'],
+    products: ['126', '68', '134'],
   },
   'storage-odor-prevent': {
     faqs: ['shoe-types', 'water-needed'],

@@ -18,6 +18,12 @@ import {
   shoeDeodorizeBlocks,
 } from './shoeDeodorizeArticle';
 import {
+  ON_CLOUD_COVER,
+  ON_CLOUD_DESCRIPTION,
+  ON_CLOUD_TITLE,
+  onCloudBlocks,
+} from './onCloudArticle';
+import {
   RUNNING_SHOE_COVER,
   RUNNING_SHOE_DESCRIPTION,
   RUNNING_SHOE_TITLE,
@@ -178,16 +184,15 @@ export const careGuides = [
     topic: 'running-shoes',
     category: TOPIC_LABELS['running-shoes'],
     publishedAt: '2025-08-18',
-    cover: '/products/product-5.jpg.jpg',
-    title: 'ทําความสะอาดรองเท้า ON CLOUD',
-    summary:
-      'รองเท้าวิ่ง ON CLOUD ควรทำความสะอาดอย่างถูกวิธี เพื่อช่วยรักษาความสะอาด ยืดอายุการใช้งาน และคงประสิทธิภาพการวิ่งได้ยาวนานขึ้น',
+    cover: ON_CLOUD_COVER,
+    title: ON_CLOUD_TITLE,
+    description: ON_CLOUD_DESCRIPTION,
+    summary: ON_CLOUD_DESCRIPTION,
+    longform: true,
+    blocks: onCloudBlocks,
+    articleClass: 'longform-article',
     video: null,
-    products: [
-      { label: 'BAZOOKA คลีนเนอร์', image: '/products/product-5.jpg.jpg' },
-      { label: 'BAZOOKA โปรจับคู่', image: '/products/product-2.jpg.png' },
-      { label: 'สเปรย์รีเฟรช', image: '/products/product-16.jpg.jpg' },
-    ],
+    products: [],
   },
   {
     id: 'storage-odor-prevent',

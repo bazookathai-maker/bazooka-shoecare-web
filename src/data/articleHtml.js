@@ -8,11 +8,12 @@ function esc(value) {
 
 function renderParts(parts) {
   return parts
-    .map((part) =>
-      part.href
-        ? `<a href="${esc(part.href)}">${esc(part.text)}</a>`
-        : esc(part.text),
-    )
+    .map((part) => {
+      if (!part.href) return esc(part.text);
+      const external = /^https?:\/\//i.test(part.href);
+      const attrs = external ? ' target="_blank" rel="noopener noreferrer"' : '';
+      return `<a href="${esc(part.href)}"${attrs}>${esc(part.text)}</a>`;
+    })
     .join('');
 }
 
