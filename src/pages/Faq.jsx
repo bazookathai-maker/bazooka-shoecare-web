@@ -114,7 +114,7 @@ export default function Faq() {
       <header className="faq-page__hero">
         <div className="container">
           <ScrollReveal className="faq-page__hero-inner">
-            <h1 className="faq-page__title">FAQ</h1>
+            <h1 className="faq-page__title">คำถามที่พบบ่อย</h1>
             <p className="faq-page__subtitle">
               คำตอบสั้น ๆ เกี่ยวกับสินค้า การสั่งซื้อ และการจัดส่ง
             </p>

@@ -30,6 +30,7 @@ let homeCatalog;
 let careGuides;
 let renderArticleHtml;
 let faqItems;
+let homeFaqs;
 let googleReviews;
 let contact;
 let hiddenIds;
@@ -43,6 +44,7 @@ try {
     homeCatalog,
     { careGuides, renderArticleHtml },
     { faqItems },
+    { homeFaqs },
     { googleReviews },
     contact,
     { LISTING_HIDDEN_PRODUCT_IDS: hiddenIds },
@@ -56,6 +58,7 @@ try {
         '/src/utils/homeCatalog.js',
         '/src/data/careGuides.js',
         '/src/data/faqPage.js',
+        '/src/data/homeFaq.js',
         '/src/data/googleReviews.js',
         '/src/data/contact.js',
         '/src/data/hiddenProducts.js',
@@ -189,6 +192,13 @@ rendered.push(
         : '',
       `<p>${link('/products', 'ดูสินค้าทั้งหมด')}</p>`,
       `<h2>บทความ</h2>${list(careGuides.map((guide) => link(seo.articlePath(guide.slug), guide.title.replace(/\s+/g, ' '))))}`,
+      '<h2>คำถามที่พบบ่อย</h2>',
+      homeFaqs
+        .map((item) => {
+          const related = (item.links || []).map((entry) => link(entry.href, entry.label)).join(' · ');
+          return `<h3>${esc(item.question)}</h3><p>${text(item.answer)}${related ? ` ${related}` : ''}</p>`;
+        })
+        .join(''),
     ].join(''),
   }),
 );
@@ -297,7 +307,7 @@ rendered.push(
   writePage('/faq', {
     seo: seo.PAGE_SEO.faq,
     body: [
-      '<h1>FAQ</h1>',
+      '<h1>คำถามที่พบบ่อย</h1>',
       '<p>คำตอบสั้น ๆ เกี่ยวกับสินค้า การสั่งซื้อ และการจัดส่ง</p>',
       faqItems
         .map((item) => {

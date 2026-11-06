@@ -1,6 +1,6 @@
 import { getCatalogPrimaryImage } from './catalogPrimaryImages';
 import { careGuides, getTopicRelatedGuides } from './careGuides';
-import { homeFaqs } from './homeFaq';
+import { faqItems } from './faqPage';
 import { findProductBySlug } from './products';
 import { getProductDetailBySlug } from './productDetails';
 
@@ -81,7 +81,13 @@ const faqRelations = {
   'water-needed': ['suede-clean'],
   'protector-benefits': ['protect-refresh'],
   'protector-frequency': ['protect-refresh'],
-  'deodorizer-effect': ['white-canvas', 'lazy-sneaker-care'],
+  'deodorizer-effect': [
+    'white-canvas',
+    'suede-clean',
+    'white-sneaker-restore',
+    'rain-wet-clean',
+    'storage-odor-prevent',
+  ],
   'sport-shoe-wash': [
     'white-sneaker-restore',
     'rain-wet-clean',
@@ -144,7 +150,7 @@ function getArticleTitle(id) {
 }
 
 function getFaqQuestion(id) {
-  return homeFaqs.find((item) => item.id === id)?.question ?? id;
+  return faqItems.find((item) => item.id === id)?.question ?? id;
 }
 
 function getProductLabel(slug) {

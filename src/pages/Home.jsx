@@ -26,7 +26,7 @@ export default function Home() {
 
       <HomeReviewsSection />
 
-      <HomeFaqSection ctaOnly />
+      <HomeFaqSection showViewAllCta />
 
     </main>
 
