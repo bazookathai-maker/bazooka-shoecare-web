@@ -143,7 +143,7 @@ function organizationReference(includeId) {
 export function buildArticleJsonLd(article) {
   const page = articleSeo(article);
   const isSuedeArticle = article?.id === 'suede-clean' || article?.slug === 'suede-clean';
-  const mentionedProducts = isSuedeArticle ? getArticleStoreProducts('suede-clean') : [];
+  const mentionedProducts = getArticleStoreProducts(article?.id || article?.slug);
   const organization = organizationReference(isSuedeArticle);
 
   return {

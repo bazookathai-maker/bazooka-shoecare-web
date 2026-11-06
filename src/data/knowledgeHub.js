@@ -12,13 +12,16 @@ export const hubRoutes = {
 };
 
 /**
- * Real shop URLs for products already named in the suede article.
+ * Real shop URLs for products named in an article.
  * Labels match the article text. No prices or stock are stored here.
  */
 const STORE_PRODUCT_LINKS = {
   130: { href: '/products/130', label: 'แปรงทำความสะอาดหนังกลับ 2 in 1' },
   128: { href: '/products/128', label: 'สเปรย์กันน้ำรองเท้า' },
   145: { href: '/products/145', label: 'ชุดสเปรย์กันน้ำรองเท้าและแปรงหนังกลับ' },
+  126: { href: '/products/126', label: 'โฟมทำความสะอาดรองเท้า' },
+  68: { href: '/products/68', label: 'ชุดโฟมทำความสะอาดรองเท้า' },
+  134: { href: '/products/134', label: 'สเปรย์ดับกลิ่นรองเท้า' },
 };
 
 const articleRelations = {
@@ -48,9 +51,9 @@ const articleRelations = {
     products: ['refresh-spray-portable', 'refresh-spray-2plus1'],
   },
   'white-sneaker-restore': {
-    faqs: ['shoe-types', 'water-needed', 'deodorizer-effect'],
-    articles: ['white-canvas', 'shoe-deodorize'],
-    products: ['bazooka-cleaner-cloth-brush', 'set-complete-bazooka'],
+    faqs: [],
+    articles: ['white-canvas', 'shoe-deodorize', 'protect-refresh'],
+    products: ['126', '68', '134'],
   },
   'rain-wet-clean': {
     faqs: ['shoe-types', 'water-needed', 'protector-benefits'],

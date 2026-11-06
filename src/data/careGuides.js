@@ -18,6 +18,13 @@ import {
   shoeDeodorizeBlocks,
 } from './shoeDeodorizeArticle';
 import {
+  RUNNING_SHOE_COVER,
+  RUNNING_SHOE_DESCRIPTION,
+  RUNNING_SHOE_TITLE,
+  RUNNING_SHOE_VIDEO_CAPTION,
+  runningShoeBlocks,
+} from './runningShoeArticle';
+import {
   SUEDE_CLEAN_COVER,
   SUEDE_CLEAN_DESCRIPTION,
   SUEDE_CLEAN_TITLE,
@@ -153,16 +160,17 @@ export const careGuides = [
     topic: 'running-shoes',
     category: TOPIC_LABELS['running-shoes'],
     publishedAt: '2025-09-04',
-    cover: '/products/cleaner-howto-3.jpg',
-    title: 'วิธีทำความสะอาดรองเท้าวิ่งใน 5 นาที',
-    summary:
-      'รองเท้าวิ่งต้องเจอกับเหงื่อและคราบสกปรกเป็นประจำ การดูแลอย่างถูกวิธีช่วยลดกลิ่นอับและยืดอายุการใช้งานได้ยาวนานขึ้น',
+    cover: RUNNING_SHOE_COVER,
+    title: RUNNING_SHOE_TITLE,
+    description: RUNNING_SHOE_DESCRIPTION,
+    summary: RUNNING_SHOE_DESCRIPTION,
+    longform: true,
+    blocks: runningShoeBlocks,
+    articleClass: 'longform-article',
+    embedVideo: true,
     video: '/videos/articles/running-shoe-cleaning.mp4',
-    products: [
-      { label: 'BAZOOKA คลีนเนอร์', image: '/products/product-5.jpg.jpg' },
-      { label: 'BAZOOKA โปรจับคู่', image: '/products/product-2.jpg.png' },
-      { label: 'ชุดครบเซ็ต BAZOOKA', image: '/products/product-27.jpg.jpg' },
-    ],
+    videoCaption: RUNNING_SHOE_VIDEO_CAPTION,
+    products: [],
   },
   {
     id: 'rain-wet-clean',
