@@ -1,7 +1,6 @@
 import { useId, useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import ScrollReveal from '../ScrollReveal';
-import { FaqRelatedArticles } from '../HubRelatedContent';
 import { homeFaqs } from '../../data/homeFaq';
 import './HomeFaqSection.css';
 
@@ -50,8 +49,20 @@ function FaqItem({ faq, index, isOpen, onToggle }) {
         aria-hidden={!isOpen}
       >
         <div className="home-faq__panel-inner">
-          <p className="home-faq__answer">{faq.answer}</p>
-          <FaqRelatedArticles faqId={faq.id} />
+          <p className="home-faq__answer">
+            {faq.answer}
+            {faq.links?.length ? (
+              <>
+                {' '}
+                {faq.links.map((item, linkIndex) => (
+                  <span key={item.href}>
+                    {linkIndex > 0 ? ' · ' : ''}
+                    <Link to={item.href}>{item.label}</Link>
+                  </span>
+                ))}
+              </>
+            ) : null}
+          </p>
         </div>
       </div>
     </article>
