@@ -2,15 +2,21 @@ import { Link } from 'react-router-dom';
 import { ArticleCardVideo } from './ArticleCard';
 
 function ArticleParts({ parts }) {
-  return parts.map((part, index) =>
-    part.href ? (
+  return parts.map((part, index) => {
+    if (!part.href) return <span key={index}>{part.text}</span>;
+    if (/^https?:\/\//i.test(part.href)) {
+      return (
+        <a key={index} href={part.href} target="_blank" rel="noopener noreferrer">
+          {part.text}
+        </a>
+      );
+    }
+    return (
       <Link key={index} to={part.href}>
         {part.text}
       </Link>
-    ) : (
-      <span key={index}>{part.text}</span>
-    ),
-  );
+    );
+  });
 }
 
 function ArticleBlock({ block }) {
