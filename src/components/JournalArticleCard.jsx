@@ -1,17 +1,16 @@
 import { Link } from 'react-router-dom';
+import { getVerifiedArticleDates } from '../utils/seo';
 
 function formatArticleDate(isoDate) {
   if (!isoDate) return '';
+  const parsed = new Date(`${isoDate}T12:00:00`);
+  if (Number.isNaN(parsed.getTime())) return '';
 
-  try {
-    return new Intl.DateTimeFormat('th-TH', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    }).format(new Date(isoDate));
-  } catch {
-    return isoDate;
-  }
+  return new Intl.DateTimeFormat('th-TH', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  }).format(parsed);
 }
 
 function cleanTitle(title = '') {
@@ -23,7 +22,8 @@ export default function JournalArticleCard({ guide }) {
   const cover =
     guide.cover || guide.products?.[0]?.image || '/products/product-5.jpg.jpg';
   const category = guide.category || 'คู่มือดูแล';
-  const dateLabel = formatArticleDate(guide.publishedAt);
+  const publishedAt = getVerifiedArticleDates(guide)?.published || '';
+  const dateLabel = formatArticleDate(publishedAt);
 
   return (
     <article className="journal-article-card">
@@ -35,7 +35,7 @@ export default function JournalArticleCard({ guide }) {
         <div className="journal-article-card__media">
           <img
             src={cover}
-            alt=""
+            alt={guide.coverAlt || ''}
             className="journal-article-card__image"
             loading="lazy"
             decoding="async"
@@ -50,7 +50,7 @@ export default function JournalArticleCard({ guide }) {
             {dateLabel ? (
               <time
                 className="journal-article-card__date"
-                dateTime={guide.publishedAt}
+                dateTime={publishedAt}
               >
                 {dateLabel}
               </time>

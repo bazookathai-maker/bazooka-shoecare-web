@@ -1,4 +1,36 @@
 {
+  "redirects": [
+    {
+      "source": "/articles/storage-odor-prevent",
+      "destination": "/articles/studs-clean",
+      "statusCode": 301
+    },
+    {
+      "source": "/articles/storage-odor-prevent/",
+      "destination": "/articles/studs-clean",
+      "statusCode": 301
+    },
+    {
+      "source": "/articles/rain-wet-clean",
+      "destination": "/articles/on-cloud-clean",
+      "statusCode": 301
+    },
+    {
+      "source": "/articles/rain-wet-clean/",
+      "destination": "/articles/on-cloud-clean",
+      "statusCode": 301
+    },
+    {
+      "source": "/articles/white-sneaker-restore",
+      "destination": "/articles/running-shoe-clean",
+      "statusCode": 301
+    },
+    {
+      "source": "/articles/white-sneaker-restore/",
+      "destination": "/articles/running-shoe-clean",
+      "statusCode": 301
+    }
+  ],
   "headers": [
     {
       "source": "/(account|cart|checkout|order-success|track-order|login|register|featured-products|app.html)",

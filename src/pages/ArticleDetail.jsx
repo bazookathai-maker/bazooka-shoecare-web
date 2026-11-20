@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom';
+import { Link, Navigate, useParams } from 'react-router-dom';
 import ArticleCard from '../components/ArticleCard';
 import { ArticleTopicRelated } from '../components/HubRelatedContent';
 import ScrollReveal from '../components/ScrollReveal';
@@ -7,7 +7,12 @@ import LongformArticle from '../components/LongformArticle';
 import { WP_ARTICLES_ENABLED, fetchWpPostBySlug } from '../api/wordpress';
 import { getCareGuideBySlug } from '../data/careGuides';
 import { getArticleStoreProducts } from '../data/knowledgeHub';
-import { articlePath, articleSeo, buildArticleJsonLd } from '../utils/seo';
+import {
+  articlePath,
+  articleSeo,
+  buildArticleJsonLd,
+  getVerifiedArticleDates,
+} from '../utils/seo';
 import useSeo from '../hooks/useSeo';
 import '../components/HubRelatedContent.css';
 import './Articles.css';
@@ -87,8 +92,6 @@ function WordpressArticleDetail({ post }) {
 
 export default function ArticleDetail() {
   const { slug } = useParams();
-  const [searchParams] = useSearchParams();
-  const faqId = searchParams.get('faq');
 
   const fallbackGuide = getCareGuideBySlug(slug);
   const [post, setPost] = useState(null);
@@ -131,12 +134,12 @@ export default function ArticleDetail() {
   }, [slug]);
 
   const seoSource = post || fallbackGuide;
-  const isLongform = Boolean(fallbackGuide?.longform) && !post;
+  const verifiedDates = !post && fallbackGuide ? getVerifiedArticleDates(fallbackGuide) : null;
   useSeo(
     seoSource
       ? {
           ...articleSeo(seoSource),
-          jsonLd: isLongform ? buildArticleJsonLd(fallbackGuide) : null,
+          jsonLd: !post && fallbackGuide ? buildArticleJsonLd(fallbackGuide) : null,
         }
       : { title: 'บทความ', path: articlePath(slug), noindex: !loading },
   );
@@ -159,14 +162,6 @@ export default function ArticleDetail() {
                 ← กลับไปดูบทความทั้งหมด
               </Link>
             </p>
-            {!isWordpress && !fallbackGuide?.longform ? (
-              <>
-                <h1 className="articles-page__title">เรื่องราวการดูแลรองเท้า</h1>
-                <p className="articles-page__subtitle">
-                  คู่มือดูแลรองเท้าคู่โปรดจาก BAZOOKA
-                </p>
-              </>
-            ) : null}
           </ScrollReveal>
         </div>
       </header>
@@ -202,7 +197,11 @@ export default function ArticleDetail() {
               blocks={guide.blocks}
               className={guide.articleClass || 'longform-article'}
               videoSrc={guide.embedVideo ? guide.video : undefined}
+              videoPoster={guide.embedVideo ? guide.videoPoster : undefined}
+              videoTitle={guide.embedVideo ? guide.videoTitle : undefined}
+              videoDescription={guide.embedVideo ? guide.videoDescription : undefined}
               videoCaption={guide.embedVideo ? guide.videoCaption : undefined}
+              publishedAt={verifiedDates?.published}
             />
           ) : null}
 
@@ -215,7 +214,7 @@ export default function ArticleDetail() {
           ) : null}
 
           {!loading && guide ? (
-            <ArticleTopicRelated slug={guide.slug} faqId={faqId} />
+            <ArticleTopicRelated slug={guide.slug} />
           ) : null}
         </div>
       </section>
