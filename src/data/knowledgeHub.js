@@ -22,57 +22,60 @@ const STORE_PRODUCT_LINKS = {
   126: { href: '/products/126', label: 'โฟมทำความสะอาดรองเท้า' },
   68: { href: '/products/68', label: 'ชุดโฟมทำความสะอาดรองเท้า' },
   134: { href: '/products/134', label: 'สเปรย์ดับกลิ่นรองเท้า' },
+  140: { href: '/products/140', label: 'ชุดโฟมแพ็กคู่' },
+  143: { href: '/products/143', label: 'สเปรย์กันน้ำรองเท้าแพ็กคู่' },
 };
 
 const articleRelations = {
   'suede-clean': {
     faqs: ['suede-cleaning', 'protector-benefits', 'water-needed'],
-    articles: ['protect-refresh', 'lazy-sneaker-care'],
+    articles: ['protect-refresh', 'white-canvas'],
     products: ['130', '128', '145'],
   },
   'white-canvas': {
     faqs: ['water-needed'],
-    articles: ['shoe-cleaner', 'protect-refresh'],
-    products: ['bazooka-cleaner-cloth-brush', 'set-complete-bazooka'],
+    articles: ['shoe-cleaner', 'lazy-sneaker-care', 'protect-refresh'],
+    products: ['126', '68'],
   },
   'shoe-cleaner': {
     faqs: ['water-needed'],
-    articles: ['white-canvas', 'suede-clean'],
-    products: ['bazooka-cleaner-cloth-brush', 'set-complete-bazooka'],
+    articles: ['white-canvas', 'suede-clean', 'lazy-sneaker-care'],
+    products: ['126', '68', '140'],
   },
   'protect-refresh': {
     faqs: ['protector-benefits'],
-    articles: ['suede-clean', 'white-canvas', 'shoe-cleaner'],
-    products: ['bazooka-spray-twin-pack', 'bazooka-spray'],
+    articles: ['suede-clean', 'white-canvas'],
+    products: ['128', '143', '145'],
   },
   'shoe-deodorize': {
     faqs: [],
     articles: ['shoe-cleaner', 'white-canvas'],
-    products: ['refresh-spray-portable', 'refresh-spray-2plus1'],
+    products: ['134'],
   },
-  'white-sneaker-restore': {
+  'running-shoe-clean': {
     faqs: [],
     articles: ['white-canvas', 'shoe-deodorize', 'protect-refresh'],
     products: ['126', '68', '134'],
   },
-  'rain-wet-clean': {
+  'on-cloud-clean': {
     faqs: [],
-    articles: ['white-sneaker-restore'],
-    products: ['126', '68', '134'],
+    articles: ['running-shoe-clean', 'shoe-deodorize'],
+    products: ['134'],
   },
-  'storage-odor-prevent': {
+  'studs-clean': {
     faqs: [],
-    articles: ['shoe-deodorize'],
-    products: ['126', '68', '134'],
+    articles: ['shoe-deodorize', 'running-shoe-clean'],
+    products: ['134'],
   },
   'lazy-sneaker-care': {
     faqs: ['water-needed', 'shoe-types'],
-    articles: ['white-canvas', 'shoe-deodorize'],
-    products: [
-      'bazooka-cleaner-cloth-brush',
-      'promo-pair-bundle',
-      'set-complete-bazooka',
-    ],
+    articles: ['white-canvas', 'shoe-cleaner', 'shoe-deodorize'],
+    products: ['126', '68'],
+  },
+  'crocs-wash': {
+    faqs: [],
+    articles: ['white-canvas', 'suede-clean'],
+    products: [],
   },
 };
 
@@ -84,21 +87,21 @@ const faqRelations = {
   'deodorizer-effect': [
     'white-canvas',
     'suede-clean',
-    'white-sneaker-restore',
-    'rain-wet-clean',
-    'storage-odor-prevent',
+    'running-shoe-clean',
+    'on-cloud-clean',
+    'studs-clean',
   ],
   'sport-shoe-wash': [
-    'white-sneaker-restore',
-    'rain-wet-clean',
-    'storage-odor-prevent',
+    'running-shoe-clean',
+    'on-cloud-clean',
+    'studs-clean',
   ],
   'suede-cleaning': ['shoe-deodorize'],
 };
 
 const productRelations = {
   'bazooka-spray-twin-pack': ['protect-refresh', 'suede-clean'],
-  'bazooka-spray': ['protect-refresh', 'rain-wet-clean'],
+  'bazooka-spray': ['protect-refresh', 'on-cloud-clean'],
   'bazooka-cleaner-cloth-brush': ['suede-clean', 'white-canvas', 'lazy-sneaker-care'],
   'suede-brush-2in1': ['suede-clean'],
   'refresh-spray-portable': ['shoe-deodorize'],
@@ -215,6 +218,29 @@ export function getFaqRelatedArticles(faqId) {
     href: hubRoutes.article(getArticleSlug(id), faqId),
     label: getArticleTitle(id),
   }));
+}
+
+/** Two or three articles chosen by the guide's next question. Never the current page. */
+export function getIntentRelatedArticles(slug) {
+  const current = getCareGuide(slug);
+  const ids = articleRelations[current?.id]?.articles ?? [];
+  const seen = new Set();
+
+  return ids.flatMap((id) => {
+    const guide = getCareGuide(id);
+    if (!guide || guide.slug === current?.slug || seen.has(guide.slug)) return [];
+    seen.add(guide.slug);
+    return [
+      {
+        href: hubRoutes.article(guide.slug),
+        label: guide.title.replace(/\s+/g, ' ').trim(),
+      },
+    ];
+  }).slice(0, 3);
+}
+
+function getCareGuide(id) {
+  return careGuides.find((item) => item.id === id || item.slug === id) ?? null;
 }
 
 export function getTopicRelatedArticles(slug, faqId) {

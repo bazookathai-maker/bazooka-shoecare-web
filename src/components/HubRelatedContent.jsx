@@ -3,8 +3,8 @@ import {
   getArticleRelatedContent,
   getFaqRelatedArticles,
   getProductRelatedArticles,
+  getIntentRelatedArticles,
   getReviewRelatedProduct,
-  getTopicRelatedArticles,
 } from '../data/knowledgeHub';
 import './HubRelatedContent.css';
 
@@ -73,13 +73,13 @@ export function FaqRelatedArticles({ faqId }) {
   );
 }
 
-export function ArticleTopicRelated({ slug, faqId }) {
-  const links = getTopicRelatedArticles(slug, faqId);
+export function ArticleTopicRelated({ slug }) {
+  const links = getIntentRelatedArticles(slug);
   if (!links.length) return null;
 
   return (
     <aside className="hub-links-group hub-links-group--article-topic">
-      <p className="hub-links-group__heading">เนื้อหาเพิ่มเติมในหัวข้อนี้</p>
+      <p className="hub-links-group__heading">บทความที่เกี่ยวข้อง</p>
       <ul className="hub-links__list">
         {links.map((link) => (
           <li key={link.href}>

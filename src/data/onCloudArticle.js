@@ -127,7 +127,7 @@ export const onCloudBlocks = [
       {
         text: 'วิธีใช้โฟมกับรองเท้าวิ่งทั่วไปอยู่ที่บทความแยก ซึ่งเป็นเนื้อหาเพิ่มเติมของ BAZOOKA และไม่ใช่คำแนะนำเฉพาะรุ่นจาก On อ่านได้ที่',
       },
-      { text: 'วิธีทำความสะอาดรองเท้าวิ่ง', href: '/articles/white-sneaker-restore' },
+      { text: 'วิธีทำความสะอาดรองเท้าวิ่ง', href: '/articles/running-shoe-clean' },
     ],
   },
   { type: 'h2', text: 'คำถามที่พบบ่อย' },

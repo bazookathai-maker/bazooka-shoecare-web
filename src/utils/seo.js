@@ -131,7 +131,25 @@ export function articleSeo(article) {
   };
 }
 
-/** Article JSON-LD for a guide whose visible title, description and image are already set. No dates, prices or reviews. */
+/**
+ * Dates that are both shown from `publishedAt` and tied to the commit that added the article.
+ * Other `publishedAt` values are earlier than the content history, so they stay off the schema.
+ */
+const VERIFIED_ARTICLE_DATES = {
+  'shoe-cleaner': {
+    published: '2026-11-03',
+    modified: '2026-11-03',
+  },
+};
+
+export function getVerifiedArticleDates(article) {
+  const record =
+    VERIFIED_ARTICLE_DATES[article?.slug] || VERIFIED_ARTICLE_DATES[article?.id];
+  if (!record || article?.publishedAt !== record.published) return null;
+  return record;
+}
+
+/** Article JSON-LD for a guide whose visible title and description are already set. No prices or reviews. */
 function organizationReference(includeId) {
   return {
     '@type': 'Organization',
@@ -146,6 +164,8 @@ export function buildArticleJsonLd(article) {
   const isSuedeArticle = article?.id === 'suede-clean' || article?.slug === 'suede-clean';
   const mentionedProducts = getArticleStoreProducts(article?.id || article?.slug);
   const organization = organizationReference(isSuedeArticle);
+  const dates = getVerifiedArticleDates(article);
+  const imageOnPage = Boolean(article?.longform && page.image);
 
   return {
     '@context': 'https://schema.org',
@@ -157,7 +177,10 @@ export function buildArticleJsonLd(article) {
       '@type': 'WebPage',
       '@id': absoluteUrl(page.path),
     },
-    ...(page.image ? { image: page.image } : {}),
+    ...(dates
+      ? { datePublished: dates.published, dateModified: dates.modified }
+      : {}),
+    ...(imageOnPage ? { image: page.image } : {}),
     ...(mentionedProducts.length
       ? {
           mentions: mentionedProducts.map((item) => ({

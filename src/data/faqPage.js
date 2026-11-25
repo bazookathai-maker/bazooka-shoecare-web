@@ -76,9 +76,9 @@ export const faqItems = [
     links: [
       { href: '/articles/white-canvas', label: 'วิธีทำความสะอาดรองเท้าผ้าใบสีขาว' },
       { href: '/articles/suede-clean', label: 'วิธีทำความสะอาดรองเท้าหนังกลับ' },
-      { href: '/articles/white-sneaker-restore', label: 'วิธีทำความสะอาดรองเท้าวิ่ง' },
-      { href: '/articles/rain-wet-clean', label: 'วิธีทำความสะอาดรองเท้า ON CLOUD' },
-      { href: '/articles/storage-odor-prevent', label: 'วิธีทำความสะอาดรองเท้าสตั๊ด' },
+      { href: '/articles/running-shoe-clean', label: 'วิธีทำความสะอาดรองเท้าวิ่ง' },
+      { href: '/articles/on-cloud-clean', label: 'วิธีทำความสะอาดรองเท้า ON CLOUD' },
+      { href: '/articles/studs-clean', label: 'วิธีทำความสะอาดรองเท้าสตั๊ด' },
       { href: '/products/126', label: 'โฟมทำความสะอาดรองเท้า' },
       { href: '/products/128', label: 'สเปรย์กันน้ำรองเท้า' },
       { href: '/products/134', label: 'สเปรย์ดับกลิ่นรองเท้า' },
@@ -91,9 +91,9 @@ export const faqItems = [
     answer:
       'ไม่มีวิธีซักเครื่องเดียวสำหรับรองเท้ากีฬาทุกชนิด คำแนะนำเรื่องซักเครื่องต้องดูชนิดรองเท้าและผู้ผลิต รองเท้าวิ่งในบทความ BAZOOKA ใช้โฟมกับคราบ รองเท้า ON CLOUD ตาม On ไม่ควรใส่รองเท้าทั้งคู่เข้าเครื่องซักผ้าหรือเครื่องอบ รองเท้าสตั๊ดให้แยกตามคำแนะนำของ Nike, adidas และ PUMA',
     links: [
-      { href: '/articles/white-sneaker-restore', label: 'วิธีทำความสะอาดรองเท้าวิ่ง' },
-      { href: '/articles/rain-wet-clean', label: 'วิธีทำความสะอาดรองเท้า ON CLOUD' },
-      { href: '/articles/storage-odor-prevent', label: 'วิธีทำความสะอาดรองเท้าสตั๊ด' },
+      { href: '/articles/running-shoe-clean', label: 'วิธีทำความสะอาดรองเท้าวิ่ง' },
+      { href: '/articles/on-cloud-clean', label: 'วิธีทำความสะอาดรองเท้า ON CLOUD' },
+      { href: '/articles/studs-clean', label: 'วิธีทำความสะอาดรองเท้าสตั๊ด' },
     ],
   },
   {

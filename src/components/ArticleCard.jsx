@@ -127,13 +127,16 @@ function ArticleCardVideoPlaceholder({ title }) {
   );
 }
 
-export function ArticleCardVideo({ src, title, isActive }) {
+export function ArticleCardVideo({ src, title, isActive, poster }) {
   const videoRef = useRef(null);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [activeSrc, setActiveSrc] = useState('');
+  const [playing, setPlaying] = useState(false);
+  const mediaSrc = activeSrc === src ? src : '';
+  const isPlaying = playing && Boolean(mediaSrc);
 
   useEffect(() => {
     const video = videoRef.current;
-    if (!video) return undefined;
+    if (!video || !mediaSrc) return undefined;
 
     video.muted = true;
     video.defaultMuted = true;
@@ -141,31 +144,44 @@ export function ArticleCardVideo({ src, title, isActive }) {
     const keepMuted = () => {
       if (!video.muted) video.muted = true;
     };
+    let cancelled = false;
+    const start = () => {
+      if (cancelled) return;
+      video.play().then(() => {
+        if (!cancelled) setPlaying(true);
+      }).catch(() => {});
+    };
 
     video.addEventListener('volumechange', keepMuted);
-    return () => video.removeEventListener('volumechange', keepMuted);
-  }, [src]);
+    start();
+
+    return () => {
+      cancelled = true;
+      video.removeEventListener('volumechange', keepMuted);
+    };
+  }, [mediaSrc]);
 
   useEffect(() => {
-    const video = videoRef.current;
-    if (!video || isActive) return;
-
-    video.pause();
-    setIsPlaying(false);
+    if (isActive) return;
+    videoRef.current?.pause();
   }, [isActive]);
 
   const play = useCallback(() => {
     const video = videoRef.current;
     if (!video) return;
     video.muted = true;
-    video.play().then(() => setIsPlaying(true)).catch(() => {});
-  }, []);
+    if (video.getAttribute('src') !== src) {
+      setActiveSrc(src);
+      video.src = src;
+    }
+    video.play().then(() => setPlaying(true)).catch(() => {});
+  }, [src]);
 
   const pause = useCallback(() => {
     const video = videoRef.current;
     if (!video) return;
     video.pause();
-    setIsPlaying(false);
+    setPlaying(false);
   }, []);
 
   const handleToggle = () => {
@@ -185,19 +201,22 @@ export function ArticleCardVideo({ src, title, isActive }) {
       <video
         ref={videoRef}
         className="article-card__video-el"
-        src={src}
+        src={mediaSrc || undefined}
         muted={true}
         defaultMuted
         loop
         playsInline
-        preload="metadata"
+        preload="none"
         controlsList="nodownload nofullscreen noremoteplayback"
         disablePictureInPicture
         aria-hidden="true"
         tabIndex={-1}
-        onPlay={() => setIsPlaying(true)}
-        onPause={() => setIsPlaying(false)}
+        onPlay={() => setPlaying(true)}
+        onPause={() => setPlaying(false)}
       />
+      {poster && !isPlaying ? (
+        <img className="article-card__video-poster" src={poster} alt="" />
+      ) : null}
       {!isPlaying ? (
         <span className="article-card__video-play" aria-hidden="true">
           <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -225,7 +244,11 @@ export default function ArticleCard({ guide, isActive = true, variant = 'carouse
     >
       <div className="article-card__body">
         <div className="article-card__content">
-          <h2 className="article-card__title">{guide.title}</h2>
+          {variant === 'standalone' ? (
+            <h1 className="article-card__title">{guide.title}</h1>
+          ) : (
+            <h2 className="article-card__title">{guide.title}</h2>
+          )}
           <p className="article-card__summary">{guide.summary}</p>
         </div>
 

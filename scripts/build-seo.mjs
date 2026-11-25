@@ -37,6 +37,7 @@ let hiddenIds;
 let policies;
 let productCareLinks;
 let getArticleStoreProducts;
+let getIntentRelatedArticles;
 try {
   [
     seo,
@@ -50,7 +51,7 @@ try {
     { LISTING_HIDDEN_PRODUCT_IDS: hiddenIds },
     policies,
     productCareLinks,
-    { getArticleStoreProducts },
+    { getArticleStoreProducts, getIntentRelatedArticles },
   ] = await Promise.all(
       [
         '/src/utils/seo.js',
@@ -69,6 +70,14 @@ try {
     );
 } finally {
   await vite.close();
+}
+
+function relatedArticlesHtml(slug) {
+  const articles = getIntentRelatedArticles(slug);
+  if (!articles.length) return '';
+  return `<aside aria-label="บทความที่เกี่ยวข้อง"><p>บทความที่เกี่ยวข้อง</p><ul>${articles
+    .map((item) => `<li><a href="${esc(item.href)}">${esc(item.label)}</a></li>`)
+    .join('')}</ul></aside>`;
 }
 
 function storeProductsHtml(articleId) {
@@ -94,6 +103,18 @@ function esc(value) {
 }
 
 const text = (value) => esc(value).replace(/\n+/g, '<br>');
+function verifiedDateHtml(guide) {
+  const published = seo.getVerifiedArticleDates(guide)?.published;
+  if (!published) return '';
+  const parsed = new Date(`${published}T12:00:00`);
+  if (Number.isNaN(parsed.getTime())) return '';
+  const label = new Intl.DateTimeFormat('th-TH', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  }).format(parsed);
+  return `<time datetime="${esc(published)}">${esc(label)}</time>`;
+}
 const link = (href, label) => `<a href="${esc(href)}">${esc(label)}</a>`;
 const careLinkHtml = (productId) => {
   const careLink = productCareLinks.getProductCareLink(productId);
@@ -251,10 +272,13 @@ rendered.push(
       '<h1>Journal</h1>',
       '<p>คู่มือดูแลรองเท้าสั้นๆ จากทีม BAZOOKA</p>',
       list(
-        careGuides.map(
-          (guide) =>
-            `<h2>${link(seo.articlePath(guide.slug), guide.title.replace(/\s+/g, ' '))}</h2><p>${text(guide.summary)}</p>`,
-        ),
+        careGuides.map((guide) => {
+          const title = guide.title.replace(/\s+/g, ' ');
+          const image = guide.cover
+            ? `<img src="${esc(guide.cover)}" alt="${esc(guide.coverAlt || '')}" width="1024" height="1024">`
+            : '';
+          return `<h2>${link(seo.articlePath(guide.slug), title)}</h2>${image}<p>${text(guide.summary)}</p>${verifiedDateHtml(guide)}`;
+        }),
       ),
     ].join(''),
   }),
@@ -262,25 +286,30 @@ rendered.push(
 
 for (const guide of careGuides) {
   const longform = guide.longform === true && Array.isArray(guide.blocks);
+  const verifiedDates = seo.getVerifiedArticleDates(guide);
   rendered.push(
     writePage(seo.articlePath(guide.slug), {
       seo: seo.articleSeo(guide),
-      jsonLd: longform ? seo.buildArticleJsonLd(guide) : undefined,
+      jsonLd: seo.buildArticleJsonLd(guide),
       body: longform
         ? `<p>${link('/articles', '← กลับไปดูบทความทั้งหมด')}</p>${renderArticleHtml({
             title: guide.title,
             blocks: guide.blocks,
             className: guide.articleClass || 'longform-article',
             videoSrc: guide.embedVideo ? guide.video : undefined,
+            videoPoster: guide.embedVideo ? guide.videoPoster : undefined,
+            videoPosterAlt: guide.embedVideo ? guide.videoPosterAlt : undefined,
+            videoTitle: guide.embedVideo ? guide.videoTitle : undefined,
+            videoDescription: guide.embedVideo ? guide.videoDescription : undefined,
             videoCaption: guide.embedVideo ? guide.videoCaption : undefined,
-          })}${storeProductsHtml(guide.id)}`
+            publishedAt: verifiedDates?.published,
+          })}${storeProductsHtml(guide.id)}${relatedArticlesHtml(guide.slug)}`
         : [
             `<p>${link('/articles', '← กลับไปดูบทความทั้งหมด')}</p>`,
-            '<h1>เรื่องราวการดูแลรองเท้า</h1>',
-            `<h2>${text(guide.title)}</h2>`,
+            `<h1>${text(guide.title)}</h1>`,
             `<p>${text(guide.summary)}</p>`,
             guide.products?.length
-              ? `<h3>สินค้าแนะนำ</h3>${list(guide.products.map((item) => esc(item.label)))}`
+              ? `<p>สินค้าแนะนำ</p>${list(guide.products.map((item) => esc(item.label)))}`
               : '',
           ].join(''),
     }),
