@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
+import LocaleLink from '../components/LocaleLink';
+import { useLocale } from '../i18n/LocaleContext';
+import { translateKnown } from '../i18n/knownMessages';
+import { localizedProductName } from '../i18n/productCopy';
 import ThaiAddressSelector from '../components/ThaiAddressSelector';
 import CheckoutFreeShipping from '../components/CheckoutFreeShipping';
 import { useCart } from '../context/CartContext';
@@ -21,6 +25,7 @@ import {
   validateCheckoutCustomerForm,
 } from '../api/woocommerce';
 import { CHECKOUT_PATH, loginPath } from '../utils/authRedirect';
+import { clearCheckoutDraft, readCheckoutDraft, writeCheckoutDraft } from '../utils/checkoutDraft';
 import { trackBeginCheckout } from '../analytics/ga4';
 import { useAnalyticsConsent } from '../components/AnalyticsListener';
 import useSeo from '../hooks/useSeo';
@@ -43,15 +48,25 @@ const initialForm = {
   note: '',
 };
 
+function formFromDraft(source) {
+  const next = { ...initialForm };
+  if (!source) return next;
+  for (const key of Object.keys(initialForm)) {
+    if (typeof source[key] === 'string') next[key] = source[key];
+  }
+  return next;
+}
+
 function formatMoney(value) {
   return `฿${Number(value || 0).toLocaleString('th-TH')}`;
 }
 
 function FieldError({ message }) {
+  const { locale } = useLocale();
   if (!message) return null;
   return (
     <p className="checkout__field-error" role="alert">
-      {message}
+      {translateKnown(locale, message)}
     </p>
   );
 }
@@ -89,7 +104,8 @@ function buildSelectedRatesMap(packages, previousSelected = {}) {
 
 /** Members only: the order APIs enforce this too; the guard just routes shoppers to login. */
 export default function Checkout() {
-  useSeo({ title: 'ชำระเงิน', noindex: true });
+  const { t, localize } = useLocale();
+  useSeo({ title: t.checkout.seoTitle, noindex: true });
   const { ready, isLoggedIn } = useAuth();
 
   if (!ready) {
@@ -97,7 +113,7 @@ export default function Checkout() {
       <main className="checkout checkout--empty">
         <div className="container checkout__empty-inner">
           <p className="checkout__empty-message" role="status">
-            กำลังตรวจสอบการเข้าสู่ระบบ...
+            {t.checkout.checking}
           </p>
         </div>
       </main>
@@ -105,13 +121,15 @@ export default function Checkout() {
   }
 
   if (!isLoggedIn) {
-    return <Navigate to={loginPath(CHECKOUT_PATH)} replace />;
+    return <Navigate to={localize(loginPath(CHECKOUT_PATH))} replace />;
   }
 
   return <CheckoutForm />;
 }
 
 function CheckoutForm() {
+  const { locale, t, localize } = useLocale();
+  const copy = t.checkout;
   const navigate = useNavigate();
   const {
     items,
@@ -124,7 +142,9 @@ function CheckoutForm() {
     hydrating,
   } = useCart();
   const { customer, ready: authReady } = useAuth();
-  const [form, setForm] = useState(initialForm);
+  const identity = !authReady ? '' : customer?.id ? `c:${customer.id}` : 'guest';
+  const restoredDraft = readCheckoutDraft(identity);
+  const [form, setForm] = useState(() => formFromDraft(restoredDraft?.form));
   const [saveAddressToProfile, setSaveAddressToProfile] = useState(true);
   const [fieldErrors, setFieldErrors] = useState({});
   const [showErrors, setShowErrors] = useState(false);
@@ -152,12 +172,15 @@ function CheckoutForm() {
   const [shippingPackages, setShippingPackages] = useState([]);
   const [selectedRates, setSelectedRates] = useState({});
   const [shippingChecked, setShippingChecked] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState(() =>
+    typeof restoredDraft?.paymentMethod === 'string' ? restoredDraft.paymentMethod : '',
+  );
 
   const formRef = useRef(form);
-  const touchedFieldsRef = useRef(new Set());
+  const touchedFieldsRef = useRef(
+    new Set((restoredDraft?.touched || []).filter((field) => field in initialForm)),
+  );
   const prefillRef = useRef({ owner: '', fields: new Set() });
-  const identity = !authReady ? '' : customer?.id ? `c:${customer.id}` : 'guest';
   const identityRef = useRef(identity);
 
   useEffect(() => {
@@ -173,6 +196,15 @@ function CheckoutForm() {
   useEffect(() => {
     formRef.current = form;
   }, [form]);
+
+  useEffect(() => {
+    if (!identity || identity === 'guest') return;
+    writeCheckoutDraft(identity, {
+      form,
+      paymentMethod,
+      touched: [...touchedFieldsRef.current],
+    });
+  }, [form, paymentMethod, identity]);
 
   useEffect(() => {
     const options = getRestTestPaymentOptions();
@@ -526,13 +558,14 @@ function CheckoutForm() {
       if (!stripeSession.url) {
         throw new Error('ไม่พบ Stripe Checkout URL จากเซิร์ฟเวอร์');
       }
+      clearCheckoutDraft();
       resetCartAfterOrder();
       window.location.assign(stripeSession.url);
     } catch (err) {
       if (err?.status === 401) {
         // Session expired mid-checkout: the cart is untouched, so just sign in again.
         // Login clears the stale token itself when it sees this reason.
-        navigate(loginPath(CHECKOUT_PATH), {
+        navigate(localize(loginPath(CHECKOUT_PATH)), {
           replace: true,
           state: { reason: 'session_expired' },
         });
@@ -602,12 +635,12 @@ function CheckoutForm() {
     return (
       <main className="checkout checkout--empty">
         <div className="container checkout__empty-inner">
-          <p className="section-label">ชำระเงิน</p>
-          <h1 className="checkout__title">ตะกร้าสินค้า</h1>
-          <p className="checkout__empty-message">ยังไม่มีสินค้าในตะกร้า</p>
-          <Link to="/products" className="btn-primary checkout__shop-link">
-            กลับไปที่สินค้า
-          </Link>
+          <p className="section-label">{copy.label}</p>
+          <h1 className="checkout__title">{copy.cartTitle}</h1>
+          <p className="checkout__empty-message">{copy.empty}</p>
+          <LocaleLink to="/products" className="btn-primary checkout__shop-link">
+            {copy.shop}
+          </LocaleLink>
         </div>
       </main>
     );
@@ -617,11 +650,11 @@ function CheckoutForm() {
     <main className="checkout">
       <header className="checkout__hero">
         <div className="container">
-          <p className="section-label">ชำระเงิน</p>
-          <h1 className="checkout__title">ชำระเงิน</h1>
+          <p className="section-label">{copy.label}</p>
+          <h1 className="checkout__title">{copy.title}</h1>
           {customer?.email ? (
             <p className="checkout__account-note">
-              สั่งซื้อในบัญชี {customer.email}
+              {copy.account(customer.email)}
             </p>
           ) : null}
         </div>
@@ -629,7 +662,7 @@ function CheckoutForm() {
 
       <div className="container checkout__layout">
         <aside className="checkout__summary">
-          <h2 className="checkout__section-title">สรุปคำสั่งซื้อ</h2>
+          <h2 className="checkout__section-title">{copy.summary}</h2>
           <ul className="checkout__items">
             {items.map((item) => (
               <li key={item.key || item.id} className="checkout__item">
@@ -637,7 +670,7 @@ function CheckoutForm() {
                   {item.image ? (
                     <img
                       src={item.image}
-                      alt={item.name}
+                      alt={localizedProductName(item.id, item.name, locale)}
                       className="checkout__item-image"
                       loading="lazy"
                       decoding="async"
@@ -645,10 +678,10 @@ function CheckoutForm() {
                   ) : null}
                 </div>
                 <div className="checkout__item-details">
-                  <h3 className="checkout__item-name">{item.name}</h3>
+                  <h3 className="checkout__item-name">{localizedProductName(item.id, item.name, locale)}</h3>
                   <div className="checkout__item-meta">
                     <p className="checkout__item-unit">
-                      จำนวน {item.quantity}
+                      {copy.quantity(item.quantity)}
                     </p>
                     <p className="checkout__item-price">
                       {formatMoney(
@@ -664,27 +697,27 @@ function CheckoutForm() {
           </ul>
 
           <div className="checkout__total-row checkout__total-row--sub">
-            <span className="checkout__total-label">ยอดสินค้า</span>
+            <span className="checkout__total-label">{copy.subtotal}</span>
             <span className="checkout__total-value">
               {formatMoney(itemsTotal)}
             </span>
           </div>
           <div className="checkout__total-row checkout__total-row--sub">
-            <span className="checkout__total-label">ค่าจัดส่ง</span>
+            <span className="checkout__total-label">{copy.shipping}</span>
             <span className="checkout__total-value">
               {formatMoney(displayShippingTotal)}
             </span>
           </div>
           {Number(discountTotal) > 0 ? (
             <div className="checkout__total-row checkout__total-row--sub">
-              <span className="checkout__total-label">ส่วนลด</span>
+              <span className="checkout__total-label">{copy.discount}</span>
               <span className="checkout__total-value">
                 -{formatMoney(discountTotal)}
               </span>
             </div>
           ) : null}
           <div className="checkout__total-row">
-            <span className="checkout__total-label">รวมทั้งสิ้น</span>
+            <span className="checkout__total-label">{copy.total}</span>
             <span className="checkout__total-value">
               {formatMoney(displayOrderTotal)}
             </span>
@@ -693,10 +726,10 @@ function CheckoutForm() {
 
         <form className="checkout__form" onSubmit={handleSubmit} noValidate>
           <section className="checkout__block">
-            <h2 className="checkout__section-title">ข้อมูลลูกค้า</h2>
+            <h2 className="checkout__section-title">{copy.customer}</h2>
             <div className="checkout__fields">
               <label className="checkout__field">
-                <span className="checkout__field-label">ชื่อ</span>
+                <span className="checkout__field-label">{copy.firstName}</span>
                 <input
                   type="text"
                   name="firstName"
@@ -714,7 +747,7 @@ function CheckoutForm() {
               </label>
 
               <label className="checkout__field">
-                <span className="checkout__field-label">นามสกุล</span>
+                <span className="checkout__field-label">{copy.lastName}</span>
                 <input
                   type="text"
                   name="lastName"
@@ -732,7 +765,7 @@ function CheckoutForm() {
               </label>
 
               <label className="checkout__field">
-                <span className="checkout__field-label">อีเมล</span>
+                <span className="checkout__field-label">{copy.email}</span>
                 <input
                   type="email"
                   name="email"
@@ -750,7 +783,7 @@ function CheckoutForm() {
               </label>
 
               <label className="checkout__field">
-                <span className="checkout__field-label">เบอร์โทรศัพท์</span>
+                <span className="checkout__field-label">{copy.phone}</span>
                 <input
                   type="tel"
                   name="phone"
@@ -770,14 +803,14 @@ function CheckoutForm() {
           </section>
 
           <section className="checkout__block checkout__block--address">
-            <h2 className="checkout__section-title">ที่อยู่จัดส่ง / ใบเสร็จ</h2>
+            <h2 className="checkout__section-title">{copy.addressTitle}</h2>
             <p className="checkout__payment-note">
-              ที่อยู่เดียวกันใช้ทั้ง Billing และ Shipping ไปยัง WooCommerce
+              {copy.addressNote}
             </p>
             <div className="checkout__fields">
               <label className="checkout__field checkout__field--full">
                 <span className="checkout__field-label">
-                  บ้านเลขที่ / อาคาร / หมู่บ้าน / ชั้น / ห้อง
+                  {copy.addressLine}
                 </span>
                 <input
                   type="text"
@@ -789,7 +822,7 @@ function CheckoutForm() {
                   className={`checkout__input${
                     visibleErrors.addressLine ? ' checkout__input--error' : ''
                   }`}
-                  placeholder="เช่น 99/99 หมู่บ้าน... อาคาร... ชั้น..."
+                  placeholder={copy.addressPlaceholder}
                   disabled={busy}
                   aria-invalid={Boolean(visibleErrors.addressLine)}
                 />
@@ -810,7 +843,7 @@ function CheckoutForm() {
               />
 
               <label className="checkout__field checkout__field--full">
-                <span className="checkout__field-label">รายละเอียดเพิ่มเติม</span>
+                <span className="checkout__field-label">{copy.extra}</span>
                 <textarea
                   name="addressNote"
                   value={form.addressNote}
@@ -818,7 +851,7 @@ function CheckoutForm() {
                   onBlur={handleBlur}
                   rows={2}
                   className="checkout__input checkout__textarea checkout__textarea--compact"
-                  placeholder="จุดสังเกต / ฝากไว้ที่นิติ / เบอร์ติดต่อสำรอง"
+                  placeholder={copy.extraPlaceholder}
                   disabled={busy}
                 />
               </label>
@@ -830,7 +863,7 @@ function CheckoutForm() {
                     onChange={(e) => setSaveAddressToProfile(e.target.checked)}
                     disabled={busy}
                   />
-                  <span>บันทึกชื่อ เบอร์โทร และที่อยู่นี้ไว้ในบัญชีสำหรับการสั่งซื้อครั้งถัดไป</span>
+                  <span>{copy.saveProfile}</span>
                 </label>
               ) : null}
             </div>
@@ -839,17 +872,17 @@ function CheckoutForm() {
           <CheckoutFreeShipping disabled={busy} />
 
           <section className="checkout__block">
-            <h2 className="checkout__section-title">หมายเหตุคำสั่งซื้อ</h2>
+            <h2 className="checkout__section-title">{copy.orderNote}</h2>
             <div className="checkout__fields">
               <label className="checkout__field checkout__field--full">
-                <span className="checkout__field-label">หมายเหตุ</span>
+                <span className="checkout__field-label">{copy.note}</span>
                 <textarea
                   name="note"
                   value={form.note}
                   onChange={handleChange}
                   rows={2}
                   className="checkout__input checkout__textarea checkout__textarea--compact"
-                  placeholder="หมายเหตุเพิ่มเติม (ถ้ามี)"
+                  placeholder={copy.notePlaceholder}
                   disabled={busy}
                 />
               </label>
@@ -857,11 +890,11 @@ function CheckoutForm() {
           </section>
 
           <section className="checkout__block">
-            <h2 className="checkout__section-title">วิธีชำระเงิน</h2>
+            <h2 className="checkout__section-title">{copy.payment}</h2>
             <div
               className="checkout__payments"
               role="radiogroup"
-              aria-label="วิธีชำระเงิน"
+              aria-label={copy.payment}
             >
               {paymentOptions.map((opt) => {
                 const checked = paymentMethod === opt.id;
@@ -881,25 +914,25 @@ function CheckoutForm() {
                       className="checkout__payment-input"
                       disabled={busy}
                     />
-                    <span className="checkout__payment-label">{opt.label}</span>
+                    <span className="checkout__payment-label">{translateKnown(locale, opt.label)}</span>
                   </label>
                 );
               })}
             </div>
             <p className="checkout__payment-note">
-              ชำระผ่านพร้อมเพย์ด้วย Stripe — ระบบจะพาไปหน้าชำระเงินหลังยืนยันคำสั่งซื้อ
+              {copy.paymentNote}
             </p>
           </section>
 
           {error ? (
             <p className="checkout__error" role="alert">
-              {error}
+              {translateKnown(locale, error)}
             </p>
           ) : null}
 
           {statusMessage ? (
             <p className="checkout__status" role="status">
-              {statusMessage}
+              {translateKnown(locale, statusMessage)}
             </p>
           ) : null}
 
@@ -908,7 +941,7 @@ function CheckoutForm() {
             className="checkout__submit btn-primary"
             disabled={busy || !items.length}
           >
-            {placingOrder ? 'กำลังยืนยันคำสั่งซื้อ...' : 'ยืนยันคำสั่งซื้อ'}
+            {placingOrder ? copy.placing : copy.place}
           </button>
         </form>
       </div>

@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
+import LocaleLink from '../components/LocaleLink';
+import { useLocale } from '../i18n/LocaleContext';
 import { useAuth } from '../context/AuthContext';
 import { fetchOrderPaymentStatus } from '../api/customerAuth';
 import { trackPurchase } from '../analytics/ga4';
@@ -55,6 +57,8 @@ const COPY = {
  * Read-only; the URL's session_id is never treated as proof of payment.
  */
 function PaymentStatus({ orderId, orderNumber }) {
+  const { locale, t } = useLocale();
+  const orders = t.orders;
   const location = useLocation();
   const { ready, isLoggedIn } = useAuth();
   const [phase, setPhase] = useState('checking');
@@ -130,7 +134,7 @@ function PaymentStatus({ orderId, orderNumber }) {
   let current = phase;
   if (!orderId) current = 'notFound';
   else if (ready && !isLoggedIn) current = 'login';
-  const copy = COPY[current];
+  const copy = orders.paymentStates[current] || orders.paymentStates.unavailable;
   const canRetry = current === 'timeout' || current === 'unavailable';
   const displayNumber = order?.number || orderNumber;
 
@@ -138,7 +142,7 @@ function PaymentStatus({ orderId, orderNumber }) {
     <main className="order-page">
       <header className="order-page__hero">
         <div className="container">
-          <p className="section-label">คำสั่งซื้อ</p>
+          <p className="section-label">{orders.label}</p>
           <h1 className="order-page__title">{copy.title}</h1>
         </div>
       </header>
@@ -157,14 +161,14 @@ function PaymentStatus({ orderId, orderNumber }) {
           {displayNumber ? (
             <div className="order-meta" style={{ marginBottom: '1.25rem' }}>
               <div className="order-meta__row" style={{ textAlign: 'center' }}>
-                <span className="order-meta__label">เลขที่คำสั่งซื้อ</span>
+                <span className="order-meta__label">{orders.orderNumberLabel}</span>
                 <span className="order-meta__value order-success-card__order-id">
                   #{displayNumber}
                 </span>
               </div>
               {order?.total ? (
                 <div className="order-meta__row" style={{ textAlign: 'center' }}>
-                  <span className="order-meta__label">ยอดชำระ</span>
+                  <span className="order-meta__label">{orders.amount}</span>
                   <span className="order-meta__value">
                     ฿{Number(order.total).toLocaleString('th-TH')}
                   </span>
@@ -172,8 +176,12 @@ function PaymentStatus({ orderId, orderNumber }) {
               ) : null}
               {order?.status_label && (current === 'paid' || current === 'unpaid') ? (
                 <div className="order-meta__row" style={{ textAlign: 'center' }}>
-                  <span className="order-meta__label">สถานะ</span>
-                  <span className="order-meta__value">{order.status_label}</span>
+                  <span className="order-meta__label">{orders.status}</span>
+                  <span className="order-meta__value">
+                    {locale === 'en' && t.account.status[order.status]
+                      ? t.account.status[order.status]
+                      : order.status_label}
+                  </span>
                 </div>
               ) : null}
             </div>
@@ -187,26 +195,26 @@ function PaymentStatus({ orderId, orderNumber }) {
           >
             {canRetry ? (
               <button type="button" className="btn-primary" onClick={retry}>
-                ตรวจสอบอีกครั้ง
+                {orders.checkAgain}
               </button>
             ) : null}
             {current === 'login' ? (
-              <Link
+              <LocaleLink
                 to={loginPath(`${location.pathname}${location.search}`)}
                 className="btn-primary"
               >
-                เข้าสู่ระบบ
-              </Link>
+                {orders.signIn}
+              </LocaleLink>
             ) : null}
-            <Link
+            <LocaleLink
               to="/account"
               className={canRetry || current === 'login' ? 'btn-outline' : 'btn-primary'}
             >
-              ดูคำสั่งซื้อของฉัน
-            </Link>
-            <Link to="/products" className="btn-outline">
-              กลับไปที่สินค้า
-            </Link>
+              {orders.myOrders}
+            </LocaleLink>
+            <LocaleLink to="/products" className="btn-outline">
+              {orders.backToProducts}
+            </LocaleLink>
           </div>
         </div>
       </div>
@@ -215,7 +223,9 @@ function PaymentStatus({ orderId, orderNumber }) {
 }
 
 export default function OrderSuccess() {
-  useSeo({ title: 'คำสั่งซื้อ', noindex: true });
+  const { t } = useLocale();
+  const orders = t.orders;
+  useSeo({ title: orders.successTitle, noindex: true });
   const location = useLocation();
   const search = new URLSearchParams(location.search);
   const orderNumber =
@@ -234,21 +244,21 @@ export default function OrderSuccess() {
     <main className="order-page">
       <header className="order-page__hero">
         <div className="container">
-          <p className="section-label">คำสั่งซื้อ</p>
-          <h1 className="order-page__title">ได้รับคำสั่งซื้อแล้ว</h1>
+          <p className="section-label">{orders.label}</p>
+          <h1 className="order-page__title">{orders.receivedTitle}</h1>
         </div>
       </header>
 
       <div className="container order-page__body">
         <div className="order-card order-success-card">
           <h2 className="order-card__title" style={{ textAlign: 'center' }}>
-            ขอบคุณสำหรับคำสั่งซื้อ
+            {orders.thanks}
           </h2>
 
           {orderNumber ? (
             <div className="order-meta" style={{ marginBottom: '1.25rem' }}>
               <div className="order-meta__row" style={{ textAlign: 'center' }}>
-                <span className="order-meta__label">เลขที่คำสั่งซื้อ</span>
+                <span className="order-meta__label">{orders.orderNumberLabel}</span>
                 <span className="order-meta__value order-success-card__order-id">
                   #{orderNumber}
                 </span>
@@ -262,24 +272,24 @@ export default function OrderSuccess() {
             </div>
           ) : (
             <p className="order-success-card__text">
-              ไม่พบเลขที่คำสั่งซื้อในหน้านี้ — ให้ตรวจสอบในอีเมลหรือติดตามคำสั่งซื้อ
+              {orders.missingNumber}
             </p>
           )}
 
           <p className="order-success-card__text">
-            คำสั่งซื้อถูกบันทึกในระบบแล้ว สถานะการชำระเงินจะอัปเดตเมื่อได้รับการยืนยันจากระบบชำระเงิน
+            {orders.recorded}
           </p>
 
           <div
             className="order-page__actions"
             style={{ justifyContent: 'center' }}
           >
-            <Link to="/account" className="btn-primary">
-              ดูคำสั่งซื้อของฉัน
-            </Link>
-            <Link to="/products" className="btn-outline">
-              กลับไปที่สินค้า
-            </Link>
+            <LocaleLink to="/account" className="btn-primary">
+              {orders.myOrders}
+            </LocaleLink>
+            <LocaleLink to="/products" className="btn-outline">
+              {orders.backToProducts}
+            </LocaleLink>
           </div>
         </div>
       </div>

@@ -1,14 +1,17 @@
+import { useLocale } from '../i18n/LocaleContext';
+
 /**
  * Static free-shipping option for Checkout (UI only; shippingTotal stays 0 on order).
  */
 export default function CheckoutFreeShipping({ disabled = false }) {
+  const { t } = useLocale();
   return (
     <section className="checkout__block">
-      <h2 className="checkout__section-title">วิธีจัดส่ง</h2>
+      <h2 className="checkout__section-title">{t.checkout.shippingTitle}</h2>
       <div
         className="checkout__payments"
         role="radiogroup"
-        aria-label="วิธีจัดส่ง"
+        aria-label={t.checkout.shippingTitle}
       >
         <label className="checkout__payment checkout__payment--active checkout__payment--single-row">
           <input
@@ -22,7 +25,7 @@ export default function CheckoutFreeShipping({ disabled = false }) {
             aria-checked="true"
           />
           <span className="checkout__payment-label checkout__payment-label--with-price">
-            <span>จัดส่งฟรี</span>
+            <span>{t.checkout.freeShipping}</span>
             <span className="checkout__payment-price">฿0</span>
           </span>
         </label>

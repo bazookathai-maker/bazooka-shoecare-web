@@ -3,6 +3,7 @@ import { careGuides } from '../data/careGuides';
 import { LISTING_HIDDEN_PRODUCT_IDS } from '../data/hiddenProducts';
 import { isDisplayOnlyProduct } from '../data/productDetails';
 import { formatListingName } from './productListingCopy';
+import { ARTICLE_SEARCH_EN } from '../i18n/pageCopy';
 
 function isVisibleCatalogProduct(product) {
   return !LISTING_HIDDEN_PRODUCT_IDS.has(String(product?.id));
@@ -38,7 +39,7 @@ function getProductHref(product) {
  */
 export function searchSiteContent(
   rawQuery,
-  { productLimit = 8, articleLimit = 8, productsCatalog = null } = {},
+  { productLimit = 8, articleLimit = 8, productsCatalog = null, locale = 'th' } = {},
 ) {
   const query = normalize(rawQuery);
   if (!query) {
@@ -54,7 +55,7 @@ export function searchSiteContent(
     .filter(isVisibleCatalogProduct)
     .filter((product) => {
       const haystack = normalize(
-        [product.name, product.category, product.description, product.sku]
+        [product.name, product.sourceName, product.category, product.description, product.sku]
           .filter(Boolean)
           .join(' '),
       );
@@ -71,22 +72,28 @@ export function searchSiteContent(
 
   const articles = careGuides
     .filter((guide) => {
+      const english = ARTICLE_SEARCH_EN[guide.slug];
       const haystack = normalize(
-        [guide.title, guide.category, guide.summary].filter(Boolean).join(' '),
+        [guide.title, guide.category, guide.summary, english?.title, english?.category]
+          .filter(Boolean)
+          .join(' '),
       );
       return haystack.includes(query);
     })
     .slice(0, articleLimit)
-    .map((guide) => ({
-      id: guide.id,
-      title: String(guide.title || '')
-        .replace(/\n+/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim(),
-      category: guide.category || 'บทความ',
-      image: guide.cover || guide.products?.[0]?.image || '',
-      href: `/articles/${guide.slug}`,
-    }));
+    .map((guide) => {
+      const english = locale === 'en' ? ARTICLE_SEARCH_EN[guide.slug] : null;
+      return {
+        id: guide.id,
+        title: english?.title || String(guide.title || '')
+          .replace(/\n+/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim(),
+        category: english?.category || guide.category || (locale === 'en' ? 'Journal' : 'บทความ'),
+        image: guide.cover || guide.products?.[0]?.image || '',
+        href: `/articles/${guide.slug}`,
+      };
+    });
 
   return { query, products, articles };
 }

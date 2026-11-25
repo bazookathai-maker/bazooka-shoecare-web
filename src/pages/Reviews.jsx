@@ -2,12 +2,14 @@ import { useMemo, useState } from 'react';
 import ScrollReveal from '../components/ScrollReveal';
 import { REVIEW_FILTERS, googleReviews } from '../data/googleReviews';
 import useSeo from '../hooks/useSeo';
-import { PAGE_SEO } from '../utils/seo';
+import { INDEX_ENGLISH } from '../utils/seo';
+import { useLocale } from '../i18n/LocaleContext';
 import './Reviews.css';
 
 function ReviewStars({ count = 5 }) {
+  const { t } = useLocale();
   return (
-    <span className="review-card__stars" aria-label={`${count} จาก 5 ดาว`}>
+    <span className="review-card__stars" aria-label={t.catalog.stars(count)}>
       {Array.from({ length: 5 }, (_, index) => (
         <svg
           key={index}
@@ -28,13 +30,16 @@ function ReviewStars({ count = 5 }) {
 }
 
 function ReviewCard({ review }) {
+  const { t } = useLocale();
+  const copy = t.reviews.items[review.id];
+  const shown = copy ? { ...review, ...copy } : review;
   return (
     <article className="review-card">
       <header className="review-card__header">
         <div className="review-card__identity">
-          <p className="review-card__name">{review.name}</p>
-          {review.location ? (
-            <p className="review-card__location">{review.location}</p>
+          <p className="review-card__name">{shown.name}</p>
+          {shown.location ? (
+            <p className="review-card__location">{shown.location}</p>
           ) : null}
         </div>
         {review.productImage ? (
@@ -49,18 +54,24 @@ function ReviewCard({ review }) {
         ) : null}
       </header>
 
-      <p className="review-card__product">{review.productName}</p>
-      <ReviewStars count={review.rating} />
-      <p className="review-card__text">{review.text}</p>
-      {review.time ? (
-        <time className="review-card__date">{review.time}</time>
+      <p className="review-card__product">{shown.productName}</p>
+      <ReviewStars count={shown.rating} />
+      <p className="review-card__text">{shown.text}</p>
+      {shown.time ? (
+        <time className="review-card__date">{shown.time}</time>
       ) : null}
     </article>
   );
 }
 
 export default function Reviews() {
-  useSeo(PAGE_SEO.reviews);
+  const { locale, t } = useLocale();
+  useSeo({
+    title: t.reviews.seoTitle,
+    description: t.reviews.seoDescription,
+    path: locale === 'en' ? '/en/reviews' : '/reviews',
+    noindex: locale === 'en' && !INDEX_ENGLISH,
+  });
   const [activeFilter, setActiveFilter] = useState('all');
 
   const filteredReviews = useMemo(() => {
@@ -77,18 +88,18 @@ export default function Reviews() {
           <ScrollReveal className="reviews-page__hero-inner">
             <h1 className="reviews-page__title">Reviews</h1>
             <p className="reviews-page__subtitle">
-              เสียงจากลูกค้าที่ใช้ BAZOOKA จริง
+              {t.reviews.subtitle}
             </p>
           </ScrollReveal>
         </div>
       </header>
 
-      <section className="reviews-page__content" aria-label="รายการรีวิว">
+      <section className="reviews-page__content" aria-label={t.reviews.listLabel}>
         <div className="container">
           <div
             className="reviews-page__filters"
             role="tablist"
-            aria-label="กรองตามสินค้า"
+            aria-label={t.reviews.filterLabel}
           >
             {REVIEW_FILTERS.map((filter) => {
               const isActive = activeFilter === filter.id;
@@ -103,7 +114,7 @@ export default function Reviews() {
                   }`}
                   onClick={() => setActiveFilter(filter.id)}
                 >
-                  {filter.label}
+                  {t.reviews.filters[filter.id] || filter.label}
                 </button>
               );
             })}
@@ -119,7 +130,7 @@ export default function Reviews() {
             </ul>
           ) : (
             <p className="reviews-page__empty" role="status">
-              ยังไม่มีรีวิวในหมวดนี้
+              {t.reviews.empty}
             </p>
           )}
         </div>

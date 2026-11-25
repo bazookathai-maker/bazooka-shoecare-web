@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useLocale } from '../../i18n/LocaleContext';
 import AddToCartButton from '../AddToCartButton';
+import LocaleLink from '../LocaleLink';
 import ProductPrice from '../ProductPrice';
 import ScrollReveal from '../ScrollReveal';
 import {
@@ -8,6 +9,7 @@ import {
   buildHomeTopPicks,
   getCachedStoreProducts,
 } from '../../utils/homeCatalog';
+import { localizedProductName } from '../../i18n/productCopy';
 import './HomeRecommendedPromotionSection.css';
 
 /** Same ids the shop card hides; the product itself stays in this carousel. */
@@ -47,6 +49,7 @@ function ArrowIcon({ direction }) {
 }
 
 function ReviewStars({ rating, count }) {
+  const { t } = useLocale();
   const value = Math.max(0, Math.min(5, Number(rating)));
   const full = Math.round(value);
   return (
@@ -56,7 +59,7 @@ function ReviewStars({ rating, count }) {
         {'☆☆☆☆☆'.slice(0, 5 - full)}
       </span>
       <span className="visually-hidden">
-        {`คะแนน ${value} จาก 5 จาก ${count} รีวิว`}
+        {t.catalog.rating(value, count)}
       </span>
     </p>
   );
@@ -83,8 +86,11 @@ function PickImage({ src, fallback, alt }) {
 }
 
 function TopPickCard({ item, reserveRating }) {
+  const { locale, t } = useLocale();
   const mediaRef = useRef(null);
   const badge = pickBadge(item);
+  const name = localizedProductName(item.wooId || item.id, item.name, locale);
+  const badgeLabel = badge === 'ขายดี' ? t.catalog.bestseller : badge;
   const rated = hasRealRating(item);
 
   return (
@@ -96,20 +102,20 @@ function TopPickCard({ item, reserveRating }) {
           }`}
           ref={mediaRef}
         >
-          {badge ? <span className="home-top-picks__badge">{badge}</span> : null}
-          <Link to={item.href} className="home-top-picks__card-media-link">
+          {badgeLabel ? <span className="home-top-picks__badge">{badgeLabel}</span> : null}
+          <LocaleLink to={item.href} className="home-top-picks__card-media-link">
             <PickImage
               src={item.image}
               fallback={item.fallback || undefined}
-              alt={item.name}
+              alt={name}
             />
-          </Link>
+          </LocaleLink>
         </div>
 
         <div className="home-top-picks__body">
-          <Link to={item.href} className="home-top-picks__name-link">
-            <h3 className="home-top-picks__name">{item.name}</h3>
-          </Link>
+          <LocaleLink to={item.href} className="home-top-picks__name-link">
+            <h3 className="home-top-picks__name">{name}</h3>
+          </LocaleLink>
           {reserveRating ? (
             rated ? (
               <ReviewStars rating={item.rating} count={item.reviewCount} />
@@ -138,6 +144,7 @@ function TopPickCard({ item, reserveRating }) {
 }
 
 export default function HomeRecommendedPromotionSection() {
+  const { t } = useLocale();
   const viewportRef = useRef(null);
   const [items, setItems] = useState([]);
   const [status, setStatus] = useState('loading');
@@ -216,7 +223,7 @@ export default function HomeRecommendedPromotionSection() {
               className="home-top-picks__arrow"
               onClick={() => scrollByCard(-1)}
               disabled={!canPrev}
-              aria-label="สินค้าก่อนหน้า"
+              aria-label={t.home.previousProduct}
             >
               <ArrowIcon direction="prev" />
             </button>
@@ -225,7 +232,7 @@ export default function HomeRecommendedPromotionSection() {
               className="home-top-picks__arrow"
               onClick={() => scrollByCard(1)}
               disabled={!canNext}
-              aria-label="สินค้าถัดไป"
+              aria-label={t.home.nextProduct}
             >
               <ArrowIcon direction="next" />
             </button>
@@ -234,14 +241,14 @@ export default function HomeRecommendedPromotionSection() {
 
         {status === 'loading' && items.length === 0 ? (
           <p className="home-top-picks__status" role="status">
-            กำลังโหลดสินค้า...
+            {t.home.loadingProducts}
           </p>
         ) : null}
 
         <div
           ref={viewportRef}
           className="home-top-picks__viewport"
-          aria-label="เลื่อนดูสินค้าแนะนำ"
+          aria-label={t.home.picksLabel}
         >
           <ul className="home-top-picks__grid">
             {items.map((item) => (
@@ -255,9 +262,9 @@ export default function HomeRecommendedPromotionSection() {
         </div>
 
         <ScrollReveal className="home-top-picks__footer" delay={120}>
-          <Link to="/products" className="btn-outline home-top-picks__shop-all">
-            ดูสินค้าทั้งหมด
-          </Link>
+          <LocaleLink to="/products" className="btn-outline home-top-picks__shop-all">
+            {t.home.viewAllProducts}
+          </LocaleLink>
         </ScrollReveal>
       </div>
     </section>

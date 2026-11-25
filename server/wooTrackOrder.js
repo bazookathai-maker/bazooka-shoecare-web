@@ -124,6 +124,7 @@ function publicTrackOrder(order) {
   const items = (Array.isArray(order.line_items) ? order.line_items : []).map(
     (item) => ({
       id: item.id,
+      productId: Number(item.product_id) || 0,
       name: String(item.name || '').trim(),
       image: String(item.image?.src || '').trim(),
       price: Number(item.price) || Number(item.total) / (Number(item.quantity) || 1) || 0,

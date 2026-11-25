@@ -1,16 +1,20 @@
 import { useEffect, useState } from 'react';
-import { Link, useLocation, useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
+import LocaleLink from '../components/LocaleLink';
+import { useLocale } from '../i18n/LocaleContext';
+import { translateKnown } from '../i18n/knownMessages';
+import { localizedProductName } from '../i18n/productCopy';
 import OrderStatusTimeline from '../components/OrderStatusTimeline';
 import useSeo from '../hooks/useSeo';
 import './OrderPages.css';
 
 const TRACK_ORDER_API_URL = '/api/track-order';
 
-function formatOrderDate(isoString) {
+function formatOrderDate(isoString, locale) {
   if (!isoString) return '-';
   const date = new Date(isoString);
   if (Number.isNaN(date.getTime())) return String(isoString);
-  return new Intl.DateTimeFormat('th-TH', {
+  return new Intl.DateTimeFormat(locale === 'en' ? 'en-GB' : 'th-TH', {
     dateStyle: 'medium',
     timeStyle: 'short',
   }).format(date);
@@ -48,7 +52,9 @@ async function verifyOrderWithPhone(orderId, phone) {
 }
 
 export default function OrderStatus() {
-  useSeo({ title: 'สถานะคำสั่งซื้อ', noindex: true });
+  const { locale, t, localize } = useLocale();
+  const orders = t.orders;
+  useSeo({ title: orders.statusTitle, noindex: true });
   const { orderId } = useParams();
   const location = useLocation();
   const [order, setOrder] = useState(null);
@@ -99,10 +105,10 @@ export default function OrderStatus() {
       <main className="order-page">
         <header className="order-page__hero">
           <div className="container">
-            <p className="section-label">คำสั่งซื้อ</p>
-            <h1 className="order-page__title">ตรวจสอบสถานะคำสั่งซื้อ</h1>
+            <p className="section-label">{orders.label}</p>
+            <h1 className="order-page__title">{orders.verifyTitle}</h1>
             <p className="order-page__lead">
-              กรอกเบอร์โทรศัพท์ที่ใช้สั่งซื้อเพื่อยืนยันก่อนดูรายละเอียดคำสั่งซื้อ #
+              {orders.verifyLead}
               {orderId}
             </p>
           </div>
@@ -112,7 +118,7 @@ export default function OrderStatus() {
           <form className="order-track-form" onSubmit={handleVerify}>
             <div className="order-track-form__fields">
               <label className="order-track-form__field">
-                <span className="order-track-form__label">เลขคำสั่งซื้อ</span>
+                <span className="order-track-form__label">{orders.orderId}</span>
                 <input
                   type="text"
                   value={orderId || ''}
@@ -122,7 +128,7 @@ export default function OrderStatus() {
                 />
               </label>
               <label className="order-track-form__field">
-                <span className="order-track-form__label">เบอร์โทรศัพท์</span>
+                <span className="order-track-form__label">{orders.phone}</span>
                 <input
                   type="tel"
                   name="phone"
@@ -133,7 +139,7 @@ export default function OrderStatus() {
                   }}
                   required
                   className="order-track-form__input"
-                  placeholder="เบอร์ที่ใช้สั่งซื้อ"
+                  placeholder={orders.phoneShortPlaceholder}
                   autoComplete="tel"
                   disabled={loading}
                 />
@@ -146,7 +152,7 @@ export default function OrderStatus() {
                 role="alert"
                 style={{ marginTop: '1.25rem' }}
               >
-                {error}
+                {translateKnown(locale, error)}
               </p>
             ) : null}
 
@@ -155,7 +161,7 @@ export default function OrderStatus() {
               className="btn-primary order-track-form__submit"
               disabled={loading || !String(phone || '').trim()}
             >
-              {loading ? 'กำลังยืนยัน...' : 'ยืนยันเบอร์โทรศัพท์'}
+              {loading ? orders.verifying : orders.verify}
             </button>
           </form>
 
@@ -163,26 +169,26 @@ export default function OrderStatus() {
             className="order-page__actions"
             style={{ justifyContent: 'center', marginTop: '1.5rem' }}
           >
-            <Link to="/track-order" className="btn-outline">
-              ค้นหาด้วยเลขคำสั่งซื้ออื่น
-            </Link>
+            <LocaleLink to="/track-order" className="btn-outline">
+              {orders.another}
+            </LocaleLink>
           </div>
         </div>
       </main>
     );
   }
 
-  const paymentLabel = order.payment || order.paymentMethod || '-';
+  const paymentLabel = translateKnown(locale, order.payment || order.paymentMethod || '-');
   const statusLabel = order.statusLabel || order.wooStatus || order.status || '';
 
   return (
     <main className="order-page">
       <header className="order-page__hero">
         <div className="container">
-          <p className="section-label">คำสั่งซื้อ</p>
-          <h1 className="order-page__title">ตรวจสอบสถานะคำสั่งซื้อ</h1>
+          <p className="section-label">{orders.label}</p>
+          <h1 className="order-page__title">{orders.verifyTitle}</h1>
           <p className="order-page__lead">
-            สถานะจาก WooCommerce
+            {orders.wooStatus}
             {statusLabel ? ` — ${statusLabel}` : ''}
           </p>
         </div>
@@ -192,28 +198,28 @@ export default function OrderStatus() {
         <div className="order-page__layout order-page__layout--status">
           <div className="order-page__main">
             <section className="order-card">
-              <h2 className="order-card__title">ข้อมูลคำสั่งซื้อ</h2>
+              <h2 className="order-card__title">{orders.details}</h2>
               <div className="order-meta order-meta--grid">
                 <div className="order-meta__row">
-                  <span className="order-meta__label">เลขคำสั่งซื้อ</span>
+                  <span className="order-meta__label">{orders.orderNumber}</span>
                   <span className="order-meta__value order-meta__value--id">
                     #{order.id}
                   </span>
                 </div>
                 <div className="order-meta__row">
-                  <span className="order-meta__label">วันที่สั่งซื้อ</span>
+                  <span className="order-meta__label">{orders.orderedOn}</span>
                   <span className="order-meta__value">
-                    {formatOrderDate(order.createdAt)}
+                    {formatOrderDate(order.createdAt, locale)}
                   </span>
                 </div>
                 <div className="order-meta__row">
-                  <span className="order-meta__label">ชื่อ-นามสกุล</span>
+                  <span className="order-meta__label">{orders.fullName}</span>
                   <span className="order-meta__value">
                     {order.customer?.fullName || '-'}
                   </span>
                 </div>
                 <div className="order-meta__row">
-                  <span className="order-meta__label">เบอร์โทรศัพท์</span>
+                  <span className="order-meta__label">{orders.phone}</span>
                   <span className="order-meta__value">
                     {order.customer?.phone || '-'}
                   </span>
@@ -222,20 +228,20 @@ export default function OrderStatus() {
                   className="order-meta__row"
                   style={{ gridColumn: '1 / -1' }}
                 >
-                  <span className="order-meta__label">ที่อยู่จัดส่ง</span>
+                  <span className="order-meta__label">{orders.shippingAddress}</span>
                   <span className="order-meta__value">
                     {order.address?.fullAddress || '-'}
                   </span>
                 </div>
                 <div className="order-meta__row">
-                  <span className="order-meta__label">ช่องทางชำระเงิน</span>
+                  <span className="order-meta__label">{orders.payment}</span>
                   <span className="order-meta__value">{paymentLabel}</span>
                 </div>
               </div>
             </section>
 
             <section className="order-card" style={{ marginTop: '1.25rem' }}>
-              <h2 className="order-card__title">รายการสินค้า</h2>
+              <h2 className="order-card__title">{orders.items}</h2>
               <ul className="order-items">
                 {(order.items || []).map((item) => (
                   <li key={item.id} className="order-items__item">
@@ -243,7 +249,7 @@ export default function OrderStatus() {
                       <div className="order-items__media">
                         <img
                           src={item.image}
-                          alt={item.name}
+                          alt={localizedProductName(item.productId, item.name, locale)}
                           className="order-items__image"
                           loading="lazy"
                           decoding="async"
@@ -251,11 +257,11 @@ export default function OrderStatus() {
                       </div>
                     ) : null}
                     <div className="order-items__details">
-                      <h3 className="order-items__name">{item.name}</h3>
+                      <h3 className="order-items__name">{localizedProductName(item.productId, item.name, locale)}</h3>
                       <p className="order-items__meta">
-                        จำนวน {item.quantity} ชิ้น
+                        {orders.quantity(item.quantity)}
                         {item.price
-                          ? ` · ฿${Number(item.price).toLocaleString()} / ชิ้น`
+                          ? ` · ฿${Number(item.price).toLocaleString()} / ${orders.each}`
                           : ''}
                       </p>
                     </div>
@@ -263,7 +269,7 @@ export default function OrderStatus() {
                 ))}
               </ul>
               <div className="order-total">
-                <span className="order-total__label">รวมทั้งสิ้น</span>
+                <span className="order-total__label">{orders.total}</span>
                 <span className="order-total__value">
                   ฿{Number(order.total || 0).toLocaleString()}
                 </span>
@@ -273,12 +279,12 @@ export default function OrderStatus() {
 
           <aside>
             <section className="order-card">
-              <h2 className="order-card__title">สถานะการจัดส่ง</h2>
+              <h2 className="order-card__title">{orders.delivery}</h2>
               <OrderStatusTimeline status={order.status} />
             </section>
             {order.tracking?.length ? (
               <section className="order-card" style={{ marginTop: '1.25rem' }}>
-                <h2 className="order-card__title">ข้อมูลพัสดุ</h2>
+                <h2 className="order-card__title">{orders.parcel}</h2>
                 <div className="order-meta">
                   {order.tracking.map((tracking) => (
                     <div
@@ -286,7 +292,7 @@ export default function OrderStatus() {
                       className="order-meta__row"
                     >
                       <span className="order-meta__label">
-                        {tracking.provider || 'ขนส่ง'}
+                        {tracking.provider || orders.carrier}
                       </span>
                       <span className="order-meta__value">
                         {tracking.number}
@@ -294,7 +300,7 @@ export default function OrderStatus() {
                           <>
                             {' · '}
                             <a href={tracking.link} target="_blank" rel="noopener noreferrer">
-                              ติดตามพัสดุ
+                              {orders.trackParcel}
                             </a>
                           </>
                         ) : null}
@@ -308,12 +314,12 @@ export default function OrderStatus() {
         </div>
 
         <div className="order-page__actions">
-          <Link to="/products" className="btn-primary">
-            ช้อปต่อ
-          </Link>
-          <Link to="/track-order" className="btn-outline">
-            ติดตามคำสั่งซื้ออื่น
-          </Link>
+          <LocaleLink to="/products" className="btn-primary">
+            {orders.continue}
+          </LocaleLink>
+          <LocaleLink to="/track-order" className="btn-outline">
+            {orders.trackOther}
+          </LocaleLink>
         </div>
       </div>
     </main>

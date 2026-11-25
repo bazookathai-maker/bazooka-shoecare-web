@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { youtubeVideoId } from '../data/articleHtml';
+import { useLocale } from '../i18n/LocaleContext';
 import { ArticleCardVideo } from './ArticleCard';
+import LocaleLink from './LocaleLink';
 
 function ArticleParts({ parts }) {
   return parts.map((part, index) => {
@@ -14,9 +15,9 @@ function ArticleParts({ parts }) {
       );
     }
     return (
-      <Link key={index} to={part.href}>
+      <LocaleLink key={index} to={part.href}>
         {part.text}
-      </Link>
+      </LocaleLink>
     );
   });
 }
@@ -49,10 +50,10 @@ function ArticleBlock({ block }) {
   return null;
 }
 
-function formatVerifiedDate(isoDate) {
+function formatVerifiedDate(isoDate, locale) {
   const parsed = new Date(`${isoDate}T12:00:00`);
   if (Number.isNaN(parsed.getTime())) return isoDate;
-  return new Intl.DateTimeFormat('th-TH', {
+  return new Intl.DateTimeFormat(locale === 'en' ? 'en-GB' : 'th-TH', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
@@ -71,12 +72,13 @@ function PlayGlyph() {
 }
 
 function VideoBlock({ block }) {
+  const { locale } = useLocale();
   if (!block.src) return null;
   return (
     <div className="longform-article__video">
       <ArticleCardVideo
         src={block.src}
-        title={block.title || 'วิดีโอ'}
+        title={block.title || (locale === 'en' ? 'Video' : 'วิดีโอ')}
         poster={block.poster}
         isActive
       />
@@ -94,11 +96,12 @@ function VideoBlock({ block }) {
 }
 
 function YoutubeBlock({ block }) {
+  const { locale } = useLocale();
   const id = youtubeVideoId(block.videoId || block.url);
   const [active, setActive] = useState(false);
   if (!id) return null;
 
-  const title = block.title || 'วิดีโอบน YouTube';
+  const title = block.title || (locale === 'en' ? 'YouTube video' : 'วิดีโอบน YouTube');
 
   return (
     <figure className="longform-article__video longform-article__video--youtube">
@@ -140,6 +143,7 @@ export default function LongformArticle({
   videoCaption,
   publishedAt,
 }) {
+  const { locale } = useLocale();
   const videoAfterFirstParagraph = Boolean(videoSrc) && blocks[0]?.type === 'p';
   const head = videoAfterFirstParagraph ? blocks.slice(0, 1) : [];
   const tail = videoAfterFirstParagraph ? blocks.slice(1) : blocks;
@@ -149,7 +153,7 @@ export default function LongformArticle({
       <h1>{title}</h1>
       {publishedAt ? (
         <time className="longform-article__date" dateTime={publishedAt}>
-          {formatVerifiedDate(publishedAt)}
+          {formatVerifiedDate(publishedAt, locale)}
         </time>
       ) : null}
       {head.map((block, index) => (

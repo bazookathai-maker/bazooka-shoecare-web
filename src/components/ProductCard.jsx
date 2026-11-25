@@ -1,6 +1,7 @@
 import { useRef } from 'react';
-import { Link } from 'react-router-dom';
 import { isDisplayOnlyProduct } from '../data/productDetails';
+import { useLocale } from '../i18n/LocaleContext';
+import LocaleLink from './LocaleLink';
 import {
   formatListingDescription,
   formatListingName,
@@ -37,6 +38,7 @@ export default function ProductCard({
   useCase,
   linkToDetail = true,
 }) {
+  const { t } = useLocale();
   const useCaseText = useCase ?? product.useCase;
   const mediaRef = useRef(null);
   const detailPath = getDetailPath(product, linkToDetail);
@@ -65,17 +67,17 @@ export default function ProductCard({
       }${product.imageFrame === 'fill' ? ' product-card--square-fill' : ''}`}
     >
       {detailPath && (
-        <Link
+        <LocaleLink
           to={detailPath}
           className="product-card__stretched-link"
-          aria-label={`ดู ${displayName}`}
+          aria-label={t.catalog.viewProduct(displayName)}
         />
       )}
 
       <div className="product-card__media" ref={mediaRef}>
         {!isRecommendCard && showBestsellerBadge ? (
           <div className="product-card__badges">
-            <span className="product-card__bestseller-badge">ขายดี</span>
+            <span className="product-card__bestseller-badge">{t.catalog.bestseller}</span>
           </div>
         ) : null}
         {!isRecommendCard ? (
@@ -120,9 +122,9 @@ export default function ProductCard({
       </div>
 
       {isRecommendCard && detailPath ? (
-        <Link to={detailPath} className="product-card__view-btn">
-          ซื้อสินค้า
-        </Link>
+        <LocaleLink to={detailPath} className="product-card__view-btn">
+          {t.catalog.buy}
+        </LocaleLink>
       ) : null}
 
       {!isRecommendCard && showAddToCart ? (

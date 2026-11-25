@@ -10,6 +10,7 @@ import {
   updateCustomerProfile,
 } from '../api/customerAuth';
 import { trackAuthResult } from '../analytics/ga4';
+import { clearCheckoutDraft } from '../utils/checkoutDraft';
 
 const AuthContext = createContext(null);
 
@@ -54,6 +55,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   const applyAuth = useCallback((result) => {
+    clearCheckoutDraft();
     const nextToken = result?.token || '';
     const nextCustomer = result?.customer || null;
     setCustomerToken(nextToken);
@@ -109,6 +111,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   const logout = useCallback(() => {
+    clearCheckoutDraft();
     clearCustomerToken();
     setToken('');
     setCustomer(null);

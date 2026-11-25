@@ -1,9 +1,13 @@
 import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   DEFAULT_DESCRIPTION,
+  DEFAULT_DESCRIPTION_EN,
   DEFAULT_OG_IMAGE,
   absoluteUrl,
   formatTitle,
+  hreflangAlternates,
+  isEnglishPath,
 } from '../utils/seo';
 
 const JSON_LD_ID = 'seo-json-ld';
@@ -36,6 +40,18 @@ function setCanonical(href) {
   el.setAttribute('href', href);
 }
 
+function setAlternates(links) {
+  document.head.querySelectorAll('link[data-seo-hreflang]').forEach((el) => el.remove());
+  links.forEach((link) => {
+    const el = document.createElement('link');
+    el.setAttribute('rel', 'alternate');
+    el.setAttribute('hreflang', link.hreflang);
+    el.setAttribute('href', link.href);
+    el.setAttribute('data-seo-hreflang', '');
+    document.head.appendChild(el);
+  });
+}
+
 function setJsonLd(text) {
   let el = document.getElementById(JSON_LD_ID);
   if (!text) {
@@ -54,7 +70,8 @@ function setJsonLd(text) {
 /**
  * Sets title, description, canonical, robots, Open Graph and JSON-LD for the current page.
  * Every call writes all managed tags so nothing carries over from the previous route.
- * `noindex` pages get no canonical.
+ * Private noindex pages omit `path`, so they get no canonical and no hreflang.
+ * A public page with a path keeps its canonical.
  */
 export default function useSeo({
   title,
@@ -67,16 +84,30 @@ export default function useSeo({
   jsonLd = null,
   preserveJsonLd = false,
 }) {
+  const { pathname } = useLocation();
+  const locale = isEnglishPath(pathname) ? 'en' : 'th';
   const resolvedTitle = formatTitle({ title, fullTitle });
-  const resolvedDescription = description || DEFAULT_DESCRIPTION;
-  const canonical = !noindex && path ? absoluteUrl(path) : '';
+  const resolvedDescription = description || (locale === 'en' ? DEFAULT_DESCRIPTION_EN : DEFAULT_DESCRIPTION);
+  const canonical = path && (!noindex || isEnglishPath(path)) ? absoluteUrl(path) : '';
+  const alternatesKey = path ? hreflangAlternates(path).map((item) => `${item.hreflang} ${item.href}`).join('\n') : '';
   const jsonLdText = jsonLd ? JSON.stringify(jsonLd) : '';
 
   useEffect(() => {
+    document.documentElement.lang = locale;
     document.title = resolvedTitle;
     setMeta('name', 'description', resolvedDescription);
     setMeta('name', 'robots', noindex ? 'noindex' : '');
     setCanonical(canonical);
+    setAlternates(
+      alternatesKey
+        ? alternatesKey.split('\n').map((line) => {
+            const space = line.indexOf(' ');
+            return { hreflang: line.slice(0, space), href: line.slice(space + 1) };
+          })
+        : [],
+    );
+    setMeta('property', 'og:locale', locale === 'en' ? 'en_US' : 'th_TH');
+    setMeta('property', 'og:locale:alternate', locale === 'en' ? 'th_TH' : 'en_US');
     setMeta('property', 'og:title', resolvedTitle);
     setMeta('property', 'og:description', resolvedDescription);
     setMeta('property', 'og:url', canonical);
@@ -85,12 +116,13 @@ export default function useSeo({
     setMeta('name', 'twitter:title', resolvedTitle);
     setMeta('name', 'twitter:description', resolvedDescription);
     if (!preserveJsonLd) setJsonLd(jsonLdText);
-  }, [resolvedTitle, resolvedDescription, noindex, canonical, type, image, jsonLdText, preserveJsonLd]);
+  }, [resolvedTitle, resolvedDescription, noindex, canonical, type, image, jsonLdText, preserveJsonLd, locale, alternatesKey]);
 
   useEffect(
     () => () => {
       setJsonLd('');
       setMeta('name', 'robots', '');
+      setAlternates([]);
     },
     [],
   );

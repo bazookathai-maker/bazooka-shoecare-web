@@ -1,9 +1,11 @@
 import { useRef, useState } from 'react';
 import { useCart } from '../context/CartContext';
+import { useLocale } from '../i18n/LocaleContext';
 import './AddToCartButton.css';
 
 export default function AddToCartButton({ product, mediaRef: externalMediaRef }) {
-  const { addToCart, pending } = useCart();
+  const { addToCart, pending, hydrating } = useCart();
+  const { t } = useLocale();
   const internalMediaRef = useRef(null);
   const mediaRef = externalMediaRef ?? internalMediaRef;
   const [busy, setBusy] = useState(false);
@@ -17,7 +19,7 @@ export default function AddToCartButton({ product, mediaRef: externalMediaRef })
     setLocalError('');
 
     if (!canAdd) {
-      setLocalError('สินค้านี้ยังไม่พร้อมเพิ่มลงตะกร้า');
+      setLocalError(t.commerce.unavailable);
       return;
     }
 
@@ -29,7 +31,7 @@ export default function AddToCartButton({ product, mediaRef: externalMediaRef })
       await addToCart(product, img);
     } catch (err) {
       setLocalError(
-        err instanceof Error ? err.message : 'เพิ่มสินค้าลงตะกร้าไม่สำเร็จ',
+        err instanceof Error ? err.message : t.commerce.failed,
       );
     } finally {
       setBusy(false);
@@ -48,10 +50,10 @@ export default function AddToCartButton({ product, mediaRef: externalMediaRef })
         type="button"
         className="add-to-cart"
         onClick={handleClick}
-        disabled={!canAdd || busy || pending}
-        aria-label={`สั่งซื้อสินค้า ${product?.name || ''}`.trim()}
+        disabled={!canAdd || busy || pending || hydrating}
+        aria-label={hydrating ? t.commerce.preparing : t.commerce.addedLabel(product?.name || '')}
       >
-        {busy ? 'กำลังเพิ่ม...' : 'สั่งซื้อสินค้า'}
+        {hydrating ? t.commerce.preparing : busy ? t.commerce.adding : t.commerce.add}
       </button>
       {localError ? (
         <p className="add-to-cart__error" role="alert">

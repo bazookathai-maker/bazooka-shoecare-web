@@ -197,6 +197,7 @@ function publicOrder(order) {
     payment_method_title: String(order.payment_method_title || '').trim(),
     line_items: items.map((item) => ({
       id: Number(item.id),
+      product_id: Number(item.product_id) || 0,
       name: String(item.name || '').trim(),
       quantity: Number(item.quantity) || 0,
       total: String(item.total || '0'),

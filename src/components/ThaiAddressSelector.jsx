@@ -5,15 +5,23 @@ import {
   searchProvinces,
   searchSubdistricts,
 } from '../data/thaiAddress';
+import { useLocale } from '../i18n/LocaleContext';
+import { translateKnown } from '../i18n/knownMessages';
 import './ThaiAddressSelector.css';
 
 function FieldError({ id, message }) {
+  const { locale } = useLocale();
   if (!message) return null;
   return (
     <p id={id} className="checkout__field-error" role="alert">
-      {message}
+      {translateKnown(locale, message)}
     </p>
   );
+}
+
+function EmptyAddressMatch() {
+  const { t } = useLocale();
+  return t.address.noMatch;
 }
 
 function SearchableCombobox({
@@ -137,7 +145,7 @@ function SearchableCombobox({
               ))
             ) : (
               <li className="address-combobox__empty" role="presentation">
-                ไม่พบข้อมูลที่ตรงกับคำค้นหา
+                <EmptyAddressMatch />
               </li>
             )}
           </ul>
@@ -154,6 +162,8 @@ export default function ThaiAddressSelector({
   disabled = false,
   errors = {},
 }) {
+  const { t } = useLocale();
+  const address = t.address;
   const postalErrorId = useId();
 
   const handleProvinceChange = (province) => {
@@ -189,9 +199,9 @@ export default function ThaiAddressSelector({
   return (
     <div className="thai-address">
       <SearchableCombobox
-        label="จังหวัด"
+        label={address.province}
         name="province"
-        placeholder="เลือกหรือค้นหาจังหวัด"
+        placeholder={address.provincePlaceholder}
         value={value.province}
         searchFn={(query) => searchProvinces(query)}
         onChange={handleProvinceChange}
@@ -201,9 +211,9 @@ export default function ThaiAddressSelector({
       />
 
       <SearchableCombobox
-        label="เขต/อำเภอ"
+        label={address.district}
         name="district"
-        placeholder="เลือกหรือค้นหาเขต/อำเภอ"
+        placeholder={address.districtPlaceholder}
         value={value.district}
         searchFn={(query) => searchDistricts(value.province, query)}
         onChange={handleDistrictChange}
@@ -213,9 +223,9 @@ export default function ThaiAddressSelector({
       />
 
       <SearchableCombobox
-        label="แขวง/ตำบล"
+        label={address.subdistrict}
         name="subdistrict"
-        placeholder="เลือกหรือค้นหาแขวง/ตำบล"
+        placeholder={address.subdistrictPlaceholder}
         value={value.subdistrict}
         searchFn={(query) =>
           searchSubdistricts(value.province, value.district, query)
@@ -227,9 +237,9 @@ export default function ThaiAddressSelector({
       />
 
       <SearchableCombobox
-        label="ถนน"
+        label={address.street}
         name="street"
-        placeholder="เช่น ถนนสุขุมวิท"
+        placeholder={address.streetPlaceholder}
         value={value.street}
         searchFn={() => []}
         onChange={(street) => onChange({ street })}
@@ -239,7 +249,7 @@ export default function ThaiAddressSelector({
       />
 
       <label className="checkout__field thai-address__field">
-        <span className="checkout__field-label">รหัสไปรษณีย์</span>
+        <span className="checkout__field-label">{address.postal}</span>
         <input
           type="text"
           name="postalCode"
@@ -251,7 +261,7 @@ export default function ThaiAddressSelector({
           className={`checkout__input${
             errors.postalCode ? ' checkout__input--error' : ''
           }`}
-          placeholder="กรอกรหัสไปรษณีย์"
+          placeholder={address.postalPlaceholder}
           disabled={disabled}
           aria-invalid={Boolean(errors.postalCode)}
           aria-describedby={errors.postalCode ? postalErrorId : undefined}

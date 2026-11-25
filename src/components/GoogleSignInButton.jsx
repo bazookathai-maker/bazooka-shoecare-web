@@ -1,17 +1,20 @@
 import { useEffect, useRef, useState } from 'react';
 import { fetchGoogleSignInConfig } from '../api/customerAuth';
+import { useLocale } from '../i18n/LocaleContext';
 import './GoogleSignInButton.css';
 
-const GSI_SRC = 'https://accounts.google.com/gsi/client?hl=th';
+function googleScriptSrc(locale) {
+  return `https://accounts.google.com/gsi/client?hl=${locale === 'en' ? 'en' : 'th'}`;
+}
 
 let gsiPromise = null;
 
-function loadGoogleIdentityServices() {
+function loadGoogleIdentityServices(locale) {
   if (window.google?.accounts?.id) return Promise.resolve(window.google);
   if (!gsiPromise) {
     gsiPromise = new Promise((resolve, reject) => {
       const script = document.createElement('script');
-      script.src = GSI_SRC;
+      script.src = googleScriptSrc(locale);
       script.async = true;
       script.defer = true;
       script.onload = () => {
@@ -39,6 +42,7 @@ export default function GoogleSignInButton({
   disabled = false,
   dividerText = 'หรือใช้อีเมล',
 }) {
+  const { locale, t } = useLocale();
   const containerRef = useRef(null);
   const onCredentialRef = useRef(onCredential);
   const [status, setStatus] = useState('loading');
@@ -60,7 +64,7 @@ export default function GoogleSignInButton({
           return;
         }
 
-        const google = await loadGoogleIdentityServices();
+        const google = await loadGoogleIdentityServices(locale);
         const container = containerRef.current;
         if (cancelled || !container) return;
 
@@ -95,7 +99,7 @@ export default function GoogleSignInButton({
           shape: 'pill',
           text: context === 'signup' ? 'signup_with' : 'signin_with',
           logo_alignment: 'center',
-          locale: 'th',
+          locale: locale === 'en' ? 'en' : 'th',
           width,
         });
         setStatus('ready');
@@ -108,13 +112,13 @@ export default function GoogleSignInButton({
     return () => {
       cancelled = true;
     };
-  }, [context, attempt]);
+  }, [context, attempt, locale]);
 
   if (status === 'disabled') {
     if (!import.meta.env.DEV) return null;
     return (
       <p className="google-signin__note">
-        ยังไม่ได้ตั้งค่า GOOGLE_CLIENT_ID — ปุ่มเข้าสู่ระบบด้วย Google จะแสดงเมื่อตั้งค่าแล้ว
+        {t.auth.googleMissing}
       </p>
     );
   }
@@ -129,11 +133,11 @@ export default function GoogleSignInButton({
         aria-busy={status === 'loading'}
       />
       {status === 'loading' ? (
-        <p className="google-signin__note">กำลังโหลดปุ่มเข้าสู่ระบบด้วย Google...</p>
+        <p className="google-signin__note">{t.auth.googleLoading}</p>
       ) : null}
       {status === 'error' ? (
         <p className="google-signin__note" role="alert">
-          โหลดปุ่มเข้าสู่ระบบด้วย Google ไม่สำเร็จ กรุณารีเฟรชหน้าแล้วลองใหม่
+          {t.auth.googleError}
         </p>
       ) : null}
       <div className="google-signin__divider" role="separator">

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import ScrollReveal from '../ScrollReveal';
+import { useLocale } from '../../i18n/LocaleContext';
+import LocaleLink from '../LocaleLink';
 import {
   buildHomeOurProducts,
   getCachedStoreProducts,
@@ -34,6 +35,7 @@ function ClipMedia({ src, fallback, alt }) {
 }
 
 export default function HomeOurProductsSection() {
+  const { t } = useLocale();
   const [pillarProducts, setPillarProducts] = useState(() =>
     buildHomeOurProducts([]),
   );
@@ -69,12 +71,12 @@ export default function HomeOurProductsSection() {
 
         <div
           className="home-our-products__viewport mobile-slider"
-          aria-label="เลื่อนดูสินค้า"
+          aria-label={t.home.productsLabel}
         >
           <ul className="home-our-products__track">
             {pillarProducts.map((product) => (
               <li key={product.id} className="home-our-products__slide">
-                <Link
+                <LocaleLink
                   to={product.href || '/products'}
                   className="home-our-products__card"
                 >
@@ -86,7 +88,7 @@ export default function HomeOurProductsSection() {
                   <div className="home-our-products__body">
                     <h3 className="home-our-products__name">{product.label}</h3>
                     <p className="home-our-products__benefit">
-                      {String(product.benefit || '')
+                      {String(t.home.pillars?.[product.id] || product.benefit || '')
                         .split('\n')
                         .filter(Boolean)
                         .map((line) => (
@@ -94,7 +96,7 @@ export default function HomeOurProductsSection() {
                         ))}
                     </p>
                   </div>
-                </Link>
+                </LocaleLink>
               </li>
             ))}
           </ul>

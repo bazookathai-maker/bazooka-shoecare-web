@@ -1,7 +1,10 @@
-import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { CHECKOUT_PATH, loginPath } from '../utils/authRedirect';
+import { useLocale } from '../i18n/LocaleContext';
+import { translateKnown } from '../i18n/knownMessages';
+import { localizedProductName } from '../i18n/productCopy';
+import LocaleLink from '../components/LocaleLink';
 import useSeo from '../hooks/useSeo';
 import './Cart.css';
 
@@ -15,10 +18,13 @@ function lineAmount(item) {
 }
 
 export default function Cart() {
-  useSeo({ title: 'ตะกร้าสินค้า', noindex: true });
+  const { locale, t, localize } = useLocale();
+  const copy = t.cartPage;
+  useSeo({ title: copy.seoTitle, noindex: true });
   const { ready: authReady, isLoggedIn } = useAuth();
-  const checkoutHref =
-    authReady && !isLoggedIn ? loginPath(CHECKOUT_PATH) : CHECKOUT_PATH;
+  const checkoutHref = localize(
+    authReady && !isLoggedIn ? loginPath(CHECKOUT_PATH) : CHECKOUT_PATH,
+  );
   const {
     items,
     count,
@@ -34,9 +40,9 @@ export default function Cart() {
     return (
       <main className="cart-page cart-page--empty">
         <div className="container cart-page__empty-inner">
-          <p className="section-label">ตะกร้า</p>
-          <h1 className="cart-page__title">ตะกร้าสินค้า</h1>
-          <p className="cart-page__empty-message">กำลังโหลดตะกร้า...</p>
+          <p className="section-label">{copy.label}</p>
+          <h1 className="cart-page__title">{copy.title}</h1>
+          <p className="cart-page__empty-message">{copy.loading}</p>
         </div>
       </main>
     );
@@ -46,17 +52,17 @@ export default function Cart() {
     return (
       <main className="cart-page cart-page--empty">
         <div className="container cart-page__empty-inner">
-          <p className="section-label">ตะกร้า</p>
-          <h1 className="cart-page__title">ตะกร้าสินค้า</h1>
-          <p className="cart-page__empty-message">ยังไม่มีสินค้าในตะกร้า</p>
+          <p className="section-label">{copy.label}</p>
+          <h1 className="cart-page__title">{copy.title}</h1>
+          <p className="cart-page__empty-message">{copy.empty}</p>
           {error ? (
             <p className="cart-page__error" role="alert">
-              {error}
+              {translateKnown(locale, error)}
             </p>
           ) : null}
-          <Link to="/products" className="btn-primary">
-            กลับไปที่สินค้า
-          </Link>
+          <LocaleLink to="/products" className="btn-primary">
+            {copy.shop}
+          </LocaleLink>
         </div>
       </main>
     );
@@ -68,10 +74,10 @@ export default function Cart() {
     <main className="cart-page">
       <header className="cart-page__hero">
         <div className="container">
-          <p className="section-label">ตะกร้า</p>
-          <h1 className="cart-page__title">ตะกร้าสินค้า</h1>
+          <p className="section-label">{copy.label}</p>
+          <h1 className="cart-page__title">{copy.title}</h1>
           <p className="cart-page__subtitle">
-            {loading ? 'กำลังอัปเดต...' : `${count} ชิ้นในตะกร้า`}
+            {loading ? copy.updating : copy.count(count)}
           </p>
         </div>
       </header>
@@ -79,12 +85,14 @@ export default function Cart() {
       <div className="container cart-page__layout">
         {error ? (
           <p className="cart-page__error" role="alert">
-            {error}
+            {translateKnown(locale, error)}
           </p>
         ) : null}
 
         <ul className="cart-page__list">
-          {items.map((item) => (
+          {items.map((item) => {
+            const itemName = localizedProductName(item.id, item.name, locale);
+            return (
             <li key={item.key || item.id} className="cart-page__item">
               <div className="cart-page__media">
                 {item.image ? (
@@ -99,18 +107,18 @@ export default function Cart() {
 
               <div className="cart-page__details">
                 <div className="cart-page__heading">
-                  <h2 className="cart-page__name">{item.name}</h2>
+                  <h2 className="cart-page__name">{itemName}</h2>
                 </div>
 
                 <p className="cart-page__unit">
-                  {formatPrice(item.price)} / ชิ้น
+                  {formatPrice(item.price)} / {copy.each}
                 </p>
 
                 <div className="cart-page__controls">
                   <div className="cart-page__qty">
                     <button
                       type="button"
-                      aria-label={`ลดจำนวน ${item.name}`}
+                      aria-label={copy.decrease(itemName)}
                       disabled={loading}
                       onClick={() => {
                         void updateQuantity(item.key, item.quantity - 1);
@@ -121,7 +129,7 @@ export default function Cart() {
                     <span aria-live="polite">{item.quantity}</span>
                     <button
                       type="button"
-                      aria-label={`เพิ่มจำนวน ${item.name}`}
+                      aria-label={copy.increase(itemName)}
                       disabled={loading}
                       onClick={() => {
                         void updateQuantity(item.key, item.quantity + 1);
@@ -139,7 +147,7 @@ export default function Cart() {
                       void updateQuantity(item.key, 0);
                     }}
                   >
-                    ลบสินค้า
+                    {copy.remove}
                   </button>
 
                   <p className="cart-page__line-total">
@@ -148,20 +156,21 @@ export default function Cart() {
                 </div>
               </div>
             </li>
-          ))}
+            );
+          })}
         </ul>
 
         <aside className="cart-page__summary">
           <div className="cart-page__total-row">
-            <span>รวมทั้งสิ้น</span>
+            <span>{copy.total}</span>
             <strong>{formatPrice(displayTotal)}</strong>
           </div>
-          <Link to={checkoutHref} className="btn-primary cart-page__checkout">
-            ไปชำระเงิน
-          </Link>
-          <Link to="/products" className="btn-outline cart-page__continue">
-            เลือกซื้อต่อ
-          </Link>
+          <LocaleLink to={checkoutHref} className="btn-primary cart-page__checkout">
+            {copy.checkout}
+          </LocaleLink>
+          <LocaleLink to="/products" className="btn-outline cart-page__continue">
+            {copy.continue}
+          </LocaleLink>
         </aside>
       </div>
     </main>

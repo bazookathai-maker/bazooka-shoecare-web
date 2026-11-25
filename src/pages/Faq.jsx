@@ -1,9 +1,11 @@
 import { useEffect, useId, useMemo, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import ScrollReveal from '../components/ScrollReveal';
+import LocaleLink from '../components/LocaleLink';
 import { FAQ_CATEGORIES, faqItems } from '../data/faqPage';
 import useSeo from '../hooks/useSeo';
-import { PAGE_SEO } from '../utils/seo';
+import { INDEX_ENGLISH } from '../utils/seo';
+import { useLocale } from '../i18n/LocaleContext';
 import './Faq.css';
 
 function FaqIcon({ isOpen }) {
@@ -12,6 +14,18 @@ function FaqIcon({ isOpen }) {
       {isOpen ? '−' : '+'}
     </span>
   );
+}
+
+function localizeFaq(faq, t) {
+  const fromHome = t.home.faqs?.[faq.id];
+  const fromPage = t.faq.items?.[faq.id];
+  const extra = fromPage || fromHome;
+  if (!extra) return faq;
+  const links = faq.links?.map((link) => ({
+    ...link,
+    label: fromHome?.links?.[link.href] || link.label,
+  }));
+  return { ...faq, question: extra.question, answer: extra.answer, links: links || faq.links };
 }
 
 function FaqAccordionItem({ faq, isOpen, onToggle }) {
@@ -51,7 +65,7 @@ function FaqAccordionItem({ faq, isOpen, onToggle }) {
               {faq.links.map((item, index) => (
                 <span key={item.href}>
                   {index > 0 ? ' · ' : ''}
-                  <Link to={item.href}>{item.label}</Link>
+                  <LocaleLink to={item.href}>{item.label}</LocaleLink>
                 </span>
               ))}
             </>
@@ -63,7 +77,13 @@ function FaqAccordionItem({ faq, isOpen, onToggle }) {
 }
 
 export default function Faq() {
-  useSeo(PAGE_SEO.faq);
+  const { locale, t } = useLocale();
+  useSeo({
+    title: t.faq.seoTitle,
+    description: t.faq.seoDescription,
+    path: locale === 'en' ? '/en/faq' : '/faq',
+    noindex: locale === 'en' && !INDEX_ENGLISH,
+  });
   const { hash } = useLocation();
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -72,7 +92,7 @@ export default function Faq() {
   const filteredFaqs = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
 
-    return faqItems.filter((faq) => {
+    return faqItems.map((faq) => localizeFaq(faq, t)).filter((faq) => {
       const matchesCategory =
         activeCategory === 'all' || faq.category === activeCategory;
 
@@ -82,7 +102,7 @@ export default function Faq() {
       const haystack = `${faq.question} ${faq.answer} ${(faq.links || []).map((item) => item.label).join(' ')}`.toLowerCase();
       return haystack.includes(query);
     });
-  }, [activeCategory, searchQuery]);
+  }, [activeCategory, searchQuery, t]);
 
   useEffect(() => {
     if (!hash?.startsWith('#faq-')) return;
@@ -114,23 +134,21 @@ export default function Faq() {
       <header className="faq-page__hero">
         <div className="container">
           <ScrollReveal className="faq-page__hero-inner">
-            <h1 className="faq-page__title">คำถามที่พบบ่อย</h1>
-            <p className="faq-page__subtitle">
-              คำตอบสั้น ๆ เกี่ยวกับสินค้า การสั่งซื้อ และการจัดส่ง
-            </p>
+            <h1 className="faq-page__title">{t.faq.title}</h1>
+            <p className="faq-page__subtitle">{t.faq.subtitle}</p>
           </ScrollReveal>
         </div>
       </header>
 
-      <section className="faq-page__content" aria-label="คำถามที่พบบ่อย">
+      <section className="faq-page__content" aria-label={t.faq.label}>
         <div className="faq-page__shell">
           <label className="faq-page__search">
-            <span className="visually-hidden">ค้นหาคำถาม</span>
+            <span className="visually-hidden">{t.faq.searchLabel}</span>
             <input
               type="search"
               value={searchQuery}
               onChange={handleSearchChange}
-              placeholder="ค้นหาคำถาม..."
+              placeholder={t.faq.searchPlaceholder}
               autoComplete="off"
             />
           </label>
@@ -138,7 +156,7 @@ export default function Faq() {
           <div
             className="faq-page__categories"
             role="tablist"
-            aria-label="หมวดหมู่คำถาม"
+            aria-label={t.faq.categoriesLabel}
           >
             {FAQ_CATEGORIES.map((category) => {
               const isActive = activeCategory === category.id;
@@ -153,7 +171,7 @@ export default function Faq() {
                   }`}
                   onClick={() => handleCategoryChange(category.id)}
                 >
-                  {category.label}
+                  {t.faq.categories[category.id] || category.label}
                 </button>
               );
             })}
@@ -172,7 +190,7 @@ export default function Faq() {
             </div>
           ) : (
             <p className="faq-page__empty" role="status">
-              ไม่พบคำถามที่ตรงกับการค้นหา
+              {t.faq.empty}
             </p>
           )}
         </div>
