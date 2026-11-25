@@ -1,12 +1,16 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useLocale } from '../i18n/LocaleContext';
+import { translateKnown } from '../i18n/knownMessages';
 import useSeo from '../hooks/useSeo';
 import './OrderPages.css';
 
 const TRACK_ORDER_API_URL = '/api/track-order';
 
 export default function TrackOrder() {
-  useSeo({ title: 'ติดตามคำสั่งซื้อ', noindex: true });
+  const { locale, t, localize } = useLocale();
+  const orders = t.orders;
+  useSeo({ title: orders.trackTitle, noindex: true });
   const navigate = useNavigate();
   const [form, setForm] = useState({ orderId: '', phone: '' });
   const [error, setError] = useState('');
@@ -54,7 +58,7 @@ export default function TrackOrder() {
 
       // Pass verified order only via navigation state (lost on hard refresh /
       // direct URL). Never persist customer PII in sessionStorage.
-      navigate(`/order-status/${encodeURIComponent(data.order.id)}`, {
+      navigate(localize(`/order-status/${encodeURIComponent(data.order.id)}`), {
         replace: false,
         state: { order: data.order, phoneVerified: true },
       });
@@ -73,11 +77,9 @@ export default function TrackOrder() {
     <main className="order-page">
       <header className="order-page__hero">
         <div className="container">
-          <p className="section-label">คำสั่งซื้อ</p>
-          <h1 className="order-page__title">ติดตามคำสั่งซื้อ</h1>
-          <p className="order-page__lead">
-            กรอกเลขคำสั่งซื้อและเบอร์โทรศัพท์ที่ใช้สั่งซื้อเพื่อตรวจสอบสถานะ
-          </p>
+          <p className="section-label">{orders.label}</p>
+          <h1 className="order-page__title">{orders.trackTitle}</h1>
+          <p className="order-page__lead">{orders.trackLead}</p>
         </div>
       </header>
 
@@ -85,7 +87,7 @@ export default function TrackOrder() {
         <form className="order-track-form" onSubmit={handleSubmit}>
           <div className="order-track-form__fields">
             <label className="order-track-form__field">
-              <span className="order-track-form__label">เลขคำสั่งซื้อ</span>
+              <span className="order-track-form__label">{orders.orderId}</span>
               <input
                 type="text"
                 name="orderId"
@@ -93,14 +95,14 @@ export default function TrackOrder() {
                 onChange={handleChange}
                 required
                 className="order-track-form__input"
-                placeholder="เช่น 873"
+                placeholder={orders.orderIdPlaceholder}
                 autoComplete="off"
                 disabled={loading}
               />
             </label>
 
             <label className="order-track-form__field">
-              <span className="order-track-form__label">เบอร์โทรศัพท์</span>
+              <span className="order-track-form__label">{orders.phone}</span>
               <input
                 type="tel"
                 name="phone"
@@ -108,7 +110,7 @@ export default function TrackOrder() {
                 onChange={handleChange}
                 required
                 className="order-track-form__input"
-                placeholder="เบอร์ที่ใช้สั่งซื้อ เช่น 0615359918"
+                placeholder={orders.phonePlaceholder}
                 autoComplete="tel"
                 disabled={loading}
               />
@@ -121,7 +123,7 @@ export default function TrackOrder() {
               role="alert"
               style={{ marginTop: '1.25rem' }}
             >
-              {error}
+              {translateKnown(locale, error)}
             </p>
           ) : null}
 
@@ -130,7 +132,7 @@ export default function TrackOrder() {
             className="btn-primary order-track-form__submit"
             disabled={loading}
           >
-            {loading ? 'กำลังค้นหา...' : 'ตรวจสอบสถานะ'}
+            {loading ? orders.searching : orders.check}
           </button>
         </form>
       </div>

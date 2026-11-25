@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
+import { LocaleProvider } from './i18n/LocaleContext';
 import ScrollToTop from './components/ScrollToTop';
 import AnalyticsListener from './components/AnalyticsListener';
 import CookieNotice from './components/CookieNotice';
@@ -28,41 +29,56 @@ import NotFound from './pages/NotFound';
 import StorePolicy from './pages/StorePolicy';
 import { RETURN_POLICY, SHIPPING_POLICY } from './data/storePolicies';
 
+function routePath(prefix, path) {
+  if (!prefix) return path;
+  return path === '/' ? prefix : `${prefix}${path}`;
+}
+
+function localizedRoutes(prefix) {
+  const path = (suffix) => routePath(prefix, suffix);
+  return [
+    <Route key={path('/')} path={path('/')} element={<Home />} />,
+    <Route key={path('/products')} path={path('/products')} element={<Products />} />,
+    <Route key={path('/products/:slug')} path={path('/products/:slug')} element={<ProductDetail />} />,
+    <Route key={path('/featured-products')} path={path('/featured-products')} element={<FeaturedProducts />} />,
+    <Route key={path('/recommended')} path={path('/recommended')} element={<Recommended />} />,
+    <Route key={path('/articles/:slug')} path={path('/articles/:slug')} element={<ArticleDetail />} />,
+    <Route key={path('/articles')} path={path('/articles')} element={<Articles />} />,
+    <Route key={path('/reviews')} path={path('/reviews')} element={<Reviews />} />,
+    <Route key={path('/faq')} path={path('/faq')} element={<Faq />} />,
+    <Route key={path('/contact')} path={path('/contact')} element={<Contact />} />,
+    <Route
+      key={path(SHIPPING_POLICY.path)}
+      path={path(SHIPPING_POLICY.path)}
+      element={<StorePolicy key={`${prefix}-${SHIPPING_POLICY.key}`} policy={SHIPPING_POLICY} />}
+    />,
+    <Route
+      key={path(RETURN_POLICY.path)}
+      path={path(RETURN_POLICY.path)}
+      element={<StorePolicy key={`${prefix}-${RETURN_POLICY.key}`} policy={RETURN_POLICY} />}
+    />,
+    <Route key={path('/login')} path={path('/login')} element={<Login />} />,
+    <Route key={path('/register')} path={path('/register')} element={<Register />} />,
+    <Route key={path('/account')} path={path('/account')} element={<Account />} />,
+    <Route key={path('/cart')} path={path('/cart')} element={<Cart />} />,
+    <Route key={path('/checkout')} path={path('/checkout')} element={<Checkout />} />,
+    <Route key={path('/order-success')} path={path('/order-success')} element={<OrderSuccess />} />,
+    <Route key={path('/order-status/:orderId')} path={path('/order-status/:orderId')} element={<OrderStatus />} />,
+    <Route key={path('/track-order')} path={path('/track-order')} element={<TrackOrder />} />,
+  ];
+}
+
 export default function App() {
   return (
     <BrowserRouter>
+      <LocaleProvider>
       <ScrollToTop />
       <AuthProvider>
         <CartProvider>
         <Header />
         <Routes>
-          {/* Default landing page */}
-          <Route index path="/" element={<Home />} />
-          <Route path="/products" element={<Products />} />
-          <Route path="/products/:slug" element={<ProductDetail />} />
-          <Route path="/featured-products" element={<FeaturedProducts />} />
-          <Route path="/recommended" element={<Recommended />} />
-          <Route path="/articles/:slug" element={<ArticleDetail />} />
-          <Route path="/articles" element={<Articles />} />
-          <Route path="/reviews" element={<Reviews />} />
-          <Route path="/faq" element={<Faq />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route
-            path={SHIPPING_POLICY.path}
-            element={<StorePolicy key={SHIPPING_POLICY.key} policy={SHIPPING_POLICY} />}
-          />
-          <Route
-            path={RETURN_POLICY.path}
-            element={<StorePolicy key={RETURN_POLICY.key} policy={RETURN_POLICY} />}
-          />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/account" element={<Account />} />
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/order-success" element={<OrderSuccess />} />
-          <Route path="/order-status/:orderId" element={<OrderStatus />} />
-          <Route path="/track-order" element={<TrackOrder />} />
+          {localizedRoutes('')}
+          {localizedRoutes('/en')}
           <Route path="*" element={<NotFound />} />
         </Routes>
         <Footer />
@@ -70,6 +86,7 @@ export default function App() {
         <CookieNotice />
         </CartProvider>
       </AuthProvider>
+      </LocaleProvider>
     </BrowserRouter>
   );
 }

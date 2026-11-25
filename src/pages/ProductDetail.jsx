@@ -1,5 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import LocaleLink from '../components/LocaleLink';
+import { useLocale } from '../i18n/LocaleContext';
+import { hasEnglishProductCopy, localizeStoreProduct } from '../i18n/productCopy';
 import ProductGallery from '../components/ProductGallery';
 import ProductCard from '../components/ProductCard';
 import AddToCartButton from '../components/AddToCartButton';
@@ -10,7 +13,7 @@ import {
 } from '../api/woocommerce';
 import { LISTING_HIDDEN_PRODUCT_IDS } from '../data/hiddenProducts';
 import { getProductCareLink } from '../data/productCareLinks';
-import { buildProductJsonLd, productPath, productSeo } from '../utils/seo';
+import { INDEX_ENGLISH, buildProductJsonLd, productPath } from '../utils/seo';
 import { trackViewItem } from '../analytics/ga4';
 import { useAnalyticsConsent } from '../components/AnalyticsListener';
 import useSeo from '../hooks/useSeo';
@@ -19,16 +22,18 @@ import './ProductDetail.css';
 const PRODUCT_IDS_WITHOUT_RECOMMENDED = new Set(['881', '143', '134']);
 
 function ProductCareLink({ productId }) {
+  const { t } = useLocale();
   const careLink = getProductCareLink(productId);
   if (!careLink) return null;
   return (
     <p className="pdp__care-link">
-      <Link to={careLink.href}>{careLink.label}</Link>
+      <LocaleLink to={careLink.href}>{t.pdp.suedeGuide}</LocaleLink>
     </p>
   );
 }
 
 function DetailStatus({ children, error = false }) {
+  const { t } = useLocale();
   return (
     <main className="pdp">
       <div className="container">
@@ -39,9 +44,9 @@ function DetailStatus({ children, error = false }) {
           {children}
         </p>
         <div className="pdp__actions" style={{ marginTop: '1.5rem' }}>
-          <Link to="/products" className="btn-primary">
-            กลับไปที่สินค้า
-          </Link>
+          <LocaleLink to="/products" className="btn-primary">
+            {t.pdp.back}
+          </LocaleLink>
         </div>
       </div>
     </main>
@@ -49,6 +54,7 @@ function DetailStatus({ children, error = false }) {
 }
 
 export default function ProductDetail() {
+  const { locale, t } = useLocale();
   const { slug: productId } = useParams();
   const [detail, setDetail] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -98,9 +104,7 @@ export default function ProductDetail() {
       } catch (err) {
         if (!cancelled) {
           setError(
-            err instanceof Error
-              ? err.message
-              : 'ไม่สามารถโหลดสินค้าได้ กรุณาลองใหม่อีกครั้ง',
+            err instanceof Error && err.message ? err.message : 'load',
           );
         }
       } finally {
@@ -129,106 +133,118 @@ export default function ProductDetail() {
     });
   }, [consent, detail?.id, detail?.name, detail?.price, detail?.currency]);
 
+  const view = useMemo(() => {
+    if (!detail) return null;
+    const localized = localizeStoreProduct(detail, locale);
+    return {
+      ...localized,
+      recommended: (detail.recommended || []).map((item) =>
+        localizeStoreProduct(item, locale),
+      ),
+    };
+  }, [detail, locale]);
+
   const isListed = Boolean(detail) && !LISTING_HIDDEN_PRODUCT_IDS.has(String(detail.id));
+  const englishReady = hasEnglishProductCopy(productId);
   useSeo(
-    detail
+    view
       ? {
-          ...productSeo(detail),
-          noindex: !isListed,
-          jsonLd: isListed ? buildProductJsonLd(detail) : null,
+          title: view.name,
+          description: view.heroDescription || t.products.seoDescription,
+          path: locale === 'en' ? `/en/products/${productId}` : productPath(productId),
+          noindex: !isListed || (locale === 'en' && (!INDEX_ENGLISH || !englishReady)),
+          jsonLd: isListed && (locale !== 'en' || englishReady) ? buildProductJsonLd(view, locale) : null,
         }
       : {
-          title: 'สินค้า',
-          path: productPath(productId),
-          noindex: notFound,
+          title: t.pdp.products,
+          path: locale === 'en' ? `/en/products/${productId}` : productPath(productId),
+          noindex: locale === 'en' || notFound,
           preserveJsonLd: !notFound,
         },
   );
 
   if (loading) {
-    return <DetailStatus>กำลังโหลดสินค้า...</DetailStatus>;
+    return <DetailStatus>{t.pdp.loading}</DetailStatus>;
   }
 
   if (error) {
-    return <DetailStatus error>{error}</DetailStatus>;
+    return <DetailStatus error>{error === 'load' ? t.pdp.loadError : error}</DetailStatus>;
   }
 
-  if (notFound || !detail) {
-    return (
-      <DetailStatus error>
-        ไม่พบสินค้า กรุณาตรวจสอบอีกครั้งหรือกลับไปเลือกจากหน้ารายการสินค้า
-      </DetailStatus>
+  if (notFound || !view) {
+    return <DetailStatus error>{t.pdp.notFound}</DetailStatus>;
+  }
+
+  const hasAbout = Boolean(view.aboutDescription);
+  const hasBenefits = view.benefits?.length > 0;
+  const hasHowTo = Boolean(view.howToText);
+  const categoryNames = (view.categories || [])
+    .map((item) => item.name)
+    .filter(
+      (name) =>
+        name &&
+        name.toLowerCase() !== 'uncategorized' &&
+        name !== 'ไม่มีหมวดหมู่',
     );
-  }
-
-  const hasAbout = Boolean(detail.aboutDescription);
-  const hasBenefits = detail.benefits?.length > 0;
-  const hasHowTo = Boolean(detail.howToText);
-  const realCategories =
-    detail.categories?.filter(
-      (item) =>
-        item.name &&
-        item.name.toLowerCase() !== 'uncategorized' &&
-        item.name !== 'ไม่มีหมวดหมู่',
-    ) ?? [];
-  const hasMeta = Boolean(detail.sku) || realCategories.length > 0;
+  const categoryLabel = categoryNames.length ? categoryNames.join(', ') : view.category;
+  const hasMeta = Boolean(view.sku) || Boolean(categoryLabel);
 
   return (
     <main className="pdp">
-      <nav className="pdp__breadcrumb container" aria-label="เส้นทางนำทาง">
-        <Link to="/">หน้าแรก</Link>
+      <nav className="pdp__breadcrumb container" aria-label={t.pdp.breadcrumb}>
+        <LocaleLink to="/">{t.pdp.home}</LocaleLink>
         <span className="pdp__breadcrumb-sep" aria-hidden="true">
           /
         </span>
-        <Link to="/products">สินค้า</Link>
+        <LocaleLink to="/products">{t.pdp.products}</LocaleLink>
         <span className="pdp__breadcrumb-sep" aria-hidden="true">
           /
         </span>
         <span className="pdp__breadcrumb-current">
-          {detail.breadcrumbLabel ?? detail.name}
+          {view.breadcrumbLabel ?? view.name}
         </span>
       </nav>
 
       <section className="pdp__hero container">
         <div className="pdp__layout">
-          {detail.gallery?.length > 0 ? (
+          {view.gallery?.length > 0 ? (
             <ProductGallery
-              images={detail.gallery}
-              fillFrame={detail.imageFrame === 'fill'}
+              images={view.gallery.map((image) => ({ ...image, alt: view.name }))}
+              fillFrame={view.imageFrame === 'fill'}
             />
           ) : null}
 
           <div className="pdp__info">
-            <h1 className="pdp__name">{detail.name}</h1>
-            <p className="pdp__price">฿{detail.price.toLocaleString()}</p>
-            {detail.heroDescription ? (
-              <p className="pdp__description">{detail.heroDescription}</p>
+            <h1 className="pdp__name">{view.name}</h1>
+            <p className="pdp__price">฿{view.price.toLocaleString()}</p>
+            {view.heroDescription ? (
+              <p className="pdp__description">{view.heroDescription}</p>
             ) : null}
             <p
               className={`pdp__stock${
-                detail.isInStock ? '' : ' pdp__stock--out'
+                view.isInStock ? '' : ' pdp__stock--out'
               }`}
             >
-              {detail.stockLabelShort || detail.stockLabel}
+              {view.stockLabelShort || view.stockLabel}
             </p>
 
             <div className="pdp__actions" ref={actionsMediaRef}>
-              {detail.image ? (
+              {view.image ? (
                 <img
-                  src={detail.image}
+                  src={view.image}
                   alt=""
                   className="pdp__actions-fly-source"
                   aria-hidden="true"
                 />
               ) : null}
-              {detail.isInStock ? (
+              {view.isInStock ? (
                 <AddToCartButton
-                  product={detail}
+                  product={view}
                   mediaRef={actionsMediaRef}
                 />
               ) : (
                 <button type="button" className="btn-primary" disabled>
-                  สินค้าหมด
+                  {t.pdp.soldOut}
                 </button>
               )}
             </div>
@@ -240,10 +256,10 @@ export default function ProductDetail() {
         <section className="pdp__section pdp__content" id="about">
           <div className="container pdp__section-inner">
             <header className="pdp__section-header">
-              <p className="section-label">รายละเอียด</p>
-              <h2 className="pdp__section-title">เกี่ยวกับสินค้า</h2>
+              <p className="section-label">{t.pdp.detailsLabel}</p>
+              <h2 className="pdp__section-title">{t.pdp.about}</h2>
             </header>
-            <p className="pdp__prose">{detail.aboutDescription}</p>
+            <p className="pdp__prose">{view.aboutDescription}</p>
             {hasHowTo ? null : <ProductCareLink productId={productId} />}
           </div>
         </section>
@@ -253,11 +269,11 @@ export default function ProductDetail() {
         <section className="pdp__section pdp__highlights" id="highlights">
           <div className="container pdp__section-inner">
             <header className="pdp__section-header">
-              <p className="section-label">Highlights</p>
-              <h2 className="pdp__section-title">จุดเด่น</h2>
+              <p className="section-label">{t.pdp.highlightsLabel}</p>
+              <h2 className="pdp__section-title">{t.pdp.highlights}</h2>
             </header>
             <ul className="pdp__benefit-list">
-              {detail.benefits.slice(0, 6).map((item) => (
+              {view.benefits.map((item) => (
                 <li key={item}>{item}</li>
               ))}
             </ul>
@@ -269,17 +285,17 @@ export default function ProductDetail() {
         <section className="pdp__section pdp__howto" id="how-to-use">
           <div className="container pdp__section-inner">
             <header className="pdp__section-header">
-              <p className="section-label">Usage</p>
-              <h2 className="pdp__section-title">วิธีใช้</h2>
+              <p className="section-label">{t.pdp.usageLabel}</p>
+              <h2 className="pdp__section-title">{t.pdp.usage}</h2>
             </header>
-            <p className="pdp__prose">{detail.howToText}</p>
+            <p className="pdp__prose">{view.howToText}</p>
             <ProductCareLink productId={productId} />
           </div>
         </section>
       ) : null}
 
       {!hasHowTo && !hasAbout && getProductCareLink(productId) ? (
-        <section className="pdp__section" aria-label="บทความที่เกี่ยวข้อง">
+        <section className="pdp__section" aria-label={t.pdp.relatedArticle}>
           <div className="container pdp__section-inner">
             <ProductCareLink productId={productId} />
           </div>
@@ -290,20 +306,20 @@ export default function ProductDetail() {
         <section className="pdp__section pdp__meta" id="more-details">
           <div className="container pdp__section-inner">
             <header className="pdp__section-header">
-              <p className="section-label">Info</p>
-              <h2 className="pdp__section-title">รายละเอียดเพิ่มเติม</h2>
+              <p className="section-label">{t.pdp.infoLabel}</p>
+              <h2 className="pdp__section-title">{t.pdp.more}</h2>
             </header>
             <dl className="pdp__meta-list">
-              {detail.sku ? (
+              {view.sku ? (
                 <div className="pdp__meta-row">
-                  <dt>SKU</dt>
-                  <dd>{detail.sku}</dd>
+                  <dt>{t.pdp.sku}</dt>
+                  <dd>{view.sku}</dd>
                 </div>
               ) : null}
-              {realCategories.length > 0 ? (
+              {categoryLabel ? (
                 <div className="pdp__meta-row">
-                  <dt>หมวดหมู่</dt>
-                  <dd>{realCategories.map((item) => item.name).join(', ')}</dd>
+                  <dt>{t.pdp.category}</dt>
+                  <dd>{categoryLabel}</dd>
                 </div>
               ) : null}
             </dl>
@@ -311,15 +327,15 @@ export default function ProductDetail() {
         </section>
       ) : null}
 
-      {detail.recommended?.length > 0 && (
+      {view.recommended?.length > 0 && (
         <section className="pdp__section pdp__recommended">
           <div className="container pdp__section-inner">
             <header className="pdp__section-header">
-              <p className="section-label">More</p>
-              <h2 className="pdp__section-title">สินค้าแนะนำ</h2>
+              <p className="section-label">{t.pdp.moreLabel}</p>
+              <h2 className="pdp__section-title">{t.pdp.recommended}</h2>
             </header>
             <div className="pdp__recommended-grid">
-              {detail.recommended.map((product, index) => (
+              {view.recommended.map((product, index) => (
                 <ScrollReveal
                   key={product.id}
                   delay={index * 60}

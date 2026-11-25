@@ -1,13 +1,17 @@
 import { useEffect, useState } from 'react';
-import { Link, Navigate, useParams } from 'react-router-dom';
+import { Navigate, useParams } from 'react-router-dom';
 import ArticleCard from '../components/ArticleCard';
 import { ArticleTopicRelated } from '../components/HubRelatedContent';
 import ScrollReveal from '../components/ScrollReveal';
 import LongformArticle from '../components/LongformArticle';
+import LocaleLink from '../components/LocaleLink';
 import { WP_ARTICLES_ENABLED, fetchWpPostBySlug } from '../api/wordpress';
 import { getCareGuideBySlug } from '../data/careGuides';
 import { getArticleStoreProducts } from '../data/knowledgeHub';
+import { useLocale } from '../i18n/LocaleContext';
+import { displayHubLabel, localizeGuide } from '../i18n/localizeGuide';
 import {
+  INDEX_ENGLISH,
   articlePath,
   articleSeo,
   buildArticleJsonLd,
@@ -18,16 +22,17 @@ import '../components/HubRelatedContent.css';
 import './Articles.css';
 
 function ArticleStoreProducts({ articleId }) {
+  const { locale, t } = useLocale();
   const products = getArticleStoreProducts(articleId);
   if (!products.length) return null;
 
   return (
-    <aside className="hub-links-group hub-links-group--article" aria-label="สินค้าที่เกี่ยวข้อง">
-      <h2 className="hub-links-group__title">สินค้าที่เกี่ยวข้อง</h2>
+    <aside className="hub-links-group hub-links-group--article" aria-label={t.journal.relatedProducts}>
+      <h2 className="hub-links-group__title">{t.journal.relatedProducts}</h2>
       <ul className="hub-links__list">
         {products.map((item) => (
           <li key={item.href}>
-            <Link to={item.href} className="hub-links__card hub-links__card--with-thumb">
+            <LocaleLink to={item.href} className="hub-links__card hub-links__card--with-thumb">
               {item.image ? (
                 <img
                   className="hub-links__thumb"
@@ -37,9 +42,11 @@ function ArticleStoreProducts({ articleId }) {
                   height="72"
                 />
               ) : null}
-              <span className="hub-links__card-text">{item.label}</span>
+              <span className="hub-links__card-text">
+                {displayHubLabel(item, locale, t)}
+              </span>
               <span className="hub-links__card-arrow" aria-hidden="true">›</span>
-            </Link>
+            </LocaleLink>
           </li>
         ))}
       </ul>
@@ -47,10 +54,10 @@ function ArticleStoreProducts({ articleId }) {
   );
 }
 
-function formatArticleDate(isoDate) {
+function formatArticleDate(isoDate, locale) {
   if (!isoDate) return '';
   try {
-    return new Intl.DateTimeFormat('th-TH', {
+    return new Intl.DateTimeFormat(locale === 'en' ? 'en-GB' : 'th-TH', {
       day: 'numeric',
       month: 'long',
       year: 'numeric',
@@ -61,6 +68,7 @@ function formatArticleDate(isoDate) {
 }
 
 function WordpressArticleDetail({ post }) {
+  const { locale } = useLocale();
   return (
     <article className="wp-article">
       {post.cover ? (
@@ -73,7 +81,7 @@ function WordpressArticleDetail({ post }) {
         <span>{post.category}</span>
         {post.publishedAt ? (
           <time dateTime={post.publishedAt}>
-            {formatArticleDate(post.publishedAt)}
+            {formatArticleDate(post.publishedAt, locale)}
           </time>
         ) : null}
       </p>
@@ -92,6 +100,7 @@ function WordpressArticleDetail({ post }) {
 
 export default function ArticleDetail() {
   const { slug } = useParams();
+  const { locale, t, localize } = useLocale();
 
   const fallbackGuide = getCareGuideBySlug(slug);
   const [post, setPost] = useState(null);
@@ -133,24 +142,33 @@ export default function ArticleDetail() {
     };
   }, [slug]);
 
-  const seoSource = post || fallbackGuide;
+  const localizedFallback = localizeGuide(fallbackGuide, locale);
+  const seoSource = post || localizedFallback;
   const verifiedDates = !post && fallbackGuide ? getVerifiedArticleDates(fallbackGuide) : null;
   useSeo(
-    seoSource
+    locale === 'en'
       ? {
-          ...articleSeo(seoSource),
-          jsonLd: !post && fallbackGuide ? buildArticleJsonLd(fallbackGuide) : null,
+          title: seoSource?.title || t.journal.seoTitle,
+          description: seoSource?.description || seoSource?.summary || t.journal.seoDescription,
+          path: `/en/articles/${slug}`,
+          noindex: !INDEX_ENGLISH,
+          jsonLd: !post && localizedFallback ? buildArticleJsonLd(localizedFallback, 'en') : null,
         }
-      : { title: 'บทความ', path: articlePath(slug), noindex: !loading },
+      : seoSource
+        ? {
+            ...articleSeo(seoSource),
+            jsonLd: !post && fallbackGuide ? buildArticleJsonLd(fallbackGuide) : null,
+          }
+        : { title: 'บทความ', path: articlePath(slug), noindex: !loading },
   );
 
   const isNotFound = WP_ARTICLES_ENABLED ? notFound : !fallbackGuide;
   if (!loading && isNotFound) {
-    return <Navigate to="/articles" replace />;
+    return <Navigate to={localize('/articles')} replace />;
   }
 
   const isWordpress = Boolean(post);
-  const guide = !isWordpress ? fallbackGuide : null;
+  const guide = !isWordpress ? localizedFallback : null;
 
   return (
     <main className="articles-page article-detail-page">
@@ -158,9 +176,9 @@ export default function ArticleDetail() {
         <div className="container container--editorial">
           <ScrollReveal>
             <p className="article-detail-page__back-wrap">
-              <Link to="/articles" className="article-detail-page__back">
-                ← กลับไปดูบทความทั้งหมด
-              </Link>
+              <LocaleLink to="/articles" className="article-detail-page__back">
+                {t.journal.back}
+              </LocaleLink>
             </p>
           </ScrollReveal>
         </div>
@@ -168,7 +186,7 @@ export default function ArticleDetail() {
 
       <section
         className="articles-page__content article-detail-page__content"
-        aria-label="เนื้อหาบทความ"
+        aria-label={t.journal.articleLabel}
       >
         <div
           className={
@@ -181,7 +199,7 @@ export default function ArticleDetail() {
         >
           {loading ? (
             <p className="articles-page__empty" role="status">
-              กำลังโหลดบทความ...
+              {t.journal.loading}
             </p>
           ) : null}
 

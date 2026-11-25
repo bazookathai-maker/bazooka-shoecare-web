@@ -1,5 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Link, Navigate, useSearchParams } from 'react-router-dom';
+import { Navigate, useSearchParams } from 'react-router-dom';
+import LocaleLink from '../components/LocaleLink';
+import { useLocale } from '../i18n/LocaleContext';
+import { translateKnown } from '../i18n/knownMessages';
+import { localizedProductName } from '../i18n/productCopy';
 import { fetchCustomerOrders } from '../api/customerAuth';
 import { useAuth } from '../context/AuthContext';
 import ThaiAddressSelector from '../components/ThaiAddressSelector';
@@ -23,9 +27,9 @@ const STATUS_LABELS = {
   failed: 'ไม่สำเร็จ',
 };
 
-function formatOrderDate(value) {
+function formatOrderDate(value, locale) {
   if (!value) return '-';
-  return new Intl.DateTimeFormat('th-TH', {
+  return new Intl.DateTimeFormat(locale === 'en' ? 'en-GB' : 'th-TH', {
     dateStyle: 'medium',
     timeStyle: 'short',
   }).format(new Date(value));
@@ -37,12 +41,12 @@ function formatMoney(total, currency = 'THB') {
   return `${amount.toLocaleString('th-TH')} ${currency}`;
 }
 
-function customerDisplayName(customer) {
+function customerDisplayName(customer, fallback) {
   const name = [customer?.first_name, customer?.last_name]
     .filter(Boolean)
     .join(' ')
     .trim();
-  return name || customer?.email || 'ลูกค้า';
+  return name || customer?.email || fallback;
 }
 
 function formatAddress(address) {
@@ -60,6 +64,7 @@ function formatAddress(address) {
 }
 
 function ProfileField({ label, name, value, onChange, error, disabled, ...rest }) {
+  const { locale } = useLocale();
   return (
     <label className="checkout__field">
       <span className="checkout__field-label">{label}</span>
@@ -74,7 +79,7 @@ function ProfileField({ label, name, value, onChange, error, disabled, ...rest }
       />
       {error ? (
         <p className="checkout__field-error" role="alert">
-          {error}
+          {translateKnown(locale, error)}
         </p>
       ) : null}
     </label>
@@ -82,6 +87,8 @@ function ProfileField({ label, name, value, onChange, error, disabled, ...rest }
 }
 
 function ProfileEditor({ customer, onSave, onCancel, canCancel }) {
+  const { locale, t } = useLocale();
+  const account = t.account;
   const [form, setForm] = useState(() => formFromCustomerProfile(customer));
   const [fieldErrors, setFieldErrors] = useState({});
   const [error, setError] = useState('');
@@ -132,7 +139,7 @@ function ProfileEditor({ customer, onSave, onCancel, canCancel }) {
     <form className="account-profile-form" onSubmit={handleSubmit} noValidate>
       <div className="account-form__row">
         <ProfileField
-          label="ชื่อ"
+          label={account.firstName || t.auth.firstName}
           name="firstName"
           value={form.firstName}
           onChange={handleChange}
@@ -141,7 +148,7 @@ function ProfileEditor({ customer, onSave, onCancel, canCancel }) {
           autoComplete="given-name"
         />
         <ProfileField
-          label="นามสกุล"
+          label={t.auth.lastName}
           name="lastName"
           value={form.lastName}
           onChange={handleChange}
@@ -151,7 +158,7 @@ function ProfileEditor({ customer, onSave, onCancel, canCancel }) {
         />
       </div>
       <ProfileField
-        label="เบอร์โทรศัพท์"
+        label={t.checkout.phone}
         name="phone"
         type="tel"
         value={form.phone}
@@ -161,7 +168,7 @@ function ProfileEditor({ customer, onSave, onCancel, canCancel }) {
         autoComplete="tel"
       />
       <ProfileField
-        label="บ้านเลขที่ / อาคาร / หมู่บ้าน / ชั้น / ห้อง"
+        label={account.addressLine}
         name="addressLine"
         value={form.addressLine}
         onChange={handleChange}
@@ -182,21 +189,21 @@ function ProfileEditor({ customer, onSave, onCancel, canCancel }) {
         errors={fieldErrors}
       />
       <ProfileField
-        label="รายละเอียดเพิ่มเติม"
+        label={account.extra}
         name="addressNote"
         value={form.addressNote}
         onChange={handleChange}
         disabled={saving}
-        placeholder="จุดสังเกต / ฝากไว้ที่นิติ"
+        placeholder={account.extraPlaceholder}
       />
       {error ? (
         <p className="account-form__error" role="alert">
-          {error}
+          {translateKnown(locale, error)}
         </p>
       ) : null}
       <div className="account-profile-form__actions">
         <button type="submit" className="btn-primary" disabled={saving}>
-          {saving ? 'กำลังบันทึก...' : 'บันทึกข้อมูล'}
+          {saving ? account.saving : account.save}
         </button>
         {canCancel ? (
           <button
@@ -205,7 +212,7 @@ function ProfileEditor({ customer, onSave, onCancel, canCancel }) {
             onClick={onCancel}
             disabled={saving}
           >
-            ยกเลิก
+            {account.cancel}
           </button>
         ) : null}
       </div>
@@ -214,7 +221,9 @@ function ProfileEditor({ customer, onSave, onCancel, canCancel }) {
 }
 
 export default function Account() {
-  useSeo({ title: 'บัญชีของฉัน', noindex: true });
+  const { locale, t, localize } = useLocale();
+  const account = t.account;
+  useSeo({ title: account.seoTitle, noindex: true });
   const { ready, isLoggedIn, customer, logout, saveProfile } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const setupRequested = searchParams.get('setup') === '1';
@@ -255,14 +264,14 @@ export default function Account() {
     return (
       <main className="account-page">
         <div className="container account-page__body">
-          <p className="account-page__muted">กำลังโหลดบัญชี...</p>
+          <p className="account-page__muted">{account.loading}</p>
         </div>
       </main>
     );
   }
 
   if (!isLoggedIn) {
-    return <Navigate to="/login?next=/account" replace />;
+    return <Navigate to={localize('/login?next=/account')} replace />;
   }
 
   const billing = customer.billing || {};
@@ -273,7 +282,7 @@ export default function Account() {
   const handleSaveProfile = async (address) => {
     await saveProfile(address);
     setEditing(false);
-    setSavedMessage('บันทึกข้อมูลแล้ว — จะใช้กรอกให้อัตโนมัติในการสั่งซื้อครั้งถัดไป');
+    setSavedMessage('saved');
     if (setupRequested) setSearchParams({}, { replace: true });
   };
 
@@ -286,54 +295,53 @@ export default function Account() {
     <main className="account-page">
       <header className="account-page__hero">
         <div className="container">
-          <p className="section-label">บัญชี</p>
-          <h1 className="account-page__title">บัญชีของฉัน</h1>
+          <p className="section-label">{account.label}</p>
+          <h1 className="account-page__title">{account.title}</h1>
         </div>
       </header>
 
       <div className="container account-page__body">
         <section className="account-card">
           <div className="account-card__header">
-            <h2 className="account-card__title">ข้อมูลลูกค้า</h2>
+            <h2 className="account-card__title">{account.profile}</h2>
             <button type="button" className="btn-outline account-card__logout" onClick={logout}>
-              ออกจากระบบ
+              {account.logout}
             </button>
           </div>
 
           {needsSetup ? (
             <p className="account-form__notice" role="status">
-              กรุณาบันทึกชื่อ เบอร์โทร และที่อยู่จัดส่ง
-              เพื่อให้ระบบกรอกข้อมูลให้อัตโนมัติในการสั่งซื้อครั้งถัดไป
+              {account.setup}
             </p>
           ) : null}
           {savedMessage && !showEditor ? (
             <p className="account-form__success" role="status">
-              {savedMessage}
+              {account.saved}
             </p>
           ) : null}
 
           <dl className="account-meta">
             <div>
-              <dt>อีเมล</dt>
+              <dt>{account.email}</dt>
               <dd>
                 {customer.email || '-'}
                 {customer.google_linked ? (
-                  <span className="account-meta__badge">เชื่อมกับ Google แล้ว</span>
+                  <span className="account-meta__badge">{account.googleLinked}</span>
                 ) : null}
               </dd>
             </div>
             {!showEditor ? (
               <>
                 <div>
-                  <dt>ชื่อ</dt>
-                  <dd>{customerDisplayName(customer)}</dd>
+                  <dt>{account.name}</dt>
+                  <dd>{customerDisplayName(customer, account.customer)}</dd>
                 </div>
                 <div>
-                  <dt>โทรศัพท์</dt>
+                  <dt>{account.phone}</dt>
                   <dd>{billing.phone || shipping.phone || '-'}</dd>
                 </div>
                 <div id="account-address" className="account-anchor">
-                  <dt>ที่อยู่จัดส่ง</dt>
+                  <dt>{account.shippingAddress}</dt>
                   <dd>{formatAddress(shipping)}</dd>
                 </div>
               </>
@@ -359,24 +367,24 @@ export default function Account() {
                   setEditing(true);
                 }}
               >
-                แก้ไขข้อมูลและที่อยู่
+                {account.edit}
               </button>
             </div>
           )}
         </section>
 
         <section id="account-orders" className="account-card account-anchor">
-          <h2 className="account-card__title">ประวัติคำสั่งซื้อ</h2>
+          <h2 className="account-card__title">{account.orders}</h2>
           {loadingOrders ? (
-            <p className="account-page__muted">กำลังโหลดคำสั่งซื้อ...</p>
+            <p className="account-page__muted">{account.loadingOrders}</p>
           ) : ordersError ? (
             <p className="account-form__error" role="alert">
-              {ordersError}
+              {translateKnown(locale, ordersError)}
             </p>
           ) : orders.length === 0 ? (
             <p className="account-page__muted">
-              ยังไม่มีคำสั่งซื้อ{' '}
-              <Link to="/products">เลือกซื้อสินค้า</Link>
+              {account.noOrders}{' '}
+              <LocaleLink to="/products">{account.shop}</LocaleLink>
             </p>
           ) : (
             <ul className="account-orders">
@@ -385,10 +393,12 @@ export default function Account() {
                   <div className="account-order__top">
                     <p className="account-order__number">#{order.number}</p>
                     <p className="account-order__status">
-                      {order.status_label || STATUS_LABELS[order.status] || order.status}
+                      {locale === 'en'
+                        ? account.status[order.status] || order.status
+                        : order.status_label || STATUS_LABELS[order.status] || order.status}
                     </p>
                   </div>
-                  <p className="account-order__date">{formatOrderDate(order.date_created)}</p>
+                  <p className="account-order__date">{formatOrderDate(order.date_created, locale)}</p>
                   <p className="account-order__total">
                     {formatMoney(order.total, order.currency)}
                     {order.payment_method_title
@@ -399,7 +409,7 @@ export default function Account() {
                     <ul className="account-order__items">
                       {order.line_items.map((item) => (
                         <li key={item.id}>
-                          {item.name} × {item.quantity}
+                          {localizedProductName(item.product_id, item.name, locale)} × {item.quantity}
                         </li>
                       ))}
                     </ul>
@@ -409,13 +419,13 @@ export default function Account() {
                       key={`${tracking.provider}-${tracking.number}`}
                       className="account-order__tracking"
                     >
-                      ขนส่ง {tracking.provider || '-'} · เลขพัสดุ{' '}
+                      {account.carrier} {tracking.provider || '-'} · {account.trackingNumber}{' '}
                       <strong>{tracking.number}</strong>
                       {tracking.link ? (
                         <>
                           {' · '}
                           <a href={tracking.link} target="_blank" rel="noopener noreferrer">
-                            ติดตามพัสดุ
+                            {account.track}
                           </a>
                         </>
                       ) : null}

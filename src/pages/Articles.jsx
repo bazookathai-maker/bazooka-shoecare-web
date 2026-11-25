@@ -7,8 +7,10 @@ import {
   fetchWpPosts,
 } from '../api/wordpress';
 import { ARTICLE_CATEGORIES, careGuides } from '../data/careGuides';
+import { useLocale } from '../i18n/LocaleContext';
+import { localizeGuide } from '../i18n/localizeGuide';
 import useSeo from '../hooks/useSeo';
-import { PAGE_SEO } from '../utils/seo';
+import { INDEX_ENGLISH, PAGE_SEO } from '../utils/seo';
 import './Articles.css';
 
 const PAGE_SIZE = 6;
@@ -25,7 +27,18 @@ function buildFallbackPosts() {
 }
 
 export default function Articles() {
-  useSeo(PAGE_SEO.articles);
+  const { locale, t } = useLocale();
+  const journal = t.journal;
+  useSeo(
+    locale === 'en'
+      ? {
+          title: journal.seoTitle,
+          description: journal.seoDescription,
+          path: '/en/articles',
+          noindex: !INDEX_ENGLISH,
+        }
+      : PAGE_SEO.articles,
+  );
   const [posts, setPosts] = useState(() =>
     WP_ARTICLES_ENABLED ? [] : buildFallbackPosts(),
   );
@@ -72,7 +85,7 @@ export default function Articles() {
         if (cancelled) return;
         setPosts(buildFallbackPosts());
         setCategories(buildFallbackCategories());
-        setNotice('ขณะนี้แสดงบทความแนะนำจากทีม BAZOOKA บทความใหม่จะตามมาเร็ว ๆ นี้');
+        setNotice('fallback');
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -84,24 +97,37 @@ export default function Articles() {
     };
   }, []);
 
+  const visiblePosts = useMemo(
+    () => posts.map((post) => localizeGuide(post, locale)),
+    [posts, locale],
+  );
+
   const filteredPosts = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
 
-    return posts.filter((post) => {
+    return visiblePosts.filter((post, index) => {
+      const source = posts[index];
       const matchesCategory =
         activeCategory === 'all' || post.topic === activeCategory;
 
       if (!matchesCategory) return false;
       if (!query) return true;
 
-      const haystack = [post.title, post.summary, post.category]
+      const haystack = [
+        post.title,
+        post.summary,
+        post.category,
+        source?.title,
+        source?.summary,
+        source?.category,
+      ]
         .filter(Boolean)
         .join(' ')
         .toLowerCase();
 
       return haystack.includes(query);
     });
-  }, [posts, activeCategory, searchQuery]);
+  }, [visiblePosts, posts, activeCategory, searchQuery]);
 
   const totalPages = Math.max(1, Math.ceil(filteredPosts.length / PAGE_SIZE));
   const safePage = Math.min(currentPage, totalPages);
@@ -127,20 +153,18 @@ export default function Articles() {
         <div className="container">
           <ScrollReveal className="articles-page__hero-inner">
             <h1 className="articles-page__title">Journal</h1>
-            <p className="articles-page__subtitle">
-              คู่มือดูแลรองเท้าสั้นๆ จากทีม BAZOOKA
-            </p>
+            <p className="articles-page__subtitle">{journal.subtitle}</p>
           </ScrollReveal>
         </div>
       </header>
 
-      <section className="articles-page__content" aria-label="รายการบทความ">
+      <section className="articles-page__content" aria-label={journal.listLabel}>
         <div className="container">
           <div className="articles-page__toolbar">
             <div
               className="articles-page__categories"
               role="tablist"
-              aria-label="หมวดหมู่บทความ"
+              aria-label={journal.categoriesLabel}
             >
               {categories.map((category) => {
                 const isActive = activeCategory === category.id;
@@ -155,19 +179,19 @@ export default function Articles() {
                     }`}
                     onClick={() => handleCategoryChange(category.id)}
                   >
-                    {category.label}
+                    {journal.categories[category.id] || category.label}
                   </button>
                 );
               })}
             </div>
 
             <label className="articles-page__search">
-              <span className="visually-hidden">ค้นหาบทความ</span>
+              <span className="visually-hidden">{journal.searchLabel}</span>
               <input
                 type="search"
                 value={searchQuery}
                 onChange={handleSearchChange}
-                placeholder="ค้นหาบทความ..."
+                placeholder={journal.searchPlaceholder}
                 autoComplete="off"
               />
             </label>
@@ -175,13 +199,13 @@ export default function Articles() {
 
           {loading ? (
             <p className="articles-page__empty" role="status">
-              กำลังโหลดบทความ...
+              {journal.loading}
             </p>
           ) : null}
 
           {notice ? (
             <p className="articles-page__empty" role="status">
-              {notice}
+              {journal.notice}
             </p>
           ) : null}
 
@@ -197,14 +221,14 @@ export default function Articles() {
 
           {!loading && pagePosts.length === 0 ? (
             <p className="articles-page__empty" role="status">
-              ไม่พบบทความที่ตรงกับการค้นหา
+              {journal.empty}
             </p>
           ) : null}
 
           {filteredPosts.length > PAGE_SIZE ? (
             <nav
               className="articles-page__pagination"
-              aria-label="หน้าบทความ"
+              aria-label={journal.pagination}
             >
               <button
                 type="button"
@@ -212,7 +236,7 @@ export default function Articles() {
                 onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
                 disabled={safePage <= 1}
               >
-                ก่อนหน้า
+                {journal.previous}
               </button>
 
               <div className="articles-page__page-list">
@@ -243,7 +267,7 @@ export default function Articles() {
                 }
                 disabled={safePage >= totalPages}
               >
-                ถัดไป
+                {journal.next}
               </button>
             </nav>
           ) : null}

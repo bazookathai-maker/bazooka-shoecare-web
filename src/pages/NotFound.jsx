@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import LocaleLink from '../components/LocaleLink';
+import { useLocale } from '../i18n/LocaleContext';
+import { localizedProductName } from '../i18n/productCopy';
 import ScrollReveal from '../components/ScrollReveal';
 import { fetchStoreProducts } from '../api/woocommerce';
 import { getRecommendedProducts } from '../utils/siteSearch';
@@ -11,7 +13,9 @@ function formatPrice(price) {
 }
 
 export default function NotFound() {
-  useSeo({ title: 'ไม่พบหน้าที่คุณกำลังค้นหา', noindex: true });
+  const { locale, t } = useLocale();
+  const copy = t.notFound;
+  useSeo({ title: copy.title, noindex: true });
   const [recommended, setRecommended] = useState([]);
 
   useEffect(() => {
@@ -40,34 +44,32 @@ export default function NotFound() {
         <div className="container">
           <ScrollReveal className="not-found-page__hero-inner">
             <p className="not-found-page__code">404</p>
-            <h1 className="not-found-page__title">ไม่พบหน้าที่คุณกำลังค้นหา</h1>
-            <p className="not-found-page__subtitle">
-              หน้านี้อาจถูกย้ายหรือไม่มีในเว็บไซต์แล้ว
-            </p>
+            <h1 className="not-found-page__title">{copy.title}</h1>
+            <p className="not-found-page__subtitle">{copy.subtitle}</p>
             <div className="not-found-page__actions">
-              <Link to="/" className="not-found-page__btn not-found-page__btn--primary">
-                กลับหน้าแรก
-              </Link>
-              <Link
+              <LocaleLink to="/" className="not-found-page__btn not-found-page__btn--primary">
+                {copy.home}
+              </LocaleLink>
+              <LocaleLink
                 to="/products"
                 className="not-found-page__btn not-found-page__btn--secondary"
               >
-                ดูสินค้าทั้งหมด
-              </Link>
+                {copy.products}
+              </LocaleLink>
             </div>
           </ScrollReveal>
         </div>
       </section>
 
       {recommended.length > 0 ? (
-        <section className="not-found-page__recommend" aria-label="สินค้าแนะนำ">
+        <section className="not-found-page__recommend" aria-label={copy.recommended}>
           <div className="container">
-            <h2 className="not-found-page__recommend-title">สินค้าแนะนำ</h2>
+            <h2 className="not-found-page__recommend-title">{copy.recommended}</h2>
             <ul className="not-found-page__grid">
               {recommended.map((product) => (
                 <li key={product.id}>
                   <article className="not-found-card">
-                    <Link to={product.href} className="not-found-card__link">
+                    <LocaleLink to={product.href} className="not-found-card__link">
                       <span className="not-found-card__media">
                         {product.image ? (
                           <img
@@ -78,14 +80,16 @@ export default function NotFound() {
                           />
                         ) : null}
                       </span>
-                      <h3 className="not-found-card__name">{product.name}</h3>
+                      <h3 className="not-found-card__name">
+                        {localizedProductName(product.id, product.name, locale)}
+                      </h3>
                       <p className="not-found-card__price">
                         {formatPrice(product.price)}
                       </p>
-                    </Link>
-                    <Link to={product.href} className="not-found-card__btn">
-                      ซื้อสินค้า
-                    </Link>
+                    </LocaleLink>
+                    <LocaleLink to={product.href} className="not-found-card__btn">
+                      {copy.buy}
+                    </LocaleLink>
                   </article>
                 </li>
               ))}

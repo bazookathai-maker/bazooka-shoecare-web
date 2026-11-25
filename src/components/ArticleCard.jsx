@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useCart } from '../context/CartContext';
+import { useLocale } from '../i18n/LocaleContext';
 import { findProductByImage } from '../data/products';
 
 const CART_ADDED_RESET_MS = 2200;
@@ -46,13 +47,14 @@ function ArticleCartAddedIcon() {
 }
 
 function ProductRow({ label, image }) {
+  const { locale } = useLocale();
   const mediaRef = useRef(null);
   const resetTimerRef = useRef(null);
-  const { addToCart } = useCart();
+  const { addToCart, hydrating } = useCart();
   const [added, setAdded] = useState(false);
   const shopProduct = useMemo(() => findProductByImage(image), [image]);
   const canAdd =
-    shopProduct && Number.isFinite(Number(shopProduct.id));
+    !hydrating && shopProduct && Number.isFinite(Number(shopProduct.id));
 
   const handleAddToCart = async (event) => {
     event.preventDefault();
@@ -99,10 +101,14 @@ function ProductRow({ label, image }) {
         disabled={!canAdd}
         aria-label={
           added
-            ? `สั่งซื้อสินค้า ${label} แล้ว`
-            : `สั่งซื้อสินค้า ${label}`
+            ? locale === 'en'
+              ? `Added ${label} to cart`
+              : `สั่งซื้อสินค้า ${label} แล้ว`
+            : locale === 'en'
+              ? `Add ${label} to cart`
+              : `สั่งซื้อสินค้า ${label}`
         }
-        title={added ? 'สั่งซื้อสินค้าแล้ว' : undefined}
+        title={added ? (locale === 'en' ? 'Added to cart' : 'สั่งซื้อสินค้าแล้ว') : undefined}
       >
         {added ? <ArticleCartAddedIcon /> : <ArticleCartIcon />}
       </button>
@@ -111,11 +117,12 @@ function ProductRow({ label, image }) {
 }
 
 function ArticleCardVideoPlaceholder({ title }) {
+  const { locale } = useLocale();
   return (
     <div
       className="article-card__video article-card__video--placeholder"
       role="img"
-      aria-label={`พื้นที่วิดีโอสำหรับ ${title}`}
+      aria-label={locale === 'en' ? `Video area for ${title}` : `พื้นที่วิดีโอสำหรับ ${title}`}
     >
       <span className="article-card__video-play" aria-hidden="true">
         <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -128,6 +135,7 @@ function ArticleCardVideoPlaceholder({ title }) {
 }
 
 export function ArticleCardVideo({ src, title, isActive, poster }) {
+  const { locale } = useLocale();
   const videoRef = useRef(null);
   const [activeSrc, setActiveSrc] = useState('');
   const [playing, setPlaying] = useState(false);
@@ -196,7 +204,15 @@ export function ArticleCardVideo({ src, title, isActive, poster }) {
         isPlaying ? ' article-card__video--playing' : ''
       }`}
       onClick={handleToggle}
-      aria-label={isPlaying ? `หยุดวิดีโอ: ${title}` : `เล่นวิดีโอ: ${title}`}
+      aria-label={
+        isPlaying
+          ? locale === 'en'
+            ? `Pause video: ${title}`
+            : `หยุดวิดีโอ: ${title}`
+          : locale === 'en'
+            ? `Play video: ${title}`
+            : `เล่นวิดีโอ: ${title}`
+      }
     >
       <video
         ref={videoRef}
@@ -230,6 +246,7 @@ export function ArticleCardVideo({ src, title, isActive, poster }) {
 }
 
 export default function ArticleCard({ guide, isActive = true, variant = 'carousel' }) {
+  const { locale } = useLocale();
   return (
     <article
       id={`article-${guide.id}`}
@@ -265,7 +282,9 @@ export default function ArticleCard({ guide, isActive = true, variant = 'carouse
         </div>
 
         <div className="article-card__products">
-          <p className="article-card__products-heading">สินค้าแนะนำ</p>
+          <p className="article-card__products-heading">
+            {locale === 'en' ? 'Recommended products' : 'สินค้าแนะนำ'}
+          </p>
           <ul className="article-card__product-list">
             {guide.products.map((product) => (
               <li key={product.label}>

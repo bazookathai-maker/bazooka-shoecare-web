@@ -1,5 +1,8 @@
 import { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import LocaleLink from '../components/LocaleLink';
+import { useLocale } from '../i18n/LocaleContext';
+import { translateKnown } from '../i18n/knownMessages';
 import { useAuth } from '../context/AuthContext';
 import GoogleSignInButton from '../components/GoogleSignInButton';
 import { CHECKOUT_PATH, loginPath, readNextPath } from '../utils/authRedirect';
@@ -7,7 +10,9 @@ import useSeo from '../hooks/useSeo';
 import './Account.css';
 
 export default function Register() {
-  useSeo({ title: 'สมัครบัญชี', noindex: true });
+  const { locale, t, localize } = useLocale();
+  const auth = t.auth;
+  useSeo({ title: auth.registerTitle, noindex: true });
   const navigate = useNavigate();
   const location = useLocation();
   const nextPath = readNextPath(location.search);
@@ -34,7 +39,7 @@ export default function Register() {
     setError('');
     try {
       await register(form);
-      navigate(continueTo || '/account?setup=1', { replace: true });
+      navigate(localize(continueTo || '/account?setup=1'), { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'สมัครบัญชีไม่สำเร็จ');
     } finally {
@@ -52,13 +57,13 @@ export default function Register() {
     try {
       const { customer, isNew } = await loginWithGoogle(credential);
       navigate(
-        continueTo ||
-          (isNew || !customer?.profile_complete ? '/account?setup=1' : '/account'),
+        localize(continueTo ||
+          (isNew || !customer?.profile_complete ? '/account?setup=1' : '/account')),
         { replace: true },
       );
     } catch (err) {
       if (err?.code === 'google_link_required' && err.linkTicket) {
-        navigate(loginPath(nextPath), {
+        navigate(localize(loginPath(nextPath)), {
           replace: true,
           state: { googleLink: { ticket: err.linkTicket, email: err.email || '' } },
         });
@@ -74,8 +79,8 @@ export default function Register() {
     <main className="account-page">
       <header className="account-page__hero">
         <div className="container">
-          <p className="section-label">บัญชี</p>
-          <h1 className="account-page__title">สมัครบัญชี</h1>
+          <p className="section-label">{auth.label}</p>
+          <h1 className="account-page__title">{auth.registerTitle}</h1>
         </div>
       </header>
 
@@ -83,19 +88,18 @@ export default function Register() {
         <form className="account-form" onSubmit={handleSubmit}>
           {nextPath === CHECKOUT_PATH ? (
             <p className="account-form__notice" role="status">
-              สมัครสมาชิกแล้วระบบจะพากลับไปหน้าชำระเงินทันที
-              สินค้าในตะกร้ายังอยู่ครบ
+              {auth.registerCheckout}
             </p>
           ) : null}
           <GoogleSignInButton
             context="signup"
             onCredential={handleGoogleCredential}
             disabled={submitting}
-            dividerText="หรือสมัครด้วยอีเมล"
+            dividerText={auth.signupDivider}
           />
           <div className="account-form__row">
             <label className="account-form__field">
-              <span className="account-form__label">ชื่อ</span>
+              <span className="account-form__label">{auth.firstName}</span>
               <input
                 type="text"
                 name="firstName"
@@ -106,7 +110,7 @@ export default function Register() {
               />
             </label>
             <label className="account-form__field">
-              <span className="account-form__label">นามสกุล</span>
+              <span className="account-form__label">{auth.lastName}</span>
               <input
                 type="text"
                 name="lastName"
@@ -118,7 +122,7 @@ export default function Register() {
             </label>
           </div>
           <label className="account-form__field">
-            <span className="account-form__label">อีเมล</span>
+            <span className="account-form__label">{auth.email}</span>
             <input
               type="email"
               name="email"
@@ -130,7 +134,7 @@ export default function Register() {
             />
           </label>
           <label className="account-form__field">
-            <span className="account-form__label">รหัสผ่าน</span>
+            <span className="account-form__label">{auth.password}</span>
             <input
               type="password"
               name="password"
@@ -144,15 +148,15 @@ export default function Register() {
           </label>
           {error ? (
             <p className="account-form__error" role="alert">
-              {error}
+              {translateKnown(locale, error)}
             </p>
           ) : null}
           <button type="submit" className="btn-primary" disabled={submitting}>
-            {submitting ? 'กำลังสมัคร...' : 'สมัครบัญชี'}
+            {submitting ? auth.registering : auth.createAccount}
           </button>
           <p className="account-form__hint">
-            มีบัญชีอยู่แล้ว?{' '}
-            <Link to={loginPath(nextPath)}>เข้าสู่ระบบ</Link>
+            {auth.hasAccount}{' '}
+            <LocaleLink to={loginPath(nextPath)}>{auth.signIn}</LocaleLink>
           </p>
         </form>
       </div>

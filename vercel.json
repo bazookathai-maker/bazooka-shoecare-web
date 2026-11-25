@@ -33,6 +33,22 @@
   ],
   "headers": [
     {
+      "source": "/en",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex" }]
+    },
+    {
+      "source": "/en/:path*",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex" }]
+    },
+    {
+      "source": "/en/(account|cart|checkout|order-success|track-order|login|register|featured-products)",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex" }]
+    },
+    {
+      "source": "/en/order-status/:path*",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex" }]
+    },
+    {
       "source": "/(account|cart|checkout|order-success|track-order|login|register|featured-products|app.html)",
       "headers": [{ "key": "X-Robots-Tag", "value": "noindex" }]
     },

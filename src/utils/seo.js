@@ -1,6 +1,16 @@
 import { CONTACT_EMAIL, contactInfo, socialLinks } from '../data/contact';
 import { getArticleStoreProducts } from '../data/knowledgeHub';
 import { RETURN_POLICY, SHIPPING_POLICY } from '../data/storePolicies';
+import { localizePath, stripLocale } from '../i18n/locale';
+import { localizedProductName } from '../i18n/productCopy';
+
+/**
+ * Release switch for English search indexing.
+ * While this is false, English pages stay noindex and out of sitemap.xml.
+ * At release, set this to true and remove the blanket /en X-Robots-Tag headers in vercel.json.
+ * Member, cart, checkout, and order pages stay noindex either way.
+ */
+export const INDEX_ENGLISH = false;
 
 export const SITE_URL = 'https://www.bazookashoecare.com';
 export const SITE_NAME = 'BAZOOKA Thailand';
@@ -8,6 +18,8 @@ export const BRAND_NAME = 'BAZOOKA';
 export const HOME_TITLE = `${SITE_NAME} | ดูแลรองเท้าคู่โปรด ได้ครบในเซตเดียว`;
 export const DEFAULT_DESCRIPTION =
   'ดูแลรองเท้าคู่โปรดได้ครบในเซตเดียวกับ BAZOOKA น้ำยาทำความสะอาดรองเท้า สเปรย์กันน้ำ กันคราบ และสเปรย์ดับกลิ่นรองเท้า';
+export const DEFAULT_DESCRIPTION_EN =
+  'Care for the shoes you love with BAZOOKA shoe cleaner, water-repellent spray, and deodorizing spray in one set.';
 export const DEFAULT_OG_IMAGE = `${SITE_URL}/hero.jpg`;
 
 /**
@@ -68,6 +80,32 @@ export function formatTitle({ title, fullTitle }) {
 
 export function absoluteUrl(path) {
   return `${SITE_URL}${path === '/' ? '/' : path}`;
+}
+
+export function barePublicPath(path) {
+  const value = String(path || '/').split(/[?#]/)[0] || '/';
+  return stripLocale(value);
+}
+
+export function localizedPublicPath(path, locale) {
+  return localizePath(barePublicPath(path), locale === 'en' ? 'en' : 'th');
+}
+
+/** Reciprocal alternates. x-default is the original Thai URL. */
+export function hreflangAlternates(path) {
+  const bare = barePublicPath(path);
+  const thai = absoluteUrl(localizedPublicPath(bare, 'th'));
+  const english = absoluteUrl(localizedPublicPath(bare, 'en'));
+  return [
+    { hreflang: 'th', href: thai },
+    { hreflang: 'en', href: english },
+    { hreflang: 'x-default', href: thai },
+  ];
+}
+
+export function isEnglishPath(path) {
+  const value = String(path || '');
+  return value === '/en' || value.startsWith('/en/');
 }
 
 export function productPath(id) {
@@ -159,8 +197,9 @@ function organizationReference(includeId) {
   };
 }
 
-export function buildArticleJsonLd(article) {
+export function buildArticleJsonLd(article, locale = 'th') {
   const page = articleSeo(article);
+  const path = localizedPublicPath(page.path, locale);
   const isSuedeArticle = article?.id === 'suede-clean' || article?.slug === 'suede-clean';
   const mentionedProducts = getArticleStoreProducts(article?.id || article?.slug);
   const organization = organizationReference(isSuedeArticle);
@@ -172,10 +211,10 @@ export function buildArticleJsonLd(article) {
     '@type': 'Article',
     headline: page.title,
     description: page.description,
-    inLanguage: 'th',
+    inLanguage: locale === 'en' ? 'en' : 'th',
     mainEntityOfPage: {
       '@type': 'WebPage',
-      '@id': absoluteUrl(page.path),
+      '@id': absoluteUrl(path),
     },
     ...(dates
       ? { datePublished: dates.published, dateModified: dates.modified }
@@ -183,12 +222,16 @@ export function buildArticleJsonLd(article) {
     ...(imageOnPage ? { image: page.image } : {}),
     ...(mentionedProducts.length
       ? {
-          mentions: mentionedProducts.map((item) => ({
-            '@type': 'Product',
-            '@id': `${absoluteUrl(item.href)}#product`,
-            name: item.label,
-            url: absoluteUrl(item.href),
-          })),
+          mentions: mentionedProducts.map((item) => {
+            const href = localizedPublicPath(item.href, locale);
+            const productId = String(item.href).match(/\/products\/(\d+)/)?.[1];
+            return {
+              '@type': 'Product',
+              '@id': `${absoluteUrl(href)}#product`,
+              name: localizedProductName(productId, item.label, locale),
+              url: absoluteUrl(href),
+            };
+          }),
         }
       : {}),
     author: organization,
@@ -246,8 +289,9 @@ export function buildOfferShippingDetails() {
  * reference it: an offer-level policy needs applicableCountry and returnPolicyCategory, and Google
  * prefers an offer-level policy over the store-level one.
  */
-export function buildStorePoliciesJsonLd() {
+export function buildStorePoliciesJsonLd(locale = 'th') {
   const s = SHIPPING_POLICY.structured;
+  const shippingName = locale === 'en' ? 'Shipping policy' : SHIPPING_POLICY.title;
   const servicePeriod = (range) => ({
     '@type': 'ServicePeriod',
     businessDays: ALL_DAYS_OF_WEEK,
@@ -257,16 +301,17 @@ export function buildStorePoliciesJsonLd() {
   return {
     '@context': 'https://schema.org',
     '@type': 'OnlineStore',
+    inLanguage: locale === 'en' ? 'en' : 'th',
     ...organizationProfile(),
     hasMerchantReturnPolicy: {
       '@type': 'MerchantReturnPolicy',
       '@id': RETURN_POLICY_ID,
-      merchantReturnLink: absoluteUrl(RETURN_POLICY.path),
+      merchantReturnLink: absoluteUrl(localizedPublicPath(RETURN_POLICY.path, locale)),
     },
     hasShippingService: {
       '@type': 'ShippingService',
       '@id': SHIPPING_SERVICE_ID,
-      name: SHIPPING_POLICY.title,
+      name: shippingName,
       handlingTime: servicePeriod(s.handlingDays),
       shippingConditions: {
         '@type': 'ShippingConditions',
@@ -295,10 +340,11 @@ function organizationProfile() {
 }
 
 /** Organization JSON-LD for the homepage. No address or unverified profiles. */
-export function buildOrganizationJsonLd() {
+export function buildOrganizationJsonLd(locale = 'th') {
   return {
     '@context': 'https://schema.org',
     '@type': 'Organization',
+    inLanguage: locale === 'en' ? 'en' : 'th',
     ...organizationProfile(),
   };
 }
@@ -308,8 +354,8 @@ export function buildOrganizationJsonLd() {
  * A missing or non-positive price omits the offer instead of inventing one.
  * Stock follows the buy button: in stock, or out of stock.
  */
-export function buildProductJsonLd(product) {
-  const url = absoluteUrl(productPath(product.id));
+export function buildProductJsonLd(product, locale = 'th') {
+  const url = absoluteUrl(localizedPublicPath(productPath(product.id), locale));
   const image = productPrimaryImage(product);
   const description = product.aboutDescription || product.heroDescription || '';
   const sku = typeof product.sku === 'string' ? product.sku : '';
@@ -325,6 +371,7 @@ export function buildProductJsonLd(product) {
     '@context': 'https://schema.org',
     '@type': 'Product',
     '@id': `${url}#product`,
+    inLanguage: locale === 'en' ? 'en' : 'th',
     name: product.name,
     ...(image ? { image } : {}),
     ...(description ? { description } : {}),

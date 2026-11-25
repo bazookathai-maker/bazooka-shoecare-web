@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import LocaleLink from '../components/LocaleLink';
+import { useLocale } from '../i18n/LocaleContext';
+import { translateKnown } from '../i18n/knownMessages';
 import { useAuth } from '../context/AuthContext';
 import { fetchPasswordResetUrl } from '../api/customerAuth';
 import GoogleSignInButton from '../components/GoogleSignInButton';
@@ -21,7 +24,9 @@ function readLinkState(state) {
 }
 
 export default function Login() {
-  useSeo({ title: 'เข้าสู่ระบบ', noindex: true });
+  const { locale, t, localize } = useLocale();
+  const auth = t.auth;
+  useSeo({ title: auth.loginTitle, noindex: true });
   const navigate = useNavigate();
   const location = useLocation();
   const { login, loginWithGoogle, logout, isLoggedIn, ready } = useAuth();
@@ -67,7 +72,7 @@ export default function Login() {
         googleLinkTicket: googleLink?.ticket,
       });
       navigate(
-        afterSignInPath(location.search, Boolean(signedIn?.profile_complete)),
+        localize(afterSignInPath(location.search, Boolean(signedIn?.profile_complete))),
         { replace: true },
       );
     } catch (err) {
@@ -91,10 +96,10 @@ export default function Login() {
     try {
       const { customer, isNew } = await loginWithGoogle(credential);
       navigate(
-        afterSignInPath(
+        localize(afterSignInPath(
           location.search,
           !isNew && Boolean(customer?.profile_complete),
-        ),
+        )),
         { replace: true },
       );
     } catch (err) {
@@ -118,15 +123,15 @@ export default function Login() {
   };
 
   if (ready && isLoggedIn && !submitting && !sessionExpired) {
-    return <Navigate to={nextPath || '/account'} replace />;
+    return <Navigate to={localize(nextPath || '/account')} replace />;
   }
 
   return (
     <main className="account-page">
       <header className="account-page__hero">
         <div className="container">
-          <p className="section-label">บัญชี</p>
-          <h1 className="account-page__title">เข้าสู่ระบบ</h1>
+          <p className="section-label">{auth.label}</p>
+          <h1 className="account-page__title">{auth.loginTitle}</h1>
         </div>
       </header>
 
@@ -134,42 +139,33 @@ export default function Login() {
         <form className="account-form" onSubmit={handleSubmit}>
           {sessionExpired ? (
             <p className="account-form__notice" role="status">
-              เซสชันหมดอายุ กรุณาเข้าสู่ระบบอีกครั้งเพื่อสั่งซื้อต่อ
-              สินค้าในตะกร้ายังอยู่ครบ
+              {auth.sessionExpired}
             </p>
           ) : nextPath === CHECKOUT_PATH ? (
             <p className="account-form__notice" role="status">
-              กรุณาเข้าสู่ระบบหรือสมัครสมาชิกก่อนสั่งซื้อ
-              สินค้าในตะกร้ายังอยู่ครบ
+              {auth.checkoutNotice}
             </p>
           ) : null}
           {googleLink ? (
             <div className="account-form__notice" role="status">
               <p>
-                พบบัญชีเดิมที่ใช้อีเมล <strong>{googleLink.email}</strong>{' '}
-                กรุณากรอกรหัสผ่านของบัญชีนี้เพื่อยืนยันตัวตน
-                ระบบจะเชื่อมบัญชี Google กับบัญชีเดิมหลังเข้าสู่ระบบสำเร็จ
+                {auth.linkIntro(googleLink.email)}
               </p>
               {passwordResetUrl ? (
                 <div className="account-form__steps">
-                  <p>จำรหัสผ่านไม่ได้? ทำตามขั้นตอนนี้</p>
+                  <p>{auth.forgotStepsTitle}</p>
                   <ol>
                     <li>
-                      กด “ลืมรหัสผ่าน?” ใต้ช่องรหัสผ่าน
-                      หน้าตั้งรหัสผ่านของ BAZOOKA จะเปิดในแท็บใหม่
+                      {auth.forgotStep1}
                     </li>
                     <li>
-                      กรอกอีเมล <strong>{googleLink.email}</strong>{' '}
-                      แล้วเปิดลิงก์ในอีเมลที่ได้รับเพื่อตั้งรหัสผ่านใหม่
-                      (หากไม่พบ ให้ตรวจในโฟลเดอร์จดหมายขยะ)
+                      {auth.forgotStep2} <strong>{googleLink.email}</strong>
                     </li>
                     <li>
-                      กลับมาที่หน้านี้ กรอกรหัสผ่านใหม่
-                      แล้วกด “ยืนยันและเชื่อมบัญชี Google”
-                      หากระบบแจ้งว่าคำขอหมดอายุ ให้กด “เข้าสู่ระบบด้วย Google” อีกครั้ง
+                      {auth.forgotStep3}
                     </li>
                   </ol>
-                  <p>หลังเชื่อมสำเร็จ ครั้งต่อไปกดเข้าสู่ระบบด้วย Google ได้ทันทีโดยไม่ต้องใช้รหัสผ่าน</p>
+                  <p>{auth.forgotAfter}</p>
                 </div>
               ) : null}
               <button
@@ -178,7 +174,7 @@ export default function Login() {
                 onClick={cancelGoogleLink}
                 disabled={submitting}
               >
-                ยกเลิกการเชื่อมบัญชี Google
+                {auth.cancelLink}
               </button>
             </div>
           ) : (
@@ -186,11 +182,11 @@ export default function Login() {
               context="signin"
               onCredential={handleGoogleCredential}
               disabled={submitting}
-              dividerText="หรือเข้าสู่ระบบด้วยอีเมล"
+              dividerText={auth.emailDivider}
             />
           )}
           <label className="account-form__field">
-            <span className="account-form__label">อีเมล</span>
+            <span className="account-form__label">{auth.email}</span>
             <input
               type="email"
               name="email"
@@ -203,7 +199,7 @@ export default function Login() {
             />
           </label>
           <label className="account-form__field">
-            <span className="account-form__label">รหัสผ่าน</span>
+            <span className="account-form__label">{auth.password}</span>
             <input
               type="password"
               name="password"
@@ -217,26 +213,26 @@ export default function Login() {
           {passwordResetUrl ? (
             <p className="account-form__forgot">
               <a href={passwordResetUrl} target="_blank" rel="noopener noreferrer">
-                ลืมรหัสผ่าน?
-                <span className="visually-hidden"> (เปิดในแท็บใหม่)</span>
+                {auth.forgot}
+                <span className="visually-hidden">{auth.forgotNewTab}</span>
               </a>
             </p>
           ) : null}
           {error ? (
             <p className="account-form__error" role="alert">
-              {error}
+              {translateKnown(locale, error)}
             </p>
           ) : null}
           <button type="submit" className="btn-primary" disabled={submitting}>
             {submitting
-              ? 'กำลังเข้าสู่ระบบ...'
+              ? auth.signingIn
               : googleLink
-                ? 'ยืนยันและเชื่อมบัญชี Google'
-                : 'เข้าสู่ระบบ'}
+                ? auth.confirmGoogle
+                : auth.signIn}
           </button>
           <p className="account-form__hint">
-            ยังไม่มีบัญชี?{' '}
-            <Link to={registerPath(nextPath)}>สมัครบัญชี</Link>
+            {auth.noAccount}{' '}
+            <LocaleLink to={registerPath(nextPath)}>{auth.createAccount}</LocaleLink>
           </p>
         </form>
       </div>

@@ -2,7 +2,8 @@ import { useState } from 'react';
 import ScrollReveal from '../components/ScrollReveal';
 import { CONTACT_EMAIL, contactInfo, socialLinks } from '../data/contact';
 import useSeo from '../hooks/useSeo';
-import { PAGE_SEO } from '../utils/seo';
+import { INDEX_ENGLISH } from '../utils/seo';
+import { useLocale } from '../i18n/LocaleContext';
 import './Contact.css';
 
 const INITIAL_FORM = {
@@ -53,7 +54,13 @@ function buildMailtoHref({ name, email, subject, message }) {
 }
 
 export default function Contact() {
-  useSeo(PAGE_SEO.contact);
+  const { locale, t } = useLocale();
+  useSeo({
+    title: t.contact.seoTitle,
+    description: t.contact.seoDescription,
+    path: locale === 'en' ? '/en/contact' : '/contact',
+    noindex: locale === 'en' && !INDEX_ENGLISH,
+  });
   const [form, setForm] = useState(INITIAL_FORM);
   const [status, setStatus] = useState({ type: '', text: '' });
 
@@ -69,17 +76,17 @@ export default function Contact() {
       (field) => !form[field].trim(),
     );
     if (missing) {
-      setStatus({ type: 'error', text: 'กรุณากรอกข้อมูลให้ครบทุกช่อง' });
+      setStatus({ type: 'error', text: t.contact.missing });
       return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
-      setStatus({ type: 'error', text: 'กรุณากรอกอีเมลให้ถูกต้อง' });
+      setStatus({ type: 'error', text: t.contact.invalidEmail });
       return;
     }
     window.location.href = buildMailtoHref(form);
     setStatus({
       type: 'info',
-      text: `กำลังเปิดแอปอีเมลของคุณ ข้อความจะถูกส่งถึง ${CONTACT_EMAIL} เมื่อคุณกดส่งในแอปอีเมล`,
+      text: t.contact.opening(CONTACT_EMAIL),
     });
   };
 
@@ -90,18 +97,24 @@ export default function Contact() {
           <ScrollReveal className="contact-page__hero-inner">
             <h1 className="contact-page__title">Contact</h1>
             <p className="contact-page__subtitle">
-              ติดต่อทีม BAZOOKA สำหรับคำถามเรื่องสินค้าและการดูแลรองเท้า
+              {t.contact.subtitle}
             </p>
           </ScrollReveal>
         </div>
       </header>
 
-      <section className="contact-page__content" aria-label="ข้อมูลติดต่อและแบบฟอร์ม">
+      <section className="contact-page__content" aria-label={t.contact.sectionLabel}>
         <div className="container">
           <div className="contact-page__layout">
             <div className="contact-page__aside">
               <ul className="contact-page__info-grid">
                 {contactInfo.map((item) => {
+                  const shown =
+                    locale === 'en' && item.id === 'facebook'
+                      ? { ...item, value: t.contact.facebook }
+                      : locale === 'en' && item.id === 'hours'
+                        ? { ...item, label: t.contact.hoursLabel, value: t.contact.hours }
+                        : item;
                   const ValueTag = item.href ? 'a' : 'span';
                   const valueProps = item.href
                     ? {
@@ -113,13 +126,13 @@ export default function Contact() {
                     : {};
 
                   return (
-                    <li key={item.id} className="contact-info-card">
+                    <li key={shown.id} className="contact-info-card">
                       <span className="contact-info-card__icon">
-                        <ContactIcon type={item.icon} />
+                        <ContactIcon type={shown.icon} />
                       </span>
-                      <p className="contact-info-card__label">{item.label}</p>
+                      <p className="contact-info-card__label">{shown.label}</p>
                       <ValueTag className="contact-info-card__value" {...valueProps}>
-                        {item.value}
+                        {shown.value}
                       </ValueTag>
                     </li>
                   );
@@ -148,7 +161,7 @@ export default function Contact() {
             <div className="contact-page__form-panel">
               <form className="contact-form" onSubmit={handleSubmit} noValidate>
                 <label className="contact-form__field">
-                  <span>ชื่อ</span>
+                  <span>{t.contact.name}</span>
                   <input
                     type="text"
                     name="name"
@@ -160,7 +173,7 @@ export default function Contact() {
                 </label>
 
                 <label className="contact-form__field">
-                  <span>อีเมล</span>
+                  <span>{t.contact.email}</span>
                   <input
                     type="email"
                     name="email"
@@ -172,7 +185,7 @@ export default function Contact() {
                 </label>
 
                 <label className="contact-form__field">
-                  <span>หัวข้อ</span>
+                  <span>{t.contact.subject}</span>
                   <input
                     type="text"
                     name="subject"
@@ -183,7 +196,7 @@ export default function Contact() {
                 </label>
 
                 <label className="contact-form__field">
-                  <span>ข้อความ</span>
+                  <span>{t.contact.message}</span>
                   <textarea
                     name="message"
                     value={form.message}
@@ -194,7 +207,7 @@ export default function Contact() {
                 </label>
 
                 <button type="submit" className="contact-form__submit">
-                  ส่งข้อความทางอีเมล
+                  {t.contact.submit}
                 </button>
 
                 {status.text ? (
@@ -206,14 +219,14 @@ export default function Contact() {
                   </p>
                 ) : (
                   <p className="contact-form__note">
-                    ระบบจะเปิดแอปอีเมลของคุณพร้อมข้อความนี้ เพื่อส่งถึง {CONTACT_EMAIL}
+                    {t.contact.hint(CONTACT_EMAIL)}
                   </p>
                 )}
               </form>
             </div>
           </div>
 
-          <div className="contact-page__map" aria-label="แผนที่">
+          <div className="contact-page__map" aria-label={t.contact.map}>
             <div className="contact-page__map-placeholder">
               <p className="contact-page__map-title">Google Map</p>
               <p className="contact-page__map-text">Map placeholder</p>

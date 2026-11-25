@@ -38,6 +38,11 @@ let policies;
 let productCareLinks;
 let getArticleStoreProducts;
 let getIntentRelatedArticles;
+let messages;
+let pageCopy;
+let journeyCopy;
+let productCopy;
+let guideCopy;
 try {
   [
     seo,
@@ -52,6 +57,11 @@ try {
     policies,
     productCareLinks,
     { getArticleStoreProducts, getIntentRelatedArticles },
+    messages,
+    pageCopy,
+    journeyCopy,
+    productCopy,
+    guideCopy,
   ] = await Promise.all(
       [
         '/src/utils/seo.js',
@@ -66,6 +76,11 @@ try {
         '/src/data/storePolicies.js',
         '/src/data/productCareLinks.js',
         '/src/data/knowledgeHub.js',
+        '/src/i18n/messages.js',
+        '/src/i18n/pageCopy.js',
+        '/src/i18n/journeyCopy.js',
+        '/src/i18n/productCopy.js',
+        '/src/i18n/localizeGuide.js',
       ].map((id) => vite.ssrLoadModule(id)),
     );
 } finally {
@@ -132,6 +147,19 @@ const NAV = [
   ['/contact', 'ติดต่อเรา'],
 ];
 
+const enMessages = messages.messages.en;
+const enPages = pageCopy.pageCopy.en;
+const enJourney = journeyCopy.journeyCopy.en;
+const EN_NAV = [
+  ['/', enMessages.nav.home],
+  ['/products', enMessages.nav.products],
+  ['/recommended', enMessages.footer.recommended],
+  ['/articles', enMessages.nav.articles],
+  ['/reviews', enMessages.nav.reviews],
+  ['/faq', enMessages.nav.faq],
+  ['/contact', enMessages.nav.contact],
+];
+
 const PRERENDER_STYLE = `<style>.seo-prerender{max-width:1080px;margin:0 auto;padding:96px 20px 48px;line-height:1.7;animation:seo-prerender-reveal 0s 2.5s both}.seo-prerender nav a{margin-right:16px}@keyframes seo-prerender-reveal{from{visibility:hidden}to{visibility:visible}}</style>`;
 
 const template = fs.readFileSync(path.join(DIST, 'index.html'), 'utf8');
@@ -147,15 +175,22 @@ const MANAGED_HEAD = [
 const jsonLdScript = (data) =>
   `<script type="application/ld+json" id="seo-json-ld">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>`;
 
-function renderPage({ seo: page, body, jsonLd }) {
+function renderPage({ seo: page, body, jsonLd, locale = 'th', noindex = false }) {
   const title = seo.formatTitle(page);
   const description = page.description || seo.DEFAULT_DESCRIPTION;
   const canonical = seo.absoluteUrl(page.path);
   const image = page.image || (page.type === 'product' ? '' : seo.DEFAULT_OG_IMAGE);
+  const alternates = seo.hreflangAlternates(page.path)
+    .map((item) => `<link rel="alternate" hreflang="${esc(item.hreflang)}" href="${esc(item.href)}" />`)
+    .join('\n    ');
   const head = [
     `<title>${esc(title)}</title>`,
     `<meta name="description" content="${esc(description)}" />`,
+    noindex ? '<meta name="robots" content="noindex" />' : '',
     `<link rel="canonical" href="${esc(canonical)}" />`,
+    alternates,
+    `<meta property="og:locale" content="${locale === 'en' ? 'en_US' : 'th_TH'}" />`,
+    `<meta property="og:locale:alternate" content="${locale === 'en' ? 'th_TH' : 'en_US'}" />`,
     `<meta property="og:type" content="${esc(page.type || 'website')}" />`,
     `<meta property="og:title" content="${esc(title)}" />`,
     `<meta property="og:description" content="${esc(description)}" />`,
@@ -171,10 +206,16 @@ function renderPage({ seo: page, body, jsonLd }) {
 
   let html = template;
   for (const pattern of MANAGED_HEAD) html = html.replace(pattern, '');
+  html = html.replace('<html lang="th">', `<html lang="${locale === 'en' ? 'en' : 'th'}">`);
   html = html.replace(/\s*<\/head>/, `\n    ${head}\n  </head>`);
 
-  const nav = `<nav aria-label="เมนูหลัก">${NAV.map(([href, label]) => link(href, label)).join('')}</nav>`;
-  const footer = `<footer>${policies.STORE_POLICIES.map((policy) => link(policy.path, policy.title)).join(' · ')}</footer>`;
+  const navItems = locale === 'en' ? EN_NAV : NAV;
+  const nav = `<nav aria-label="${locale === 'en' ? 'Primary' : 'เมนูหลัก'}">${navItems
+    .map(([href, label]) => link(locale === 'en' ? seo.localizedPublicPath(href, 'en') : href, label))
+    .join('')}</nav>`;
+  const footer = locale === 'en'
+    ? `<footer>${link(seo.localizedPublicPath('/shipping-policy', 'en'), enJourney.policy.shipping.title)} · ${link(seo.localizedPublicPath('/return-policy', 'en'), enJourney.policy.returns.title)}</footer>`
+    : `<footer>${policies.STORE_POLICIES.map((policy) => link(policy.path, policy.title)).join(' · ')}</footer>`;
   const snapshot = `<div class="seo-prerender">${nav}<main>${body}</main>${footer}</div>`;
   if (!html.includes('<div id="root"></div>')) throw new Error('#root not found in dist/index.html');
   return html.replace('<div id="root"></div>', `<div id="root">${snapshot}</div>`);
@@ -380,16 +421,252 @@ for (const policy of policies.STORE_POLICIES) {
   );
 }
 
+const enLink = (bare, label) => link(seo.localizedPublicPath(bare, 'en'), label);
+const enProduct = (product) => productCopy.localizeStoreProduct(product, 'en');
+const enProductLinks = (items) =>
+  list(items.map((product) => enLink(seo.productPath(product.id), enProduct(product).name)));
+const hubLabel = (item) => guideCopy.displayHubLabel(item, 'en', { ...enMessages, ...enPages });
+
+function writeEnglish(bare, page) {
+  const route = seo.localizedPublicPath(bare, 'en');
+  rendered.push(
+    writePage(route, {
+      ...page,
+      seo: { ...page.seo, path: route },
+      locale: 'en',
+      noindex: !seo.INDEX_ENGLISH || page.holdIndex === true,
+    }),
+  );
+}
+
+writeEnglish('/', {
+  seo: {
+    fullTitle: enMessages.home.seoTitle,
+    description: enMessages.home.seoDescription,
+  },
+  jsonLd: seo.buildOrganizationJsonLd('en'),
+  body: [
+    `<h1>${esc(`${enMessages.home.heroLine1} ${enMessages.home.heroLine2}`)}</h1>`,
+    `<p>${text(enMessages.home.seoDescription)}</p>`,
+    products.length
+      ? `<h2>TOP PRODUCT</h2>${enProductLinks(
+          homeCatalog.buildHomeTopPicks(products, 6, homeCatalog.HOME_TOP_PICKS_APPEND_IDS),
+        )}`
+      : '',
+    `<p>${enLink('/products', enMessages.home.viewAllProducts)}</p>`,
+    `<h2>${esc(enMessages.nav.articles)}</h2>${list(
+      careGuides.map((guide) => {
+        const view = guideCopy.localizeGuide(guide, 'en');
+        return enLink(seo.articlePath(guide.slug), view.title.replace(/\s+/g, ' '));
+      }),
+    )}`,
+    `<h2>${esc(enMessages.home.faqTitle)}</h2>`,
+    homeFaqs
+      .map((item) => {
+        const extra = enMessages.home.faqs[item.id];
+        const related = (item.links || [])
+          .map((entry) => enLink(entry.href, extra?.links?.[entry.href] || entry.label))
+          .join(' · ');
+        return `<h3>${esc(extra?.question || item.question)}</h3><p>${text(extra?.answer || item.answer)}${related ? ` ${related}` : ''}</p>`;
+      })
+      .join(''),
+  ].join(''),
+});
+
+writeEnglish('/products', {
+  seo: { title: enPages.products.seoTitle, description: enPages.products.seoDescription },
+  body: `<h1>${esc(enPages.products.title)}</h1>${enProductLinks(products)}`,
+});
+
+writeEnglish('/recommended', {
+  seo: { title: enJourney.featured.title, description: enJourney.featured.subtitle },
+  body: `<h1>TOP PRODUCT</h1>${products.length ? enProductLinks(homeCatalog.buildHomeTopPicks(products, 6)) : ''}`,
+});
+
+const untranslatedProducts = [];
+for (const product of products) {
+  const view = enProduct(product);
+  const ready = productCopy.hasEnglishProductCopy(product.id);
+  if (!ready) untranslatedProducts.push(product.id);
+  const careLink = productCareLinks.getProductCareLink(product.id);
+  const careHtml = careLink ? `<p>${enLink(careLink.href, hubLabel(careLink))}</p>` : '';
+  writeEnglish(seo.productPath(product.id), {
+    holdIndex: !ready,
+    seo: {
+      title: view.name,
+      description: seo.shortenText([view.name, view.heroDescription || view.aboutDescription].filter(Boolean).join(' – ')),
+      image: seo.productPrimaryImage(product),
+      type: 'product',
+    },
+    jsonLd: ready ? seo.buildProductJsonLd(view, 'en') : null,
+    body: [
+      `<nav aria-label="${esc(enPages.pdp.breadcrumb)}">${enLink('/', enPages.pdp.home)} / ${enLink('/products', enPages.pdp.products)} / ${esc(view.name)}</nav>`,
+      `<h1>${esc(view.name)}</h1>`,
+      seo.productPrimaryImage(product)
+        ? `<img src="${esc(seo.productPrimaryImage(product))}" alt="${esc(view.name)}">`
+        : '',
+      view.heroDescription ? `<p>${text(view.heroDescription)}</p>` : '',
+      view.aboutDescription ? `<h2>${esc(enPages.pdp.about)}</h2><p>${text(view.aboutDescription)}</p>` : '',
+      view.benefits?.length ? `<h2>${esc(enPages.pdp.highlights)}</h2>${list(view.benefits.slice(0, 6).map(esc))}` : '',
+      view.howToText ? `<h2>${esc(enPages.pdp.usage)}</h2><p>${text(view.howToText)}</p>` : '',
+      careHtml,
+      view.sku ? `<p>${esc(enPages.pdp.sku)}: ${esc(view.sku)}</p>` : '',
+      `<p>${enLink('/products', enPages.pdp.back)}</p>`,
+    ].join(''),
+  });
+}
+
+writeEnglish('/articles', {
+  seo: { title: enJourney.journal.seoTitle, description: enJourney.journal.seoDescription },
+  body: [
+    '<h1>Journal</h1>',
+    `<p>${esc(enJourney.journal.subtitle)}</p>`,
+    list(
+      careGuides.map((guide) => {
+        const view = guideCopy.localizeGuide(guide, 'en');
+        const title = view.title.replace(/\s+/g, ' ');
+        const image = view.cover
+          ? `<img src="${esc(view.cover)}" alt="${esc(view.coverAlt || '')}" width="1024" height="1024">`
+          : '';
+        return `<h2>${enLink(seo.articlePath(guide.slug), title)}</h2>${image}<p>${text(view.summary)}</p>`;
+      }),
+    ),
+  ].join(''),
+});
+
+for (const guide of careGuides) {
+  const view = guideCopy.localizeGuide(guide, 'en');
+  const longform = view.longform === true && Array.isArray(view.blocks);
+  const verifiedDates = seo.getVerifiedArticleDates(guide);
+  const related = getIntentRelatedArticles(guide.slug);
+  const storeProducts = getArticleStoreProducts(guide.id);
+  writeEnglish(seo.articlePath(guide.slug), {
+    seo: {
+      title: view.title.replace(/\s+/g, ' ').trim(),
+      description: view.description || seo.shortenText(view.summary),
+      image: seo.toAbsoluteAssetUrl(view.cover),
+      type: 'article',
+    },
+    jsonLd: seo.buildArticleJsonLd(view, 'en'),
+    body: longform
+      ? `<p>${enLink('/articles', enJourney.journal.back)}</p>${renderArticleHtml({
+          title: view.title,
+          blocks: view.blocks,
+          className: view.articleClass || 'longform-article',
+          videoSrc: view.embedVideo ? view.video : undefined,
+          videoPoster: view.embedVideo ? view.videoPoster : undefined,
+          videoPosterAlt: view.embedVideo ? view.videoPosterAlt : undefined,
+          videoTitle: view.embedVideo ? view.videoTitle : undefined,
+          videoDescription: view.embedVideo ? view.videoDescription : undefined,
+          videoCaption: view.embedVideo ? view.videoCaption : undefined,
+          publishedAt: verifiedDates?.published,
+          locale: 'en',
+        })}${
+          storeProducts.length
+            ? `<aside aria-label="${esc(enJourney.journal.relatedProducts)}"><h2>${esc(enJourney.journal.relatedProducts)}</h2><ul>${storeProducts
+                .map((item) => `<li>${enLink(item.href, hubLabel(item))}</li>`)
+                .join('')}</ul></aside>`
+            : ''
+        }${
+          related.length
+            ? `<aside aria-label="${esc(enJourney.journal.relatedHeading)}"><h2>${esc(enJourney.journal.relatedHeading)}</h2><ul>${related
+                .map((item) => `<li>${enLink(item.href, hubLabel(item))}</li>`)
+                .join('')}</ul></aside>`
+            : ''
+        }`
+      : `<p>${enLink('/articles', enJourney.journal.back)}</p><h1>${text(view.title)}</h1><p>${text(view.summary)}</p>`,
+  });
+}
+
+writeEnglish('/reviews', {
+  seo: { title: enPages.reviews.seoTitle, description: enPages.reviews.seoDescription },
+  body: [
+    `<h1>${esc(enPages.reviews.title)}</h1>`,
+    `<p>${esc(enPages.reviews.subtitle)}</p>`,
+    list(
+      googleReviews.map((review) => {
+        const extra = enPages.reviews.items[review.id];
+        const name = review.name;
+        const productName = extra?.productName || review.productName;
+        const bodyText = extra?.text || review.text;
+        return `<p><strong>${esc(name)}</strong>${productName ? ` – ${esc(productName)}` : ''}</p><p>${text(bodyText)}</p>`;
+      }),
+    ),
+  ].join(''),
+});
+
+writeEnglish('/faq', {
+  seo: { title: enPages.faq.seoTitle, description: enPages.faq.seoDescription },
+  body: [
+    `<h1>${esc(enPages.faq.title)}</h1>`,
+    `<p>${esc(enPages.faq.subtitle)}</p>`,
+    faqItems
+      .map((item) => {
+        const extra = enPages.faq.items[item.id] || enMessages.home.faqs[item.id] || item;
+        const links = (item.links || [])
+          .map((entry) => enLink(entry.href, enMessages.home.faqs[item.id]?.links?.[entry.href] || entry.label))
+          .join(' · ');
+        return `<h2>${esc(extra.question)}</h2><p>${text(extra.answer)}${links ? ` ${links}` : ''}</p>`;
+      })
+      .join(''),
+  ].join(''),
+});
+
+writeEnglish('/contact', {
+  seo: { title: enPages.contact.seoTitle, description: enPages.contact.seoDescription },
+  body: [
+    `<h1>${esc(enPages.contact.title)}</h1>`,
+    `<p>${esc(enPages.contact.subtitle)}</p>`,
+    list(
+      contact.contactInfo.map((item) => {
+        const shown = item.id === 'facebook'
+          ? { ...item, value: enPages.contact.facebook }
+          : item.id === 'hours'
+            ? { ...item, label: enPages.contact.hoursLabel, value: enPages.contact.hours }
+            : item;
+        return `${esc(shown.label)}: ${shown.href ? link(shown.href, shown.value) : esc(shown.value)}`;
+      }),
+    ),
+    list(contact.socialLinks.map((item) => link(item.href, item.label))),
+  ].join(''),
+});
+
+for (const policy of policies.STORE_POLICIES) {
+  const overlay = policy.key === 'shippingPolicy' ? enJourney.policy.shipping : enJourney.policy.returns;
+  writeEnglish(policy.path, {
+    seo: { title: overlay.title, description: overlay.description },
+    jsonLd: seo.buildStorePoliciesJsonLd('en'),
+    body: [
+      `<h1>${esc(overlay.title)}</h1>`,
+      overlay.sections.map((section) => `<h2>${esc(section.heading)}</h2>${list(section.items.map(esc))}`).join(''),
+      policy.contacts
+        ? `<h2>${esc(enJourney.policy.contact)}</h2>${list(policy.contacts.map((item) => `${esc(item.id === 'email' ? enJourney.policy.email : item.label)} ${link(item.href, item.value)}`))}`
+        : '',
+    ].join(''),
+  });
+}
+
 console.log(`[seo] pre-rendered ${rendered.length} pages (${products.length} products)`);
+
+const thaiSitemapPaths = [
+  ...Object.values(seo.PAGE_SEO).map((page) => page.path),
+  ...products.map((product) => seo.productPath(product.id)),
+  ...careGuides.map((guide) => seo.articlePath(guide.slug)),
+];
+const englishReadyPaths = [
+  ...Object.values(seo.PAGE_SEO).map((page) => seo.localizedPublicPath(page.path, 'en')),
+  ...products
+    .filter((product) => productCopy.hasEnglishProductCopy(product.id))
+    .map((product) => seo.localizedPublicPath(seo.productPath(product.id), 'en')),
+  ...careGuides.map((guide) => seo.localizedPublicPath(seo.articlePath(guide.slug), 'en')),
+];
 
 if (products.length === 0) {
   console.warn('[seo] keeping the committed sitemap because no products were loaded');
 } else {
-  const sitemapPaths = [
-    ...Object.values(seo.PAGE_SEO).map((page) => page.path),
-    ...products.map((product) => seo.productPath(product.id)),
-    ...careGuides.map((guide) => seo.articlePath(guide.slug)),
-  ];
+  const sitemapPaths = seo.INDEX_ENGLISH
+    ? [...thaiSitemapPaths, ...englishReadyPaths]
+    : thaiSitemapPaths;
   const xml = [
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
@@ -399,4 +676,10 @@ if (products.length === 0) {
   ].join('\n');
   fs.writeFileSync(path.join(DIST, 'sitemap.xml'), xml);
   console.log(`[seo] sitemap: ${sitemapPaths.length} URLs (${products.length} products)`);
+  console.log(
+    `[seo] english index held: ${englishReadyPaths.length} public English URLs are prerendered with noindex and are not in sitemap.xml`,
+  );
+  if (untranslatedProducts.length) {
+    console.log(`[seo] products without English copy stay noindex: ${untranslatedProducts.join(', ')}`);
+  }
 }

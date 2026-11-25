@@ -1,7 +1,9 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { fetchStoreProducts } from '../api/woocommerce';
 import { searchSiteContent } from '../utils/siteSearch';
+import { useLocale } from '../i18n/LocaleContext';
+import { localizeStoreProduct } from '../i18n/productCopy';
+import LocaleLink from './LocaleLink';
 import './SearchOverlay.css';
 
 function formatPrice(price) {
@@ -9,15 +11,20 @@ function formatPrice(price) {
 }
 
 export default function SearchOverlay({ open, onClose }) {
+  const { locale, t } = useLocale();
   const inputId = useId();
   const inputRef = useRef(null);
   const [draft, setDraft] = useState('');
   const [query, setQuery] = useState('');
   const [catalog, setCatalog] = useState([]);
 
+  const localizedCatalog = useMemo(
+    () => catalog.map((product) => localizeStoreProduct(product, locale)),
+    [catalog, locale],
+  );
   const results = useMemo(
-    () => searchSiteContent(query, { productsCatalog: catalog }),
-    [query, catalog],
+    () => searchSiteContent(query, { productsCatalog: localizedCatalog, locale }),
+    [query, localizedCatalog, locale],
   );
   const hasQuery = Boolean(query);
   const hasResults = results.products.length > 0 || results.articles.length > 0;
@@ -72,11 +79,11 @@ export default function SearchOverlay({ open, onClose }) {
   };
 
   return (
-    <div className="search-overlay" role="dialog" aria-modal="true" aria-label="ค้นหา">
+    <div className="search-overlay" role="dialog" aria-modal="true" aria-label={t.search.label}>
       <button
         type="button"
         className="search-overlay__backdrop"
-        aria-label="ปิดการค้นหา"
+        aria-label={t.search.close}
         onClick={onClose}
       />
 
@@ -84,7 +91,7 @@ export default function SearchOverlay({ open, onClose }) {
         <div className="search-overlay__top">
           <form className="search-overlay__form" onSubmit={handleSubmit} role="search">
             <label htmlFor={inputId} className="visually-hidden">
-              ค้นหาสินค้าและบทความ
+              {t.search.field}
             </label>
             <input
               ref={inputRef}
@@ -93,19 +100,19 @@ export default function SearchOverlay({ open, onClose }) {
               className="search-overlay__input"
               value={draft}
               onChange={(event) => setDraft(event.target.value)}
-              placeholder="ค้นหาสินค้าหรือบทความ..."
+              placeholder={t.search.placeholder}
               autoComplete="off"
               enterKeyHint="search"
             />
             <button type="submit" className="search-overlay__submit">
-              ค้นหา
+              {t.search.submit}
             </button>
           </form>
 
           <button
             type="button"
             className="search-overlay__close"
-            aria-label="ปิด"
+            aria-label={t.search.dismiss}
             onClick={onClose}
           >
             ×
@@ -114,25 +121,25 @@ export default function SearchOverlay({ open, onClose }) {
 
         <div className="search-overlay__body">
           {!hasQuery ? (
-            <p className="search-overlay__hint">พิมพ์คำค้นแล้วกด Enter</p>
+            <p className="search-overlay__hint">{t.search.hint}</p>
           ) : null}
 
           {hasQuery && !hasResults ? (
             <div className="search-overlay__empty">
-              <p>ไม่พบผลลัพธ์ที่ค้นหา</p>
-              <Link to="/products" className="search-overlay__cta" onClick={onClose}>
-                ดูสินค้าทั้งหมด
-              </Link>
+              <p>{t.search.empty}</p>
+              <LocaleLink to="/products" className="search-overlay__cta" onClick={onClose}>
+                {t.search.viewAll}
+              </LocaleLink>
             </div>
           ) : null}
 
           {hasQuery && results.products.length > 0 ? (
-            <section className="search-overlay__section" aria-label="สินค้า">
-              <h2 className="search-overlay__section-title">สินค้า</h2>
+            <section className="search-overlay__section" aria-label={t.search.products}>
+              <h2 className="search-overlay__section-title">{t.search.products}</h2>
               <ul className="search-overlay__list">
                 {results.products.map((product) => (
                   <li key={product.id}>
-                    <Link
+                    <LocaleLink
                       to={product.href}
                       className="search-result search-result--product"
                       onClick={onClose}
@@ -146,7 +153,7 @@ export default function SearchOverlay({ open, onClose }) {
                           {formatPrice(product.price)}
                         </span>
                       </span>
-                    </Link>
+                    </LocaleLink>
                   </li>
                 ))}
               </ul>
@@ -154,12 +161,12 @@ export default function SearchOverlay({ open, onClose }) {
           ) : null}
 
           {hasQuery && results.articles.length > 0 ? (
-            <section className="search-overlay__section" aria-label="บทความ">
-              <h2 className="search-overlay__section-title">บทความ</h2>
+            <section className="search-overlay__section" aria-label={t.search.articles}>
+              <h2 className="search-overlay__section-title">{t.search.articles}</h2>
               <ul className="search-overlay__list">
                 {results.articles.map((article) => (
                   <li key={article.id}>
-                    <Link
+                    <LocaleLink
                       to={article.href}
                       className="search-result search-result--article"
                       onClick={onClose}
@@ -171,7 +178,7 @@ export default function SearchOverlay({ open, onClose }) {
                         <span className="search-result__meta">{article.category}</span>
                         <span className="search-result__title">{article.title}</span>
                       </span>
-                    </Link>
+                    </LocaleLink>
                   </li>
                 ))}
               </ul>

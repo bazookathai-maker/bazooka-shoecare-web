@@ -1,7 +1,10 @@
-import { Link } from 'react-router-dom';
+import { useLocale } from '../i18n/LocaleContext';
+import LocaleLink from './LocaleLink';
 import './Hero.css';
 
 export default function Hero() {
+  const { t } = useLocale();
+
   return (
     <section className="hero hero--cinematic">
       <div className="hero__overlay" aria-hidden="true" />
@@ -41,20 +44,20 @@ export default function Hero() {
       <div className="hero__content container">
         <div className="hero__copy">
           <h1 className="hero__headline">
-            <span>ดูแลรองเท้า</span>
-            <span>ได้ครบในเซตเดียว</span>
+            <span>{t.home.heroLine1}</span>
+            <span>{t.home.heroLine2}</span>
           </h1>
 
           <div className="hero__actions">
-            <Link to="/products" className="btn-primary">
-              เลือกซื้อสินค้า
-            </Link>
-            <Link
+            <LocaleLink to="/products" className="btn-primary">
+              {t.home.shop}
+            </LocaleLink>
+            <LocaleLink
               to="#how-to-care"
               className="btn-outline hero__cta-secondary"
             >
-              ดูวิธีดูแลรองเท้า
-            </Link>
+              {t.home.howTo}
+            </LocaleLink>
           </div>
         </div>
       </div>

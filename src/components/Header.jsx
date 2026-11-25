@@ -1,26 +1,31 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { useLocale } from '../i18n/LocaleContext';
+import { stripLocale } from '../i18n/locale';
 import SearchOverlay from './SearchOverlay';
 import MiniCart from './MiniCart';
+import LanguageSwitcher from './LanguageSwitcher';
+import LocaleLink from './LocaleLink';
 import logoBlackUrl from '../assets/bazooka-logo-black.png';
 import logoWhiteUrl from '../assets/bazooka-logo-white.png';
 import './Header.css';
 
 const navLinks = [
-  { to: '/', label: 'หน้าแรก' },
-  { to: '/products', label: 'สินค้า' },
-  { to: '/articles', label: 'บทความ' },
-  { to: '/reviews', label: 'รีวิว' },
-  { to: '/faq', label: 'FAQ' },
-  { to: '/track-order', label: 'ติดตามคำสั่งซื้อ' },
-  { to: '/contact', label: 'ติดต่อเรา' },
+  { to: '/', key: 'home' },
+  { to: '/products', key: 'products' },
+  { to: '/articles', key: 'articles' },
+  { to: '/reviews', key: 'reviews' },
+  { to: '/faq', key: 'faq' },
+  { to: '/track-order', key: 'trackOrder' },
+  { to: '/contact', key: 'contact' },
 ];
 
 function isActive(pathname, to) {
-  if (to === '/') return pathname === '/';
-  return pathname === to || pathname.startsWith(`${to}/`);
+  const current = stripLocale(pathname);
+  if (to === '/') return current === '/';
+  return current === to || current.startsWith(`${to}/`);
 }
 
 function CartIcon() {
@@ -95,9 +100,9 @@ function ChevronIcon() {
   );
 }
 
-function customerDisplayName(customer) {
+function customerDisplayName(customer, fallback) {
   const name = [customer?.first_name, customer?.last_name].filter(Boolean).join(' ').trim();
-  return name || customer?.email || 'ลูกค้า';
+  return name || customer?.email || fallback;
 }
 
 function getHeroScrollThreshold() {
@@ -108,17 +113,23 @@ function getHeroScrollThreshold() {
 
 export default function Header() {
   const { pathname } = useLocation();
+  const { t } = useLocale();
+  const barePath = stripLocale(pathname);
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
-  const [pastHero, setPastHero] = useState(pathname !== '/');
+  const [pastHero, setPastHero] = useState(barePath !== '/');
   const { count, isBouncing, cartIconRef } = useCart();
   const { isLoggedIn, ready: authReady, customer, logout } = useAuth();
   const [accountOpen, setAccountOpen] = useState(false);
   const accountMenuRef = useRef(null);
   const accountButtonRef = useRef(null);
-  const isHome = pathname === '/';
-  const accountLabel = !authReady ? 'บัญชีลูกค้า' : isLoggedIn ? 'บัญชีของฉัน' : 'เข้าสู่ระบบ';
+  const isHome = barePath === '/';
+  const accountLabel = !authReady
+    ? t.header.accountPending
+    : isLoggedIn
+      ? t.header.account
+      : t.header.login;
 
   const updateScrollState = useCallback(() => {
     if (!isHome) {
@@ -143,7 +154,7 @@ export default function Header() {
     setSearchOpen(false);
     setCartOpen(false);
     setAccountOpen(false);
-    setPastHero(pathname !== '/');
+    setPastHero(stripLocale(pathname) !== '/');
   }, [pathname]);
 
   useEffect(() => {
@@ -212,7 +223,7 @@ export default function Header() {
           .join(' ')}
       >
         <div className="container header__inner">
-          <Link to="/" className="header__logo" onClick={closeMenu}>
+          <LocaleLink to="/" className="header__logo" onClick={closeMenu}>
             <img
               className="header__logo-img header__logo-img--dark"
               src={logoBlackUrl}
@@ -229,27 +240,28 @@ export default function Header() {
               height="200"
               decoding="async"
             />
-          </Link>
+            </LocaleLink>
 
           <div className="header__end">
             <nav className={`header__nav ${menuOpen ? 'header__nav--open' : ''}`}>
-              {navLinks.map(({ to, label }) => (
-                <Link
+              {navLinks.map(({ to, key }) => (
+                <LocaleLink
                   key={to}
                   to={to}
                   className={`header__link ${isActive(pathname, to) ? 'header__link--active' : ''}`}
                   onClick={closeMenu}
                 >
-                  {label}
-                </Link>
+                  {t.nav[key]}
+                </LocaleLink>
               ))}
             </nav>
 
             <div className="header__actions">
+              <LanguageSwitcher />
               <button
                 type="button"
                 className="header__search"
-                aria-label="ค้นหา"
+                aria-label={t.header.search}
                 aria-expanded={searchOpen}
                 onClick={openSearch}
               >
@@ -281,14 +293,14 @@ export default function Header() {
                         authReady && !isLoggedIn ? 'header__account-label--shown' : undefined
                       }
                     >
-                      เข้าสู่ระบบ
+                      {t.header.login}
                     </span>
                     <span
                       className={
                         authReady && isLoggedIn ? 'header__account-label--shown' : undefined
                       }
                     >
-                      บัญชีของฉัน
+                      {t.header.account}
                     </span>
                   </span>
                   <ChevronIcon />
@@ -301,34 +313,34 @@ export default function Header() {
                 >
                   {!authReady ? (
                     <p className="header__account-note" role="status">
-                      กำลังตรวจสอบสถานะสมาชิก...
+                      {t.header.checking}
                     </p>
                   ) : isLoggedIn ? (
                     <>
-                      <p className="header__account-name">{customerDisplayName(customer)}</p>
+                      <p className="header__account-name">{customerDisplayName(customer, t.header.customer)}</p>
                       <ul className="header__account-list">
                         <li>
-                          <Link to="/account" className="header__account-item" onClick={closeAccount}>
-                            บัญชีของฉัน
-                          </Link>
+                          <LocaleLink to="/account" className="header__account-item" onClick={closeAccount}>
+                            {t.header.account}
+                          </LocaleLink>
                         </li>
                         <li>
-                          <Link
+                          <LocaleLink
                             to="/account#account-address"
                             className="header__account-item"
                             onClick={closeAccount}
                           >
-                            ที่อยู่ของฉัน
-                          </Link>
+                            {t.header.addresses}
+                          </LocaleLink>
                         </li>
                         <li>
-                          <Link
+                          <LocaleLink
                             to="/account#account-orders"
                             className="header__account-item"
                             onClick={closeAccount}
                           >
-                            ประวัติคำสั่งซื้อ
-                          </Link>
+                            {t.header.orders}
+                          </LocaleLink>
                         </li>
                       </ul>
                       <button
@@ -336,28 +348,26 @@ export default function Header() {
                         className="header__account-item header__account-logout"
                         onClick={handleLogout}
                       >
-                        ออกจากระบบ
+                        {t.header.logout}
                       </button>
                     </>
                   ) : (
                     <>
-                      <p className="header__account-note">
-                        บันทึกที่อยู่ไว้ สั่งซื้อครั้งถัดไปได้สะดวกขึ้น
-                      </p>
-                      <Link
+                      <p className="header__account-note">{t.header.loginNote}</p>
+                      <LocaleLink
                         to="/login"
                         className="btn-primary header__account-login"
                         onClick={closeAccount}
                       >
-                        เข้าสู่ระบบ
-                      </Link>
-                      <Link
+                        {t.header.login}
+                      </LocaleLink>
+                      <LocaleLink
                         to="/register"
                         className="header__account-item header__account-register"
                         onClick={closeAccount}
                       >
-                        สมัครสมาชิก
-                      </Link>
+                        {t.header.register}
+                      </LocaleLink>
                     </>
                   )}
                 </div>
@@ -367,7 +377,7 @@ export default function Header() {
                 type="button"
                 ref={cartIconRef}
                 className={`header__cart ${isBouncing ? 'header__cart--bounce' : ''}`}
-                aria-label={`ตะกร้าสินค้า ${count} ชิ้น`}
+                aria-label={t.header.cart(count)}
                 aria-expanded={cartOpen}
                 onClick={() => {
                   closeMenu();
@@ -386,7 +396,7 @@ export default function Header() {
                 type="button"
                 className="header__toggle"
                 aria-expanded={menuOpen}
-                aria-label={menuOpen ? 'ปิดเมนู' : 'เปิดเมนู'}
+                aria-label={menuOpen ? t.header.closeMenu : t.header.openMenu}
                 onClick={() => {
                   setAccountOpen(false);
                   setMenuOpen((open) => !open);

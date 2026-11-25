@@ -1,6 +1,8 @@
 import { useId, useEffect, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
+import { useLocale } from '../../i18n/LocaleContext';
 import ScrollReveal from '../ScrollReveal';
+import LocaleLink from '../LocaleLink';
 import { homeFaqs } from '../../data/homeFaq';
 import './HomeFaqSection.css';
 
@@ -57,7 +59,7 @@ function FaqItem({ faq, index, isOpen, onToggle }) {
                 {faq.links.map((item, linkIndex) => (
                   <span key={item.href}>
                     {linkIndex > 0 ? ' · ' : ''}
-                    <Link to={item.href}>{item.label}</Link>
+                    <LocaleLink to={item.href}>{item.label}</LocaleLink>
                   </span>
                 ))}
               </>
@@ -69,8 +71,24 @@ function FaqItem({ faq, index, isOpen, onToggle }) {
   );
 }
 
+function localizedFaq(faq, copy) {
+  const overlay = copy?.[faq.id];
+  if (!overlay) return faq;
+  return {
+    ...faq,
+    question: overlay.question,
+    answer: overlay.answer,
+    links: faq.links?.map((link) => ({
+      ...link,
+      label: overlay.links?.[link.href] || link.label,
+    })),
+  };
+}
+
 export default function HomeFaqSection({ showViewAllCta = false, ctaOnly = false }) {
   const { hash } = useLocation();
+  const { t } = useLocale();
+  const faqs = homeFaqs.map((faq) => localizedFaq(faq, t.home.faqs));
   const [openIndex, setOpenIndex] = useState(null);
 
   useEffect(() => {
@@ -86,12 +104,12 @@ export default function HomeFaqSection({ showViewAllCta = false, ctaOnly = false
 
   if (ctaOnly) {
     return (
-      <section className="home-faq home-faq--cta-only" id="faq" aria-label="คำถามที่พบบ่อย">
+      <section className="home-faq home-faq--cta-only" id="faq" aria-label={t.home.faqLabel}>
         <div className="container">
           <ScrollReveal className="home-faq__cta-wrap" delay={70}>
-            <Link to="/faq" className="home-faq__cta-card">
-              ดูคำถามที่พบบ่อย
-            </Link>
+            <LocaleLink to="/faq" className="home-faq__cta-card">
+              {t.home.viewAllFaq}
+            </LocaleLink>
           </ScrollReveal>
         </div>
       </section>
@@ -102,17 +120,15 @@ export default function HomeFaqSection({ showViewAllCta = false, ctaOnly = false
     <section className="home-faq" id="faq" aria-labelledby="home-faq-title">
       <div className="container">
         <ScrollReveal className="home-faq__header">
-          <h2 id="home-faq-title" className="home-faq__title">
-            คำถามที่พบบ่อย
+            <h2 id="home-faq-title" className="home-faq__title">
+            {t.home.faqTitle}
           </h2>
-          <p className="home-faq__subtitle">
-            รวมคำถามเกี่ยวกับการดูแลรองเท้าและการใช้งานผลิตภัณฑ์
-          </p>
+          <p className="home-faq__subtitle">{t.home.faqSubtitle}</p>
         </ScrollReveal>
 
         <ScrollReveal className="home-faq__list-wrap" delay={70}>
           <div className="home-faq__list">
-            {homeFaqs.map((faq, index) => (
+            {faqs.map((faq, index) => (
               <FaqItem
                 key={faq.id}
                 faq={faq}
@@ -126,9 +142,9 @@ export default function HomeFaqSection({ showViewAllCta = false, ctaOnly = false
 
         {showViewAllCta ? (
           <ScrollReveal className="home-faq__footer" delay={120}>
-            <Link to="/faq" className="btn-outline home-faq__view-all">
-              ดูคำถามที่พบบ่อยทั้งหมด
-            </Link>
+            <LocaleLink to="/faq" className="btn-outline home-faq__view-all">
+              {t.home.viewAllFaq}
+            </LocaleLink>
           </ScrollReveal>
         ) : null}
       </div>

@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import ScrollReveal from '../ScrollReveal';
 import HomeReviewVideo from './HomeReviewVideo';
 import { homeReviewVideos } from '../../data/homeStory';
+import { useLocale } from '../../i18n/LocaleContext';
 import { useCenterFocusCarousel } from '../../hooks/useCenterFocusCarousel';
 import './HomeReviewsSection.css';
 
@@ -14,6 +15,7 @@ const reviewVideoClasses = {
 const DEFAULT_HANDLE = '@bazookashoecare';
 
 export default function HomeReviewsSection() {
+  const { t } = useLocale();
   const [reviews, setReviews] = useState(homeReviewVideos);
 
   const {
@@ -87,7 +89,7 @@ export default function HomeReviewsSection() {
                     type="button"
                     className="home-reviews__card-hit"
                     onClick={() => goToIndex(index)}
-                    aria-label={`เล่นวิดีโอรีวิว ${index + 1}`}
+                    aria-label={t.reviews.play(index + 1)}
                     aria-pressed={isActive}
                   >
                     <div className="home-reviews__card-media">
@@ -95,7 +97,7 @@ export default function HomeReviewsSection() {
                         src={item.src}
                         fallback={item.fallback}
                         classes={reviewVideoClasses}
-                        ariaLabel={`วิดีโอรีวิว ${index + 1}`}
+                        ariaLabel={t.reviews.video(index + 1)}
                         isActive={isActive}
                         managedPlayback
                         onUnavailable={() => removeReview(item.src)}

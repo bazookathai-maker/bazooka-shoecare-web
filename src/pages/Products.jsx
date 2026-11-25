@@ -5,7 +5,9 @@ import ProductCard from '../components/ProductCard';
 import ScrollReveal from '../components/ScrollReveal';
 import { LISTING_HIDDEN_PRODUCT_IDS } from '../data/hiddenProducts';
 import useSeo from '../hooks/useSeo';
-import { PAGE_SEO } from '../utils/seo';
+import { INDEX_ENGLISH } from '../utils/seo';
+import { useLocale } from '../i18n/LocaleContext';
+import { localizeStoreProduct } from '../i18n/productCopy';
 import './Products.css';
 
 /**
@@ -31,11 +33,17 @@ function applyProductSwaps(list) {
 }
 
 export default function Products() {
+  const { locale, t } = useLocale();
   const [activeFilter, setActiveFilter] = useState('all');
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  useSeo(PAGE_SEO.products);
+  useSeo({
+    title: t.products.seoTitle,
+    description: t.products.seoDescription,
+    path: locale === 'en' ? '/en/products' : '/products',
+    noindex: locale === 'en' && !INDEX_ENGLISH,
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -58,11 +66,7 @@ export default function Products() {
       } catch (err) {
         if (!cancelled) {
           setProducts([]);
-          setError(
-            err instanceof Error
-              ? err.message
-              : 'ไม่สามารถโหลดสินค้าได้ กรุณาลองใหม่อีกครั้ง',
-          );
+          setError(err instanceof Error && err.message ? err.message : 'load');
         }
       } finally {
         if (!cancelled) {
@@ -78,14 +82,19 @@ export default function Products() {
     };
   }, []);
 
+  const localizedProducts = useMemo(
+    () => products.map((product) => localizeStoreProduct(product, locale)),
+    [products, locale],
+  );
+
   const filteredProducts = useMemo(() => {
-    return products.filter((product) =>
+    return localizedProducts.filter((product) =>
       matchesProductFilter(product, activeFilter),
     );
-  }, [products, activeFilter]);
+  }, [localizedProducts, activeFilter]);
 
   const getFilterCount = (filterId) =>
-    products.filter((product) => matchesProductFilter(product, filterId))
+    localizedProducts.filter((product) => matchesProductFilter(product, filterId))
       .length;
 
   return (
@@ -93,8 +102,8 @@ export default function Products() {
       <header className="products-page__intro">
         <div className="container">
           <ScrollReveal className="products-page__intro-inner">
-            <p className="section-label">COLLECTION</p>
-            <h1 className="section-title">BAZOOKA STORE</h1>
+            <p className="section-label">{t.products.label}</p>
+            <h1 className="section-title">{t.products.title}</h1>
           </ScrollReveal>
         </div>
       </header>
@@ -104,7 +113,7 @@ export default function Products() {
           <div
             className="products-page__filters"
             role="tablist"
-            aria-label="กรองตามหมวดหมู่สินค้า"
+            aria-label={t.products.filters}
           >
             {PRODUCT_FILTER_TABS.map((tab) => {
               const count = loading ? 0 : getFilterCount(tab.id);
@@ -124,13 +133,13 @@ export default function Products() {
                 >
                   {isBestsellerTab ? (
                     <>
-                      <span className="products-page__filter-hot-badge">ขายดี</span>
-                      <span>{tab.label}</span>
+                      <span className="products-page__filter-hot-badge">{t.catalog.bestseller}</span>
+                      <span>{t.products.tabs[tab.id] || tab.label}</span>
                       <span className="products-page__filter-count">{count}</span>
                     </>
                   ) : (
                     <>
-                      {tab.label} {count}
+                      {t.products.tabs[tab.id] || tab.label} {count}
                     </>
                   )}
                 </button>
@@ -140,13 +149,13 @@ export default function Products() {
 
           {loading ? (
             <p className="products-page__status" role="status">
-              กำลังโหลดสินค้า...
+              {t.products.loading}
             </p>
           ) : null}
 
           {error ? (
             <p className="products-page__status products-page__status--error" role="alert">
-              {error}
+              {error === 'load' ? t.products.loadError : error}
             </p>
           ) : null}
 
@@ -156,7 +165,7 @@ export default function Products() {
               className="products-page__grid products-page__grid--fade-in"
             >
               {filteredProducts.length === 0 ? (
-                <p className="products-page__status">ไม่พบสินค้าในหมวดนี้</p>
+                <p className="products-page__status">{t.products.empty}</p>
               ) : (
                 filteredProducts.map((product) => (
                   <ProductCard

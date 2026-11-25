@@ -1,50 +1,58 @@
-import { Link } from 'react-router-dom';
 import { STORE_POLICIES } from '../data/storePolicies';
+import { useLocale } from '../i18n/LocaleContext';
+import LocaleLink from './LocaleLink';
 import './Footer.css';
 
+const policyLabel = {
+  shippingPolicy: 'shipping',
+  returnPolicy: 'returns',
+};
+
 export default function Footer() {
+  const { t } = useLocale();
+
   return (
     <footer id="contact" className="footer">
       <div className="container footer__inner">
         <div className="footer__brand">
           <span className="footer__logo">BAZOOKA</span>
-          <p className="footer__tagline">ดูแลรองเท้าคู่โปรด ได้ครบในเซตเดียว</p>
+          <p className="footer__tagline">{t.footer.tagline}</p>
         </div>
 
         <nav className="footer__nav">
-          <Link to="/" className="footer__link">
-            หน้าแรก
-          </Link>
-          <Link to="/products" className="footer__link">
-            สินค้า
-          </Link>
-          <Link to="/recommended" className="footer__link">
-            TOP PRODUCT
-          </Link>
-          <Link to="/articles" className="footer__link">
-            บทความ
-          </Link>
-          <Link to="/reviews" className="footer__link">
-            รีวิว
-          </Link>
-          <Link to="/account" className="footer__link">
-            บัญชีของฉัน
-          </Link>
-          <Link to="/track-order" className="footer__link">
-            ติดตามคำสั่งซื้อ
-          </Link>
-          <Link to="/contact" className="footer__link">
-            ติดต่อเรา
-          </Link>
+          <LocaleLink to="/" className="footer__link">
+            {t.nav.home}
+          </LocaleLink>
+          <LocaleLink to="/products" className="footer__link">
+            {t.nav.products}
+          </LocaleLink>
+          <LocaleLink to="/recommended" className="footer__link">
+            {t.footer.recommended}
+          </LocaleLink>
+          <LocaleLink to="/articles" className="footer__link">
+            {t.nav.articles}
+          </LocaleLink>
+          <LocaleLink to="/reviews" className="footer__link">
+            {t.nav.reviews}
+          </LocaleLink>
+          <LocaleLink to="/account" className="footer__link">
+            {t.header.account}
+          </LocaleLink>
+          <LocaleLink to="/track-order" className="footer__link">
+            {t.nav.trackOrder}
+          </LocaleLink>
+          <LocaleLink to="/contact" className="footer__link">
+            {t.nav.contact}
+          </LocaleLink>
           {STORE_POLICIES.map((policy) => (
-            <Link key={policy.key} to={policy.path} className="footer__link">
-              {policy.title}
-            </Link>
+            <LocaleLink key={policy.key} to={policy.path} className="footer__link">
+              {t.footer[policyLabel[policy.key]] || policy.title}
+            </LocaleLink>
           ))}
         </nav>
 
         <p className="footer__copy">
-          &copy; {new Date().getFullYear()} BAZOOKA สงวนลิขสิทธิ์
+          &copy; {new Date().getFullYear()} BAZOOKA {t.footer.rights}
         </p>
       </div>
     </footer>

@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import LocaleLink from './LocaleLink';
+import { useLocale } from '../i18n/LocaleContext';
 import { fetchStoreProducts } from '../api/woocommerce';
 import { buildHomeTopPicks } from '../utils/homeCatalog';
 import ShowcaseProductCard from './ShowcaseProductCard';
 import './FeaturedProductsSection.css';
 
 export default function FeaturedProductsSection({ showViewAll = true }) {
+  const { t } = useLocale();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -40,15 +42,13 @@ export default function FeaturedProductsSection({ showViewAll = true }) {
     <section className="featured-products" id="featured-products">
       <div className="container">
         <header className="featured-products__header">
-          <h2 className="featured-products__title">สินค้าแนะนำ</h2>
-          <p className="featured-products__subtitle">
-            สินค้าคัดสรรสำหรับการดูแลรองเท้าสมัยใหม่
-          </p>
+          <h2 className="featured-products__title">{t.featured.title}</h2>
+          <p className="featured-products__subtitle">{t.featured.subtitle}</p>
         </header>
 
         {loading && products.length === 0 ? (
           <p className="featured-products__status" role="status">
-            กำลังโหลดสินค้า...
+            {t.featured.loading}
           </p>
         ) : null}
 
@@ -62,9 +62,9 @@ export default function FeaturedProductsSection({ showViewAll = true }) {
 
         {showViewAll && (
           <div className="featured-products__cta">
-            <Link to="/products" className="btn-outline">
-              ดูสินค้าทั้งหมด
-            </Link>
+            <LocaleLink to="/products" className="btn-outline">
+              {t.featured.viewAll}
+            </LocaleLink>
           </div>
         )}
       </div>

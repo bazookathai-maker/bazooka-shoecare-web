@@ -3,14 +3,20 @@ import { fetchStoreProducts } from '../api/woocommerce';
 import { buildHomeTopPicks } from '../utils/homeCatalog';
 import ShowcaseProductCard from '../components/ShowcaseProductCard';
 import '../components/FeaturedProductsSection.css';
+import { useLocale } from '../i18n/LocaleContext';
 import useSeo from '../hooks/useSeo';
-import { PAGE_SEO } from '../utils/seo';
+import { INDEX_ENGLISH, PAGE_SEO } from '../utils/seo';
 import './Recommended.css';
 
 export default function Recommended() {
+  const { locale, t } = useLocale();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  useSeo(PAGE_SEO.recommended);
+  useSeo(
+    locale === 'en'
+      ? { title: t.featured.title, description: t.featured.subtitle, path: '/en/recommended', noindex: !INDEX_ENGLISH }
+      : PAGE_SEO.recommended,
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -51,7 +57,7 @@ export default function Recommended() {
         <div className="container">
           {loading && products.length === 0 ? (
             <p className="featured-products__status" role="status">
-              กำลังโหลดสินค้า...
+              {t.featured.loading}
             </p>
           ) : null}
           <ul className="featured-products__grid">

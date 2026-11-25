@@ -1,11 +1,13 @@
 import { ORDER_STATUS_STEPS, getStatusStepIndex } from '../utils/orderStorage';
+import { useLocale } from '../i18n/LocaleContext';
 import './OrderStatusTimeline.css';
 
 export default function OrderStatusTimeline({ status }) {
+  const { t } = useLocale();
   const currentIndex = getStatusStepIndex(status);
 
   return (
-    <ol className="order-timeline" aria-label="สถานะคำสั่งซื้อ">
+    <ol className="order-timeline" aria-label={t.orders.timeline}>
       {ORDER_STATUS_STEPS.map((step, index) => {
         const isDone = index < currentIndex;
         const isCurrent = index === currentIndex;
@@ -23,9 +25,9 @@ export default function OrderStatusTimeline({ status }) {
           >
             <span className="order-timeline__marker" aria-hidden="true" />
             <div className="order-timeline__content">
-              <span className="order-timeline__label">{step.label}</span>
+              <span className="order-timeline__label">{t.orders.steps[step.id] || step.label}</span>
               {isCurrent ? (
-                <span className="order-timeline__badge">สถานะปัจจุบัน</span>
+                <span className="order-timeline__badge">{t.orders.current}</span>
               ) : null}
             </div>
           </li>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useLocale } from '../../i18n/LocaleContext';
 import ScrollReveal from '../ScrollReveal';
+import LocaleLink from '../LocaleLink';
 import { homeHowToCare } from '../../data/homeStory';
 import {
   buildHomeArticleSlides,
@@ -100,12 +101,12 @@ function ArticleBlock({ card }) {
       <CareBlockIntro card={card} />
       <CareImageSlider
         images={card.slides.map((slide) => slide.image)}
-        slideLabel="บทความ"
+        slideLabel={card.title}
       />
       <div className="home-how-to-care__articles-cta">
-        <Link to={card.href} className="btn-outline home-how-to-care__articles-link">
+        <LocaleLink to={card.href} className="btn-outline home-how-to-care__articles-link">
           {card.cta}
-        </Link>
+        </LocaleLink>
       </div>
     </div>
   );
@@ -133,7 +134,7 @@ function HowToBlock({ card, guideCard }) {
       <div className="home-how-to-care__static-image">
         <img
           src={card.image}
-          alt="วิธีการใช้ผลิตภัณฑ์ BAZOOKA"
+          alt={card.imageAlt || 'วิธีการใช้ผลิตภัณฑ์ BAZOOKA'}
           loading="eager"
           decoding="async"
         />
@@ -160,8 +161,17 @@ function CareBlock({ card, guideCard }) {
   return null;
 }
 
+function withLocaleCopy(card, copy) {
+  const overlay = copy?.[card.id];
+  return overlay ? { ...card, ...overlay } : card;
+}
+
 export default function HomeHowToCareSection() {
-  const guideCard = homeHowToCare.find((card) => card.id === 'sneaker-care-guide');
+  const { t } = useLocale();
+  const sourceGuide = homeHowToCare.find((card) => card.id === 'sneaker-care-guide');
+  const guideCard = sourceGuide
+    ? { ...withLocaleCopy(sourceGuide, t.home.howToCards), imageAlt: t.home.howToImageAlt }
+    : sourceGuide;
   const [cards, setCards] = useState(homeHowToCare);
 
   useEffect(() => {
@@ -199,15 +209,21 @@ export default function HomeHowToCareSection() {
         <ScrollReveal as="ul" className="home-how-to-care__grid" delay={70}>
           {cards
             .filter((card) => card.id !== 'sneaker-care-guide')
-            .map((card, index) => (
+            .map((card, index) => {
+              const localized = {
+                ...withLocaleCopy(card, t.home.howToCards),
+                imageAlt: t.home.howToImageAlt,
+              };
+              return (
               <li
                 key={card.id}
                 className="home-how-to-care__item"
                 style={{ transitionDelay: `${index * 80}ms` }}
               >
-                <CareBlock card={card} guideCard={guideCard} />
+                <CareBlock card={localized} guideCard={guideCard} />
               </li>
-            ))}
+              );
+            })}
         </ScrollReveal>
       </div>
     </section>

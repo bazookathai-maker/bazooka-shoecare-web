@@ -1,8 +1,10 @@
 import { useEffect, useId, useRef } from 'react';
-import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { CHECKOUT_PATH, loginPath } from '../utils/authRedirect';
+import { useLocale } from '../i18n/LocaleContext';
+import { localizedProductName } from '../i18n/productCopy';
+import LocaleLink from './LocaleLink';
 import './MiniCart.css';
 
 function formatPrice(value) {
@@ -15,6 +17,7 @@ function lineAmount(item) {
 }
 
 export default function MiniCart({ open, onClose }) {
+  const { locale, t } = useLocale();
   const titleId = useId();
   const panelRef = useRef(null);
   const { ready: authReady, isLoggedIn } = useAuth();
@@ -59,7 +62,7 @@ export default function MiniCart({ open, onClose }) {
       <button
         type="button"
         className="mini-cart__backdrop"
-        aria-label="ปิดตะกร้า"
+        aria-label={t.cart.close}
         onClick={onClose}
       />
 
@@ -70,13 +73,13 @@ export default function MiniCart({ open, onClose }) {
       >
         <header className="mini-cart__header">
           <h2 id={titleId} className="mini-cart__title">
-            ตะกร้าสินค้า
+            {t.cart.title}
             {count > 0 ? ` (${count})` : ''}
           </h2>
           <button
             type="button"
             className="mini-cart__close"
-            aria-label="ปิด"
+            aria-label={t.search.dismiss}
             onClick={onClose}
           >
             ×
@@ -91,23 +94,25 @@ export default function MiniCart({ open, onClose }) {
 
         {(hydrating || loading) && items.length === 0 ? (
           <p className="mini-cart__status" role="status">
-            กำลังโหลดตะกร้า...
+            {t.cart.loading}
           </p>
         ) : null}
 
         {!hydrating && !loading && items.length === 0 ? (
           <div className="mini-cart__empty">
-            <p>ยังไม่มีสินค้าในตะกร้า</p>
-            <Link to="/products" className="btn-primary" onClick={onClose}>
-              เลือกซื้อสินค้า
-            </Link>
+            <p>{t.cart.empty}</p>
+            <LocaleLink to="/products" className="btn-primary" onClick={onClose}>
+              {t.cart.shop}
+            </LocaleLink>
           </div>
         ) : null}
 
         {items.length > 0 ? (
           <>
             <ul className="mini-cart__list">
-              {items.map((item) => (
+              {items.map((item) => {
+                const itemName = localizedProductName(item.id, item.name, locale);
+                return (
                 <li key={item.key || item.id} className="mini-cart__item">
                   <div className="mini-cart__media">
                     {item.image ? (
@@ -120,13 +125,13 @@ export default function MiniCart({ open, onClose }) {
                     ) : null}
                   </div>
                   <div className="mini-cart__details">
-                    <p className="mini-cart__name">{item.name}</p>
+                    <p className="mini-cart__name">{itemName}</p>
                     <p className="mini-cart__meta">{formatPrice(item.price)}</p>
                     <div className="mini-cart__row">
                       <div className="mini-cart__qty">
                         <button
                           type="button"
-                          aria-label={`ลดจำนวน ${item.name}`}
+                          aria-label={t.cart.decrease(itemName)}
                           disabled={loading}
                           onClick={() => {
                             void updateQuantity(item.key, item.quantity - 1);
@@ -137,7 +142,7 @@ export default function MiniCart({ open, onClose }) {
                         <span aria-live="polite">{item.quantity}</span>
                         <button
                           type="button"
-                          aria-label={`เพิ่มจำนวน ${item.name}`}
+                          aria-label={t.cart.increase(itemName)}
                           disabled={loading}
                           onClick={() => {
                             void updateQuantity(item.key, item.quantity + 1);
@@ -154,7 +159,7 @@ export default function MiniCart({ open, onClose }) {
                           void updateQuantity(item.key, 0);
                         }}
                       >
-                        ลบ
+                        {t.cart.remove}
                       </button>
                     </div>
                     <p className="mini-cart__line">
@@ -162,28 +167,29 @@ export default function MiniCart({ open, onClose }) {
                     </p>
                   </div>
                 </li>
-              ))}
+                );
+              })}
             </ul>
 
             <footer className="mini-cart__footer">
               <div className="mini-cart__total">
-                <span>รวม</span>
+                <span>{t.cart.total}</span>
                 <strong>{formatPrice(displayTotal)}</strong>
               </div>
-              <Link
+              <LocaleLink
                 to="/cart"
                 className="btn-outline mini-cart__link"
                 onClick={onClose}
               >
-                ดูตะกร้า
-              </Link>
-              <Link
+                {t.cart.view}
+              </LocaleLink>
+              <LocaleLink
                 to={checkoutHref}
                 className="btn-primary mini-cart__link"
                 onClick={onClose}
               >
-                ไปชำระเงิน
-              </Link>
+                {t.cart.checkout}
+              </LocaleLink>
             </footer>
           </>
         ) : null}

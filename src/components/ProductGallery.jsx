@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useLocale } from '../i18n/LocaleContext';
 import './ProductGallery.css';
 
 function uniqueImages(images) {
@@ -22,6 +23,7 @@ function prefersReducedMotion() {
 }
 
 export default function ProductGallery({ images, fillFrame = false }) {
+  const { t } = useLocale();
   const list = uniqueImages(images);
   const total = list.length;
   const hasMany = total > 1;
@@ -98,7 +100,7 @@ export default function ProductGallery({ images, fillFrame = false }) {
       }`}
       role="region"
       aria-roledescription="carousel"
-      aria-label="ภาพสินค้า"
+      aria-label={t.pdp.gallery}
       onKeyDown={handleKeyDown}
     >
       <div className="product-gallery__main">
@@ -133,7 +135,7 @@ export default function ProductGallery({ images, fillFrame = false }) {
               className="product-gallery__arrow product-gallery__arrow--prev"
               onClick={() => goTo(activeIndex - 1)}
               disabled={activeIndex === 0}
-              aria-label="ภาพก่อนหน้า"
+              aria-label={t.pdp.previousImage}
             >
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M15 5l-7 7 7 7" />
@@ -144,7 +146,7 @@ export default function ProductGallery({ images, fillFrame = false }) {
               className="product-gallery__arrow product-gallery__arrow--next"
               onClick={() => goTo(activeIndex + 1)}
               disabled={activeIndex === total - 1}
-              aria-label="ภาพถัดไป"
+              aria-label={t.pdp.nextImage}
             >
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M9 5l7 7-7 7" />
@@ -158,7 +160,7 @@ export default function ProductGallery({ images, fillFrame = false }) {
         <ul
           ref={thumbsRef}
           className="product-gallery__thumbs"
-          aria-label="ภาพย่อสินค้า"
+          aria-label={t.pdp.thumbs}
         >
           {list.map((image, index) => (
             <li key={`${image.src}-${index}`}>
@@ -168,7 +170,7 @@ export default function ProductGallery({ images, fillFrame = false }) {
                   index === activeIndex ? 'product-gallery__thumb--active' : ''
                 }`}
                 onClick={() => goTo(index)}
-                aria-label={`ดูภาพที่ ${index + 1}`}
+                aria-label={t.pdp.viewImage(index + 1)}
                 aria-current={index === activeIndex ? 'true' : undefined}
               >
                 <img src={image.src} alt="" loading="lazy" decoding="async" />
