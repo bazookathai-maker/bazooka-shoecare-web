@@ -5,12 +5,11 @@ import { localizePath, stripLocale } from '../i18n/locale';
 import { localizedProductName } from '../i18n/productCopy';
 
 /**
- * Release switch for English search indexing.
- * While this is false, English pages stay noindex and out of sitemap.xml.
- * At release, set this to true and remove the blanket /en X-Robots-Tag headers in vercel.json.
- * Member, cart, checkout, and order pages stay noindex either way.
+ * English public pages are in the sitemap.
+ * Member, cart, checkout, order, and hidden-product pages stay noindex.
+ * Private /en routes keep their own X-Robots-Tag headers in vercel.json.
  */
-export const INDEX_ENGLISH = false;
+export const INDEX_ENGLISH = true;
 
 export const SITE_URL = 'https://www.bazookashoecare.com';
 export const SITE_NAME = 'BAZOOKA Thailand';

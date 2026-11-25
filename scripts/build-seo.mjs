@@ -677,7 +677,9 @@ if (products.length === 0) {
   fs.writeFileSync(path.join(DIST, 'sitemap.xml'), xml);
   console.log(`[seo] sitemap: ${sitemapPaths.length} URLs (${products.length} products)`);
   console.log(
-    `[seo] english index held: ${englishReadyPaths.length} public English URLs are prerendered with noindex and are not in sitemap.xml`,
+    seo.INDEX_ENGLISH
+      ? `[seo] english index: ${englishReadyPaths.length} public English URLs are in sitemap.xml`
+      : `[seo] english index held: ${englishReadyPaths.length} public English URLs are prerendered with noindex and are not in sitemap.xml`,
   );
   if (untranslatedProducts.length) {
     console.log(`[seo] products without English copy stay noindex: ${untranslatedProducts.join(', ')}`);

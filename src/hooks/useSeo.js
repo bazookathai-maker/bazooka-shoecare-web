@@ -71,7 +71,7 @@ function setJsonLd(text) {
  * Sets title, description, canonical, robots, Open Graph and JSON-LD for the current page.
  * Every call writes all managed tags so nothing carries over from the previous route.
  * Private noindex pages omit `path`, so they get no canonical and no hreflang.
- * English public pages keep a canonical while they are still noindex.
+ * A public page with a path keeps its canonical.
  */
 export default function useSeo({
   title,

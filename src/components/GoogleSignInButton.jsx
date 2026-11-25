@@ -99,7 +99,7 @@ export default function GoogleSignInButton({
           shape: 'pill',
           text: context === 'signup' ? 'signup_with' : 'signin_with',
           logo_alignment: 'center',
-          locale: 'th',
+          locale: locale === 'en' ? 'en' : 'th',
           width,
         });
         setStatus('ready');
